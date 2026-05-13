@@ -1,85 +1,81 @@
 document.addEventListener("DOMContentLoaded", () => {
-    
-    // --- 1. XỬ LÝ SUB-MENU (MENU CON) ---
-    const menuToggles = document.querySelectorAll('.menu-toggle');
-    menuToggles.forEach(toggle => {
-        toggle.addEventListener('click', (e) => {
-            e.preventDefault();
-            const parentLi = toggle.parentElement;
-            parentLi.classList.toggle('open');
-        });
-    });
-
-    // --- 2. XỬ LÝ NẠP TRANG (SPA ROUTING) ---
-    const mainContent = document.getElementById('main-content');
-    
-    const loadPage = async (pageUrl) => {
+    // 1. CHUYỂN TRANG (SPA ROUTING)
+    const loadPage = async (page) => {
+        const content = document.getElementById('main-content');
         try {
-            const response = await fetch(`views/${pageUrl}.html`);
-            if (!response.ok) throw new Error('Không tìm thấy trang');
-            const html = await response.text();
-            mainContent.innerHTML = html;
-        } catch (error) {
-            mainContent.innerHTML = `
-                <div style="text-align: center; margin-top: 50px;">
-                    <h2>Opps! Lỗi tải trang</h2>
-                    <p style="color: red;">${error.message}</p>
-                    <p><i>Hãy chắc chắn bạn đang chạy code qua Local Server (như Live Server trên VS Code).</i></p>
-                </div>`;
+            const res = await fetch(`views/${page}.html`);
+            if (!res.ok) throw new Error();
+            content.innerHTML = await res.text();
+        } catch {
+            content.innerHTML = "<h2>Trang đang cập nhật...</h2>";
         }
-    }
+    };
+    loadPage('dashboard'); // Mặc định load dashboard
 
-    // Load mặc định
-    loadPage('dashboard');
-
-    // Sự kiện click chuyển trang trên menu
-    const menuLinks = document.querySelectorAll('.menu-item > a[data-target]');
-    menuLinks.forEach(link => {
-        link.addEventListener('click', (e) => {
+    // 2. SIDEBAR MENU TOGGLE
+    document.querySelectorAll('.menu-toggle').forEach(btn => {
+        btn.addEventListener('click', (e) => {
             e.preventDefault();
-            
-            // Xử lý Active state
-            const currentActive = document.querySelector('.menu-item.active');
-            if (currentActive) currentActive.classList.remove('active');
-            link.parentElement.classList.add('active');
-            
-            // Tải nội dung
-            const target = link.getAttribute('data-target');
-            if(target) loadPage(target);
+            btn.parentElement.classList.toggle('open');
         });
     });
 
-    // --- 3. XỬ LÝ RESPONSIVE MOBILE SIDEBAR ---
-    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-    const sidebar = document.querySelector('.sidebar');
-    
-    // Tạo lớp phủ tối màu
-    const overlay = document.createElement('div');
-    overlay.classList.add('sidebar-overlay');
-    document.body.appendChild(overlay);
+    // 3. DROPDOWN HEADER
+    const userDrop = document.getElementById('user-dropdown');
+    userDrop.addEventListener('click', (e) => {
+        e.stopPropagation();
+        userDrop.querySelector('.dropdown-menu').classList.toggle('show');
+    });
 
-    // Mở menu
-    if(mobileMenuBtn) {
-        mobileMenuBtn.addEventListener('click', () => {
-            sidebar.classList.add('show');
-            overlay.classList.add('show');
+    // 4. MODALS (PROFILE & PASSWORD)
+    const profileModal = document.getElementById('modal-profile');
+    const passwordModal = document.getElementById('modal-password');
+
+    document.getElementById('open-profile').addEventListener('click', () => profileModal.classList.add('active'));
+    document.getElementById('open-password').addEventListener('click', () => passwordModal.classList.add('active'));
+
+    document.querySelectorAll('.close-modal').forEach(btn => {
+        btn.addEventListener('click', () => {
+            profileModal.classList.remove('active');
+            passwordModal.classList.remove('active');
+        });
+    });
+
+    // CLICK RA NGOÀI ĐỂ ĐÓNG TẤT CẢ
+    window.addEventListener('click', (e) => {
+        document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('show'));
+        if (e.target.classList.contains('modal-overlay')) {
+            profileModal.classList.remove('active');
+            passwordModal.classList.remove('active');
+        }
+    });
+
+// Xử lý Dropdown thông báo
+    const notiBtn = document.getElementById('notification-dropdown');
+
+    if (notiBtn) {
+        notiBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            
+            // Đóng các dropdown khác nếu đang mở
+            document.querySelectorAll('.dropdown-menu').forEach(menu => {
+                if (menu !== this.querySelector('.dropdown-menu')) {
+                    menu.classList.remove('show');
+                }
+            });
+
+            // Toggle menu thông báo
+            this.querySelector('.dropdown-menu').classList.toggle('show');
+            
+            // (Tùy chọn) Ẩn chấm đỏ sau khi người dùng bấm xem
+            const dot = this.querySelector('.badge-dot');
+            if (dot) dot.style.display = 'none'; 
         });
     }
 
-    // Đóng menu khi bấm ra ngoài lớp phủ
-    overlay.addEventListener('click', () => {
-        sidebar.classList.remove('show');
-        overlay.classList.remove('show');
+    // Bấm ra ngoài màn hình thì đóng menu
+    window.addEventListener('click', function() {
+        const menus = document.querySelectorAll('.dropdown-menu');
+        menus.forEach(m => m.classList.remove('show'));
     });
-
-    // Tự động đóng menu trên mobile khi click vào 1 link
-    menuLinks.forEach(link => {
-        link.addEventListener('click', () => {
-            if(window.innerWidth <= 768) {
-                sidebar.classList.remove('show');
-                overlay.classList.remove('show');
-            }
-        });
-    });
-
 });
