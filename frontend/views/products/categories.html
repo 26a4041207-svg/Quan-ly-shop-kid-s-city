@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Danh mục sản phẩm - Kid's City</title>
+
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+
+    <link rel="stylesheet" href="../../assets/css/index.css">
+    <link rel="stylesheet" href="products.css">
+</head>
+
+<body>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+
+        <div class="sidebar-header">
+
+            <div class="logo">
+
+                <i class='bx bxs-face'></i>
+
+                <div>
+                    <h2>Kid's City</h2>
+                    <p>Quản lý bán hàng</p>
+                </div>
+
+            </div>
+
+        </div>
+
+        <ul class="menu">
+
+            <li class="menu-item">
+                <a href="../dashboard.html">
+                    <i class='bx bx-grid-alt'></i>
+                    Tổng quan
+                </a>
+            </li>
+
+            <li class="menu-item">
+                <a href="../users.html">
+                    <i class='bx bx-user'></i>
+                    Quản lý người dùng
+                </a>
+            </li>
+
+            <li class="menu-item">
+                <a href="../imports.html">
+                    <i class='bx bx-box'></i>
+                    Quản lý nhập hàng
+                </a>
+            </li>
+
+            <!-- PRODUCT -->
+            <li class="menu-item has-submenu open active">
+
+                <a href="#" class="menu-toggle">
+
+                    <i class='bx bx-cube'></i>
+
+                    <span>Quản lý sản phẩm</span>
+
+                    <i class='bx bx-chevron-down arrow'></i>
+
+                </a>
+
+                <ul class="submenu">
+
+                    <li class="submenu-active">
+
+                        <a href="categories.html">
+
+                            <i class='bx bx-purchase-tag-alt'></i>
+
+                            Danh mục
+
+                        </a>
+
+                    </li>
+
+                    <li>
+
+                        <a href="list.html">
+
+                            <i class='bx bx-package'></i>
+
+                            Sản phẩm
+
+                        </a>
+
+                    </li>
+
+                </ul>
+
+            </li>
+
+            <!-- SALES -->
+            <li class="menu-item has-submenu">
+
+                <a href="#" class="menu-toggle">
+
+                    <i class='bx bx-cart'></i>
+
+                    <span>Quản lý bán hàng</span>
+
+                    <i class='bx bx-chevron-down arrow'></i>
+
+                </a>
+
+                <ul class="submenu">
+
+                    <li>
+                        <a href="../sales/invoices.html">
+                            <i class='bx bx-receipt'></i>
+                            Hóa đơn
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="../sales/exchanges.html">
+                            <i class='bx bx-transfer'></i>
+                            Đổi hàng
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="../sales/returns.html">
+                            <i class='bx bx-revision'></i>
+                            Trả hàng
+                        </a>
+                    </li>
+
+                </ul>
+
+            </li>
+
+            <li class="menu-item">
+
+                <a href="../customers.html">
+
+                    <i class='bx bx-user-pin'></i>
+
+                    Quản lý khách hàng
+
+                </a>
+
+            </li>
+            <li class="menu-item ">
+                <a href="#" class="menu-toggle">
+                    <i class='bx bx-bar-chart-alt-2'></i> <span>Quản lý báo cáo</span>
+                    <i class='bx bx-chevron-down arrow'></i>
+                </a>
+                <ul class="submenu">
+                    <li><a href="#"><i class='bx bx-line-chart'></i> Doanh thu</a></li>
+                    <li><a href="#"><i class='bx bx-box'></i> Sản phẩm</a></li>
+                    <li><a href="#"><i class='bx bx-group'></i> Khách hàng</a></li>
+                </ul>
+            </li>
+
+        </ul>
+
+        <div class="sidebar-user">
+
+            <div class="avatar">N</div>
+
+            <div class="user-info">
+                <h4>Nguyễn Văn An</h4>
+                <p>Chủ Shop</p>
+            </div>
+
+        </div>
+
+    </aside>
+
+ 
+    <!-- MAIN -->
+    <div class="main-wrapper">
+
+        <!-- HEADER -->
+        <header class="top-header">
+
+            <div style="display:flex; align-items:center;">
+
+                <i class='bx bx-menu' id="mobile-menu-btn"></i>
+
+                <div class="search-bar">
+
+                    <i class='bx bx-search'></i>
+
+                    <input type="text" placeholder="Tìm kiếm tại đây...">
+
+                </div>
+
+            </div>
+
+            <div class="header-actions">
+
+                <i class='bx bx-bell notification-icon'></i>
+
+                <div class="header-user">
+
+                    <div class="avatar blue-bg">N</div>
+
+                    <div class="user-info mobile-hidden">
+                        <h4>Nguyễn Văn An</h4>
+                        <p>Chủ shop</p>
+                    </div>
+
+                    <i class='bx bx-chevron-down'></i>
+
+                </div>
+
+            </div>
+
+        </header>
+
+        <!-- CONTENT -->
+        <main class="content-body">
+
+            <!-- PAGE HEADER -->
+            <div class="page-header">
+
+                <h1>Danh mục sản phẩm</h1>
+
+                <p>Quản lý danh mục sản phẩm trong hệ thống</p>
+
+            </div>
+
+            <!-- STATS -->
+            <div class="stats-grid">
+
+                <div class="stat-card">
+
+                    <div>
+
+                        <p class="stat-title">
+                            Tổng danh mục
+                        </p>
+
+                        <h3 class="stat-value" id="totalCategory">
+                            0
+                        </h3>
+
+                    </div>
+
+                    <div class="stat-icon blue-light">
+
+                        <i class='bx bx-category'></i>
+
+                    </div>
+
+                </div>
+
+                <div class="stat-card">
+
+                    <div>
+
+                        <p class="stat-title">
+                            Danh mục tháng này
+                        </p>
+
+                        <h3 class="stat-value" id="monthCategory">
+                            0
+                        </h3>
+
+                    </div>
+
+                    <div class="stat-icon green-light">
+
+                        <i class='bx bx-calendar'></i>
+
+                    </div>
+
+                </div>
+
+                <div class="stat-card">
+
+                    <div>
+
+                        <p class="stat-title">
+                            Danh mục hôm nay
+                        </p>
+
+                        <h3 class="stat-value" id="todayCategory">
+                            0
+                        </h3>
+
+                    </div>
+
+                    <div class="stat-icon orange-light">
+
+                        <i class='bx bx-time'></i>
+
+                    </div>
+
+                </div>
+
+                <div class="stat-card">
+
+                    <div>
+
+                        <p class="stat-title">
+                            Mới thêm
+                        </p>
+
+                        <h3 class="stat-value" id="newCategory">
+                            0
+                        </h3>
+
+                    </div>
+
+                    <div class="stat-icon purple-light">
+
+                        <i class='bx bx-star'></i>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- TOOLBAR -->
+            <div class="toolbar">
+
+                <div class="toolbar-left">
+
+                    <div class="table-search">
+
+                        <i class='bx bx-search'></i>
+
+                        <input
+                            type="text"
+                            id="searchCategory"
+                            placeholder="Tìm kiếm danh mục...">
+
+                    </div>
+
+                    <div class="date-filter">
+
+                        <input type="date" id="fromDate">
+
+                        <span>đến</span>
+
+                        <input type="date" id="toDate">
+
+                    </div>
+
+                </div>
+
+                <button class="btn-primary" id="openModalBtn">
+
+                    <i class='bx bx-plus'></i>
+
+                    Thêm danh mục
+
+                </button>
+
+            </div>
+
+            <!-- TABLE -->
+            <div class="table-container">
+
+                <table class="category-table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>Mã danh mục</th>
+                            <th>Tên danh mục</th>
+                            <th>Mô tả</th>
+                            <th>Ngày tạo</th>
+                            <th>Thao tác</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="categoryTable"></tbody>
+
+                </table>
+
+            </div>
+
+        </main>
+
+    </div>
+
+    <!-- MODAL -->
+    <div class="modal" id="categoryModal">
+
+        <div class="modal-content">
+
+            <div class="modal-header">
+
+                <h3 id="modalTitle">
+                    Thêm danh mục
+                </h3>
+
+                <button class="close-modal" id="closeModalBtn">
+
+                    <i class='bx bx-x'></i>
+
+                </button>
+
+            </div>
+
+            <div class="modal-body">
+
+                <div class="form-group">
+
+                    <label>Mã danh mục</label>
+
+                    <input type="text" id="categoryId">
+
+                </div>
+
+                <div class="form-group">
+
+                    <label>Tên danh mục</label>
+
+                    <input type="text" id="categoryName">
+
+                </div>
+
+                <div class="form-group">
+
+                    <label>Mô tả</label>
+
+                    <textarea rows="4" id="categoryDescription"></textarea>
+
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+
+                <button class="btn-secondary" id="cancelModalBtn">
+
+                    Hủy
+
+                </button>
+
+                <button class="btn-primary" id="saveCategoryBtn">
+
+                    Lưu danh mục
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <script src="categories.js"></script>
+
+</body>
+
+</html>
