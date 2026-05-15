@@ -96,14 +96,112 @@
             </div>
             
             <div class="header-actions">
-                <i class='bx bx-bell notification-icon'></i>
-                <div class="header-user">
-                    <div class="avatar blue-bg">N</div>
-                    <div class="user-info mobile-hidden">
-                        <h4>Nguyễn Văn An</h4>
-                        <p>Chủ shop</p>
+                <div class="dropdown" id="notification-dropdown">
+                        <div class="icon-wrapper">
+                            <i class='bx bx-bell notification-icon'></i>
+                            <span class="badge-dot"></span> </div>
+                        
+                        <div class="dropdown-menu">
+                            <div class="dropdown-header">Thông báo mới</div>
+                            <ul class="dropdown-list">
+                                <li>
+                                    <i class='bx bx-cart-alt'></i>
+                                    <div>
+                                        <p>Có đơn hàng mới <strong>#ORD011</strong></p>
+                                        <span>2 phút trước</span>
+                                    </div>
+                                </li>
+                                <li>
+                                    <i class='bx bx-error-circle'></i>
+                                    <div>
+                                        <p>Sản phẩm <strong>Áo thun</strong> sắp hết hàng</p>
+                                        <span>1 giờ trước</span>
+                                    </div>
+                                </li>
+                            </ul>
+                            <a href="#" class="dropdown-footer">Xem tất cả thông báo</a>
+                        </div>
                     </div>
-                    <i class='bx bx-chevron-down'></i>
+
+                <div class="dropdown" id="user-dropdown">
+                    <div class="header-user">
+                        <div class="avatar blue-bg">N</div>
+                        <div class="user-info mobile-hidden">
+                            <h4>Nguyễn Văn An</h4>
+                            <p>Chủ shop</p>
+                        </div>
+                        <i class='bx bx-chevron-down'></i>
+                    </div>
+
+                    <div class="dropdown-menu account-menu">
+                        <ul class="dropdown-list">
+                            <li id="open-profile">
+                                <i class='bx bx-user'></i> <span>Thông tin cá nhân</span>
+                            </li>
+                            <li id="open-password">
+                                <i class='bx bx-lock-alt'></i> <span>Đổi mật khẩu</span>
+                            </li>
+                            <li class="divider"></li>
+                            <li class="logout-item">
+                                <i class='bx bx-log-out-circle'></i> <span>Đăng xuất</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-overlay" id="modal-profile">
+                <div class="modal-content profile-modal">
+                    <div class="modal-header">
+                        <h3>Thông tin cá nhân</h3>
+                    </div>
+                    <div class="modal-body">
+                        <div class="profile-main">
+                            <div class="avatar-large blue-bg">N</div>
+                            <div class="profile-info-header">
+                                <h4>Nguyễn Văn An</h4>
+                                <p>admin@kidscity.vn</p>
+                                <span class="badge-role">Chủ shop</span>
+                            </div>
+                        </div>
+                        <div class="profile-details">
+                            <div class="detail-row">
+                                <span class="label">Tên đăng nhập</span>
+                                <span class="value">admin</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="label">Điện thoại</span>
+                                <span class="value">0901234567</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="label">Ngày tạo</span>
+                                <span class="value">2024-01-01</span>
+                            </div>
+                        </div>
+                        <button class="btn-primary-block close-modal">Đóng</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-overlay" id="modal-password">
+                <div class="modal-content password-modal">
+                    <div class="modal-header">
+                        <h3>Đổi mật khẩu</h3>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label>Mật khẩu cũ</label>
+                            <input type="password" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label>Mật khẩu mới</label>
+                            <input type="password" class="form-control">
+                        </div>
+                        <div class="modal-footer-btns">
+                            <button class="btn-outline close-modal">Hủy</button>
+                            <button class="btn-primary">Lưu thay đổi</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </header>
@@ -112,6 +210,6 @@
             </main>
     </div>
 
-    <script src="js/app.js"></script>
+    <script src="js/index.js"></script>
 </body>
 </html>

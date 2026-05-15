@@ -148,6 +148,7 @@ table td { padding: 15px 10px; font-size: 14px; border-bottom: 1px solid #f3f4f6
 
 /* Mobile */
 @media (max-width: 768px) {
+
     #mobile-menu-btn { display: block; }
     .search-bar, .mobile-hidden { display: none; }
     .top-header { padding: 0 15px; }
@@ -165,4 +166,213 @@ table td { padding: 15px 10px; font-size: 14px; border-bottom: 1px solid #f3f4f6
     .stats-grid { grid-template-columns: 1fr; }
     .recent-orders { overflow-x: auto; }
     table { min-width: 600px; }
+}
+
+/* --- HỆ THỐNG DROPDOWN --- */
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.icon-wrapper {
+    position: relative;
+    cursor: pointer;
+    padding: 5px;
+}
+
+/* Chấm đỏ thông báo trên icon chuông */
+.badge-dot {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 9px;
+    height: 9px;
+    background-color: #ef4444; /* Màu đỏ thông báo */
+    border: 2px solid #fff;
+    border-radius: 50%;
+}
+
+/* Khung Menu thả xuống */
+.dropdown-menu {
+    position: absolute;
+    top: calc(100% + 12px);
+    right: 0;
+    width: 260px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+    border: 1px solid #f0f0f0;
+    display: none; /* Ẩn mặc định */
+    z-index: 1000;
+    overflow: hidden;
+    animation: fadeInSlide 0.2s ease-out;
+}
+
+.dropdown-menu.show {
+    display: block;
+}
+
+@keyframes fadeInSlide {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Header & Footer của dropdown thông báo */
+.dropdown-header {
+    padding: 15px;
+    font-weight: 600;
+    border-bottom: 1px solid #f3f4f6;
+    font-size: 14px;
+}
+
+.dropdown-footer {
+    display: block;
+    text-align: center;
+    padding: 12px;
+    font-size: 13px;
+    color: #2563eb;
+    background: #f9fafb;
+    border-top: 1px solid #f3f4f6;
+}
+
+/* Danh sách các mục trong menu */
+.dropdown-list { padding: 5px 0; margin: 0; list-style: none; }
+.dropdown-list li { transition: 0.2s; }
+.dropdown-list li:hover { background-color: #f8fafc; }
+
+.dropdown-list a, .dropdown-list li {
+    padding: 10px 15px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    color: #475569;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.dropdown-list i { font-size: 18px; color: #64748b; }
+
+/* CSS riêng cho Menu tài khoản (Giống image_48649c.png) */
+.account-menu { width: 200px; }
+.divider { height: 1px; background: #f1f5f9; margin: 4px 0; padding: 0 !important; }
+.logout-item { color: #ef4444 !important; font-weight: 500; }
+.logout-item i { color: #ef4444 !important; }
+
+/* --- MODAL SYSTEM --- */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    display: none; /* Ẩn mặc định */
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+
+.modal-overlay.active { display: flex; }
+
+.modal-content {
+    background: #fff;
+    border-radius: 24px; /* Bo góc cực mạnh như ảnh */
+    width: 100%;
+    max-width: 450px;
+    padding: 30px;
+    position: relative;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+}
+
+.modal-header h3 {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 25px;
+    color: #111827;
+}
+
+/* Style cho Thông tin cá nhân (Profile) */
+.profile-main {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+.avatar-large {
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    font-weight: bold;
+    color: #fff;
+}
+.profile-info-header h4 { font-size: 18px; margin-bottom: 4px; }
+.profile-info-header p { color: #6b7280; font-size: 14px; margin-bottom: 8px; }
+.badge-role {
+    background: #e0e7ff;
+    color: #4f46e5;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.profile-details { margin-bottom: 30px; }
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 15px 0;
+    border-bottom: 1px solid #f3f4f6;
+    font-size: 14px;
+}
+.detail-row .label { color: #6b7280; }
+.detail-row .value { font-weight: 600; color: #111827; }
+
+/* Style cho Đổi mật khẩu */
+.form-group { margin-bottom: 20px; }
+.form-group label { display: block; margin-bottom: 8px; font-weight: 500; font-size: 14px; color: #374151; }
+.form-control {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    font-size: 14px;
+    outline: none;
+}
+.modal-footer-btns {
+    display: flex;
+    gap: 12px;
+    margin-top: 30px;
+}
+
+/* Nút bấm chuẩn style */
+.btn-primary-block {
+    width: 100%;
+    padding: 14px;
+    background: #2563eb;
+    color: #fff;
+    border: none;
+    border-radius: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+.btn-primary {
+    flex: 1;
+    padding: 14px;
+    background: #2563eb;
+    color: #fff;
+    border: none;
+    border-radius: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+.btn-outline {
+    flex: 1;
+    padding: 14px;
+    background: transparent;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    color: #6b7280;
 }
