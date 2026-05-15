@@ -243,6 +243,24 @@ const saveProductBtn = document.getElementById("saveProductBtn");
 
 const addCategoryBtn = document.getElementById("addCategoryBtn");
 
+const stopConfirmModal = document.getElementById("stopConfirmModal");
+
+const closeStopConfirmBtn = document.getElementById("closeStopConfirmBtn");
+
+const cancelStopBtn = document.getElementById("cancelStopBtn");
+
+const confirmStopBtn = document.getElementById("confirmStopBtn");
+
+const stopSuccessModal = document.getElementById("stopSuccessModal");
+
+const closeStopSuccessBtn = document.getElementById("closeStopSuccessBtn");
+
+const okStopSuccessBtn = document.getElementById("okStopSuccessBtn");
+
+const stopSuccessMessage = document.getElementById("stopSuccessMessage");
+
+let pendingStopProductId = null;
+
 // FORM
 
 const productName = document.getElementById("productName");
@@ -344,11 +362,21 @@ addCategoryBtn.addEventListener("click", () => {
 
 });
 
+function getVisibleProducts() {
+
+    return products.filter(product =>
+
+        product.status === "selling"
+
+    );
+
+}
+
 // =========================
 // RENDER PRODUCTS
 // =========================
 
-function renderProducts(data = products) {
+function renderProducts(data = getVisibleProducts()) {
 
     table.innerHTML = "";
 
@@ -517,7 +545,7 @@ function updateStats() {
 
 function filterProducts() {
 
-    let filtered = [...products];
+    let filtered = getVisibleProducts();
 
     if (categoryFilter.value) {
 
@@ -549,7 +577,12 @@ function filterProducts() {
 
 function setupPriceRange() {
 
-    const prices = products.map(product => product.price);
+    const visibleProducts = getVisibleProducts();
+
+    const rangeProducts =
+        visibleProducts.length > 0 ? visibleProducts : products;
+
+    const prices = rangeProducts.map(product => product.price);
 
     const lowestPrice = Math.min(...prices);
 
@@ -646,6 +679,8 @@ openModalBtn.addEventListener("click", () => {
 
     saveProductBtn.style.display = "flex";
 
+    showAddCategoryButton();
+
     openModal();
 
 });
@@ -665,6 +700,35 @@ modal.addEventListener("click", (e) => {
     if (e.target === modal) {
 
         closeModal();
+
+    }
+
+});
+closeStopConfirmBtn.addEventListener("click", closeStopConfirmModal);
+
+cancelStopBtn.addEventListener("click", closeStopConfirmModal);
+
+confirmStopBtn.addEventListener("click", confirmStopSelling);
+
+closeStopSuccessBtn.addEventListener("click", closeStopSuccessModal);
+
+okStopSuccessBtn.addEventListener("click", closeStopSuccessModal);
+
+stopConfirmModal.addEventListener("click", (e) => {
+
+    if (e.target === stopConfirmModal) {
+
+        closeStopConfirmModal();
+
+    }
+
+});
+
+stopSuccessModal.addEventListener("click", (e) => {
+
+    if (e.target === stopSuccessModal) {
+
+        closeStopSuccessModal();
 
     }
 
@@ -790,6 +854,8 @@ function viewProduct(id) {
 
     saveProductBtn.style.display = "none";
 
+    hideAddCategoryButton();
+
     modalTitle.innerText =
         "Chi tiết sản phẩm";
 
@@ -817,6 +883,8 @@ function editProduct(id) {
 
     saveProductBtn.style.display = "flex";
 
+    hideAddCategoryButton();
+
     modalTitle.innerText =
         "Cập nhật sản phẩm";
 
@@ -830,24 +898,56 @@ function editProduct(id) {
 
 function stopSelling(id) {
 
-    const confirmStop = confirm(
-        "Bạn có muốn ngừng bán sản phẩm này?"
-    );
+    pendingStopProductId = id;
 
-    if (!confirmStop) return;
-
-    const product = products.find(product =>
-
-        product.id === id
-
-    );
-
-    product.status = "stopped";
-
-    renderProducts();
+    stopConfirmModal.classList.add("show");
 
 }
 
+function closeStopConfirmModal() {
+
+    pendingStopProductId = null;
+
+    stopConfirmModal.classList.remove("show");
+
+    filterProducts();
+
+}
+
+function confirmStopSelling() {
+
+    if (!pendingStopProductId) return;
+
+    const product = products.find(product =>
+
+        product.id === pendingStopProductId
+
+    );
+
+    if (!product) return;
+
+    product.status = "stopped";
+
+    pendingStopProductId = null;
+
+    stopConfirmModal.classList.remove("show");
+
+    setupPriceRange();
+
+    filterProducts();
+
+    stopSuccessMessage.innerText =
+        `B\u1ea1n \u0111\u00e3 ng\u1eebng kinh doanh s\u1ea3n ph\u1ea9m ${product.id} - ${product.name}`;
+
+    stopSuccessModal.classList.add("show");
+
+}
+
+function closeStopSuccessModal() {
+
+    stopSuccessModal.classList.remove("show");
+
+}
 // =========================
 // RESTORE PRODUCT
 // =========================
@@ -862,7 +962,9 @@ function restoreProduct(id) {
 
     product.status = "selling";
 
-    renderProducts();
+    setupPriceRange();
+
+    filterProducts();
 
 }
 
@@ -910,6 +1012,17 @@ function clearForm() {
 
 }
 
+function showAddCategoryButton() {
+
+    addCategoryBtn.style.display = "flex";
+
+}
+
+function hideAddCategoryButton() {
+
+    addCategoryBtn.style.display = "none";
+
+}
 function disableForm() {
 
     document.querySelectorAll(

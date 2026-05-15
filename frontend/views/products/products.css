@@ -390,6 +390,11 @@
     border-radius:16px;
 }
 
+.confirm-modal{
+    width:440px;
+}
+
+
 .modal-header{
     padding:20px 24px;
 
@@ -421,6 +426,13 @@
 .product-modal .modal-body{
     padding:0 24px 24px;
 }
+
+.modal-message{
+    color:#374151;
+    font-size:15px;
+    line-height:1.6;
+}
+
 
 /* =========================
    FORM

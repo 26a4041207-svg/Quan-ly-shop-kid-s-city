@@ -66,11 +66,6 @@ let currentEditId = null;
 const tableBody = document.getElementById("categoryTable");
 
 const searchInput = document.getElementById("searchCategory");
-
-const fromDateInput = document.getElementById("fromDate");
-
-const toDateInput = document.getElementById("toDate");
-
 const modal = document.getElementById("categoryModal");
 
 const openModalBtn = document.getElementById("openModalBtn");
@@ -182,59 +177,31 @@ function updateStats() {
 
 }
 
-// SEARCH + FILTER
+// SEARCH
 
-searchInput.addEventListener("keyup", filterData);
+searchInput.addEventListener("keyup", searchCategories);
 
-fromDateInput.addEventListener("change", filterData);
+function searchCategories() {
 
-toDateInput.addEventListener("change", filterData);
+    const keyword = searchInput.value.toLowerCase();
 
-function filterData() {
+    const filtered = categories.filter(category =>
 
-    const keyword =
-        searchInput.value.toLowerCase();
+        category.id.toLowerCase().includes(keyword)
 
-    const fromDate =
-        fromDateInput.value;
+        ||
 
-    const toDate =
-        toDateInput.value;
+        category.name.toLowerCase().includes(keyword)
 
-    const filtered = categories.filter(category => {
+        ||
 
-        const matchKeyword =
+        category.description.toLowerCase().includes(keyword)
 
-            category.id.toLowerCase().includes(keyword) ||
-
-            category.name.toLowerCase().includes(keyword) ||
-
-            category.description.toLowerCase().includes(keyword);
-
-        let matchDate = true;
-
-        if (fromDate) {
-
-            matchDate =
-                category.createdAt >= fromDate;
-
-        }
-
-        if (toDate && matchDate) {
-
-            matchDate =
-                category.createdAt <= toDate;
-
-        }
-
-        return matchKeyword && matchDate;
-
-    });
+    );
 
     renderTable(filtered);
 
 }
-
 // MODAL
 
 openModalBtn.addEventListener("click", () => {
