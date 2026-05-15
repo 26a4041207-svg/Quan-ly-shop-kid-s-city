@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Danh mục sản phẩm - Kid's City</title>
+
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+
+    <link rel="stylesheet" href="../assets/css/index.css">
+    <link rel="stylesheet" href="customers.css">
+
+</head>
+
+<body>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+
+        <div class="sidebar-header">
+
+            <div class="logo">
+
+                <i class='bx bxs-face'></i>
+
+                <div>
+                    <h2>Kid's City</h2>
+                    <p>Quản lý bán hàng</p>
+                </div>
+
+            </div>
+
+        </div>
+
+        <ul class="menu">
+
+            <li class="menu-item">
+                <a href="../dashboard.html">
+                    <i class='bx bx-grid-alt'></i>
+                    Tổng quan
+                </a>
+            </li>
+
+            <li class="menu-item">
+                <a href="../users.html">
+                    <i class='bx bx-user'></i>
+                    Quản lý người dùng
+                </a>
+            </li>
+
+            <li class="menu-item">
+                <a href="../imports.html">
+                    <i class='bx bx-box'></i>
+                    Quản lý nhập hàng
+                </a>
+            </li>
+
+            <!-- PRODUCT -->
+            <li class="menu-item has-submenu open active">
+
+                <a href="#" class="menu-toggle">
+
+                    <i class='bx bx-cube'></i>
+
+                    <span>Quản lý sản phẩm</span>
+
+                    <i class='bx bx-chevron-down arrow'></i>
+
+                </a>
+
+                <ul class="submenu">
+
+                    <li class="submenu-active">
+
+                        <a href="/frontend/views/products/categories.html">
+
+                            <i class='bx bx-purchase-tag-alt'></i>
+
+                            Danh mục
+
+                        </a>
+
+                    </li>
+
+                    <li>
+
+                        <a href="/frontend/views/products/list.html">
+
+                            <i class='bx bx-package'></i>
+
+                            Sản phẩm
+
+                        </a>
+
+                    </li>
+
+                </ul>
+
+            </li>
+
+            <!-- SALES -->
+            <li class="menu-item has-submenu">
+
+                <a href="#" class="menu-toggle">
+
+                    <i class='bx bx-cart'></i>
+
+                    <span>Quản lý bán hàng</span>
+
+                    <i class='bx bx-chevron-down arrow'></i>
+
+                </a>
+
+                <ul class="submenu">
+
+                    <li>
+                        <a href="../sales/invoices.html">
+                            <i class='bx bx-receipt'></i>
+                            Hóa đơn
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="../sales/exchanges.html">
+                            <i class='bx bx-transfer'></i>
+                            Đổi hàng
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="../sales/returns.html">
+                            <i class='bx bx-revision'></i>
+                            Trả hàng
+                        </a>
+                    </li>
+
+                </ul>
+
+            </li>
+
+            <li class="menu-item">
+
+                <a href="../customers.html">
+
+                    <i class='bx bx-user-pin'></i>
+
+                    Quản lý khách hàng
+
+                </a>
+
+            </li>
+            <li class="menu-item ">
+                <a href="#" class="menu-toggle">
+                    <i class='bx bx-bar-chart-alt-2'></i> <span>Quản lý báo cáo</span>
+                    <i class='bx bx-chevron-down arrow'></i>
+                </a>
+                <ul class="submenu">
+                    <li><a href="#"><i class='bx bx-line-chart'></i> Doanh thu</a></li>
+                    <li><a href="#"><i class='bx bx-box'></i> Sản phẩm</a></li>
+                    <li><a href="#"><i class='bx bx-group'></i> Khách hàng</a></li>
+                </ul>
+            </li>
+
+        </ul>
+
+        <div class="sidebar-user">
+
+            <div class="avatar">N</div>
+
+            <div class="user-info">
+                <h4>Nguyễn Văn An</h4>
+                <p>Chủ Shop</p>
+            </div>
+
+        </div>
+
+    </aside>
+<!-- MAIN -->
+     <div class="main-wrapper">
+
+        <!-- HEADER -->
+        <header class="top-header">
+
+            <div style="display:flex; align-items:center;">
+
+                <i class='bx bx-menu' id="mobile-menu-btn"></i>
+
+                <div class="search-bar">
+
+                    <i class='bx bx-search'></i>
+
+                    <input type="text" placeholder="Tìm kiếm tại đây...">
+
+                </div>
+
+            </div>
+
+            <div class="header-actions">
+
+                <i class='bx bx-bell notification-icon'></i>
+
+                <div class="header-user">
+
+                    <div class="avatar blue-bg">N</div>
+
+                    <div class="user-info mobile-hidden">
+                        <h4>Nguyễn Văn An</h4>
+                        <p>Chủ shop</p>
+                    </div>
+
+                    <i class='bx bx-chevron-down'></i>
+
+                </div>
+
+            </div>
+
+        </header>
+<div class="main-wrapper">
+
+    <!-- CONTENT -->
+    <main class="content-body">
+
+        <!-- PAGE HEADER -->
+        <div class="page-header">
+
+            <h1>Quản lý khách hàng</h1>
+
+            <p>Quản lý thông tin khách hàng trong hệ thống</p>
+
+        </div>
+
+        <!-- STATS -->
+        <div class="stats-grid">
+
+            <!-- TOTAL -->
+            <div class="stat-card">
+
+                <div>
+
+                    <p class="stat-title">
+                        Tổng khách hàng
+                    </p>
+
+                    <h3 class="stat-value"
+                        id="totalCustomers">
+                        0
+                    </h3>
+
+                </div>
+
+                <div class="stat-icon blue-light">
+
+                    <i class='bx bx-user'></i>
+
+                </div>
+
+            </div>
+
+            <!-- NEW -->
+            <div class="stat-card">
+
+                <div>
+
+                    <p class="stat-title">
+                        Khách mới tháng này
+                    </p>
+
+                    <h3 class="stat-value"
+                        id="newCustomers">
+                        0
+                    </h3>
+
+                </div>
+
+                <div class="stat-icon green-light">
+
+                    <i class='bx bx-user-plus'></i>
+
+                </div>
+
+            </div>
+
+            <!-- ORDERS -->
+            <div class="stat-card">
+
+                <div>
+
+                    <p class="stat-title">
+                        Tổng đơn hàng
+                    </p>
+
+                    <h3 class="stat-value"
+                        id="totalOrders">
+                        0
+                    </h3>
+
+                </div>
+
+                <div class="stat-icon orange-light">
+
+                    <i class='bx bx-receipt'></i>
+
+                </div>
+
+            </div>
+
+            <!-- AVG -->
+            <div class="stat-card">
+
+                <div>
+
+                    <p class="stat-title">
+                        TB đơn / khách
+                    </p>
+
+                    <h3 class="stat-value"
+                        id="avgOrders">
+                        0
+                    </h3>
+
+                </div>
+
+                <div class="stat-icon purple-light">
+
+                    <i class='bx bx-bar-chart'></i>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- TOOLBAR -->
+        <div class="toolbar">
+
+            <div class="toolbar-grid">
+
+                <!-- SEARCH -->
+                <div class="table-search">
+
+                    <i class='bx bx-search'></i>
+
+                    <input type="text"
+                           id="searchCustomer"
+                           placeholder="Tìm khách hàng...">
+
+                </div>
+
+                <!-- FROM DATE -->
+                <input type="date"
+                       id="fromDate"
+                       class="filter-input">
+
+                <!-- TO DATE -->
+                <input type="date"
+                       id="toDate"
+                       class="filter-input">
+
+                <!-- FILTER -->
+                <button class="btn-secondary"
+                        onclick="filterCustomers()">
+
+                    <i class='bx bx-filter-alt'></i>
+
+                    Lọc
+
+                </button>
+
+            </div>
+
+            <!-- ADD -->
+            <button class="btn-primary"
+                    onclick="openAddModal()">
+
+                <i class='bx bx-plus'></i>
+
+                Thêm khách hàng
+
+            </button>
+
+        </div>
+
+        <!-- TABLE -->
+        <div class="table-container">
+
+            <table class="customer-table">
+
+                <thead>
+
+                    <tr>
+
+                        <th>Mã KH</th>
+                        <th>Tên khách hàng</th>
+                        <th>Số điện thoại</th>
+                        <th>Ngày tạo</th>
+                        <th>Ngày cập nhật</th>
+                        <th>Thao tác</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody id="customerTableBody">
+
+                    <!-- RENDER JS -->
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </main>
+
+</div>
+
+<!-- ADD / EDIT MODAL -->
+<div class="modal" id="customerModal">
+
+    <div class="modal-content customer-modal">
+
+        <!-- HEADER -->
+        <div class="modal-header">
+
+            <h2 id="modalTitle">
+                Thêm khách hàng
+            </h2>
+
+            <button class="close-modal"
+                    onclick="closeCustomerModal()">
+
+                <i class='bx bx-x'></i>
+
+            </button>
+
+        </div>
+
+        <!-- BODY -->
+        <div class="modal-body">
+
+            <div class="form-grid">
+
+                <input type="hidden"
+                       id="customerId">
+
+                <!-- NAME -->
+                <div class="form-group full-width">
+
+                    <label>Tên khách hàng *</label>
+
+                    <input type="text"
+                           id="customerName">
+
+                </div>
+
+                <!-- PHONE -->
+                <div class="form-group full-width">
+
+                    <label>Số điện thoại *</label>
+
+                    <input type="text"
+                           id="customerPhone">
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- FOOTER -->
+        <div class="modal-footer">
+
+            <button class="btn-secondary"
+                    onclick="closeCustomerModal()">
+
+                Hủy
+
+            </button>
+
+            <button class="btn-primary"
+                    onclick="saveCustomer()">
+
+                Lưu
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="modal" id="detailModal">
+
+    <div class="modal-content customer-detail-modal">
+
+        <!-- HEADER -->
+        <div class="modal-header">
+
+            <h2>Chi tiết khách hàng</h2>
+
+            <button class="close-modal"
+                    onclick="closeDetailModal()">
+
+                <i class='bx bx-x'></i>
+
+            </button>
+
+        </div>
+
+        <!-- BODY -->
+        <div class="modal-body">
+
+            <!-- CUSTOMER INFO -->
+            <div class="customer-info"
+                 id="customerDetail">
+
+                <!-- RENDER JS -->
+
+            </div>
+
+            <!-- HISTORY -->
+            <div class="history-header">
+
+                <h3>Lịch sử mua hàng</h3>
+
+            </div>
+
+            <div class="table-container">
+
+                <table class="history-table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>Mã KH</th>
+                            <th>Mã hóa đơn</th>
+                            <th>Tổng tiền</th>
+                            <th>Ngày mua</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="purchaseHistoryBody">
+
+                        <!-- RENDER JS -->
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+<script src="customers.js"></script>
+</body>
+
+</html>
