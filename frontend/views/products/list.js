@@ -218,19 +218,16 @@ function getTodayDate() {
 
 const table = document.getElementById("productTable");
 
-const searchInput = document.getElementById("searchInput");
 
 const categoryFilter = document.getElementById("categoryFilter");
 
-const startDate = document.getElementById("startDate");
 
-const endDate = document.getElementById("endDate");
 
 const minPrice = document.getElementById("minPrice");
 
 const maxPrice = document.getElementById("maxPrice");
 
-const statusFilter = document.getElementById("statusFilter");
+const priceRangeText = document.getElementById("priceRangeText");
 
 const modal = document.getElementById("productModal");
 
@@ -522,22 +519,6 @@ function filterProducts() {
 
     let filtered = [...products];
 
-    const keyword = searchInput.value.toLowerCase();
-
-    if (keyword) {
-
-        filtered = filtered.filter(product =>
-
-            product.name.toLowerCase().includes(keyword)
-
-            ||
-
-            product.id.toLowerCase().includes(keyword)
-
-        );
-
-    }
-
     if (categoryFilter.value) {
 
         filtered = filtered.filter(product =>
@@ -548,51 +529,15 @@ function filterProducts() {
 
     }
 
-    if (statusFilter.value) {
-
-        filtered = filtered.filter(product =>
-
-            product.status === statusFilter.value
-
-        );
-
-    }
-
-    if (minPrice.value) {
+    if (minPrice.value && maxPrice.value) {
 
         filtered = filtered.filter(product =>
 
             product.price >= Number(minPrice.value)
 
-        );
-
-    }
-
-    if (maxPrice.value) {
-
-        filtered = filtered.filter(product =>
+            &&
 
             product.price <= Number(maxPrice.value)
-
-        );
-
-    }
-
-    if (startDate.value) {
-
-        filtered = filtered.filter(product =>
-
-            product.createdAt >= startDate.value
-
-        );
-
-    }
-
-    if (endDate.value) {
-
-        filtered = filtered.filter(product =>
-
-            product.createdAt <= endDate.value
 
         );
 
@@ -602,45 +547,76 @@ function filterProducts() {
 
 }
 
+function setupPriceRange() {
+
+    const prices = products.map(product => product.price);
+
+    const lowestPrice = Math.min(...prices);
+
+    const highestPrice = Math.max(...prices);
+
+    minPrice.min = lowestPrice;
+
+    minPrice.max = highestPrice;
+
+    minPrice.value = lowestPrice;
+
+    maxPrice.min = lowestPrice;
+
+    maxPrice.max = highestPrice;
+
+    maxPrice.value = highestPrice;
+
+    updatePriceRangeText();
+
+}
+
+function updatePriceRangeText() {
+
+    priceRangeText.innerText =
+        `${Number(minPrice.value).toLocaleString("vi-VN")}đ - ${Number(maxPrice.value).toLocaleString("vi-VN")}đ`;
+
+}
+
+function handlePriceRangeInput(event) {
+
+    if (Number(minPrice.value) > Number(maxPrice.value)) {
+
+        if (event.target === minPrice) {
+
+            maxPrice.value = minPrice.value;
+
+        } else {
+
+            minPrice.value = maxPrice.value;
+
+        }
+
+    }
+
+    updatePriceRangeText();
+
+    filterProducts();
+
+}
 // =========================
 // FILTER EVENTS
 // =========================
-
-searchInput.addEventListener(
-    "keyup",
-    filterProducts
-);
 
 categoryFilter.addEventListener(
     "change",
     filterProducts
 );
 
-statusFilter.addEventListener(
-    "change",
-    filterProducts
-);
-
 minPrice.addEventListener(
     "input",
-    filterProducts
+    handlePriceRangeInput
 );
 
 maxPrice.addEventListener(
     "input",
-    filterProducts
+    handlePriceRangeInput
 );
-
-startDate.addEventListener(
-    "change",
-    filterProducts
-);
-
-endDate.addEventListener(
-    "change",
-    filterProducts
-);
-
 // =========================
 // MODAL
 // =========================
@@ -785,6 +761,8 @@ saveProductBtn.addEventListener("click", () => {
         };
 
     }
+
+    setupPriceRange();
 
     renderProducts();
 
@@ -960,4 +938,5 @@ function enableForm() {
 // INIT
 // =========================
 
+setupPriceRange();
 renderProducts();

@@ -286,17 +286,7 @@
             <!-- FILTER -->
             <div class="toolbar">
 
-                <div class="toolbar-grid">
-
-                    <div class="table-search">
-
-                        <i class='bx bx-search'></i>
-
-                        <input type="text"
-                               id="searchInput"
-                               placeholder="Tìm sản phẩm...">
-
-                    </div>
+                <div class="toolbar-grid product-filter-grid">
 
                     <select id="categoryFilter" class="filter-select">
 
@@ -304,40 +294,35 @@
 
                     </select>
 
-                    <input type="date"
-                           id="startDate"
-                           class="filter-input">
+                    <div class="price-range-filter">
 
-                    <input type="date"
-                           id="endDate"
-                           class="filter-input">
+                        <div class="price-range-header">
 
-                    <input type="number"
-                           id="minPrice"
-                           class="filter-input"
-                           placeholder="Giá từ">
+                            <span>Khoảng giá</span>
 
-                    <input type="number"
-                           id="maxPrice"
-                           class="filter-input"
-                           placeholder="Giá đến">
+                            <strong id="priceRangeText">0đ - 0đ</strong>
 
-                    <select id="statusFilter" class="filter-select">
+                        </div>
 
-                        <option value="selling">
-                            Đang bán
-                        </option>
+                        <div class="range-slider">
 
-                        <option value="">
-                            Tất cả
-                        </option>
+                            <input type="range"
+                                   id="minPrice"
+                                   min="0"
+                                   max="0"
+                                   step="10000"
+                                   value="0">
 
-                        <option value="stopped">
-                            Ngừng bán
-                        </option>
+                            <input type="range"
+                                   id="maxPrice"
+                                   min="0"
+                                   max="0"
+                                   step="10000"
+                                   value="0">
 
-                    </select>
+                        </div>
 
+                    </div>
                 </div>
 
                 <button class="btn-primary" id="openModalBtn">

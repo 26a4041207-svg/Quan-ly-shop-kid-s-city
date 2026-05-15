@@ -73,6 +73,14 @@
 
     font-weight:600;
 }
+.toolbar > .btn-primary{
+    width:170px;
+    max-width:170px;
+    height:42px;
+    padding:0 14px;
+    flex:0 0 170px;
+    white-space:nowrap;
+}
 
 .btn-primary{
     background:#2563eb;
@@ -341,6 +349,11 @@
 
     .toolbar-grid{
         grid-template-columns:1fr;
+    }
+    .toolbar > .btn-primary{
+        width:170px;
+        max-width:100%;
+        flex-basis:170px;
     }
 
     .customer-info{
