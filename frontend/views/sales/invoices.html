@@ -1,0 +1,72 @@
+<div class="sales-page" id="invoice-page">
+    <div class="page-header">
+        <h1>Quản lý hóa đơn</h1>
+        <p>Quản lý hóa đơn bán hàng</p>
+    </div>
+
+    <div class="sales-stats">
+        <div class="sales-stat"><span>Tổng hóa đơn</span><strong>14</strong></div>
+        <div class="sales-stat"><span>Tổng doanh thu</span><strong class="green">4.885.000đ</strong></div>
+        <div class="sales-stat"><span>Tiền mặt</span><strong class="blue">8</strong></div>
+        <div class="sales-stat"><span>Chuyển khoản</span><strong class="purple">6</strong></div>
+    </div>
+
+    <div class="sales-toolbar">
+        <label class="sales-search"><i class='bx bx-search'></i><input type="text" id="invoice-search" placeholder="Tìm kiếm hóa đơn..."></label>
+        <button class="sales-btn primary" data-open="invoice-create"><i class='bx bx-plus'></i> Tạo hóa đơn</button>
+    </div>
+
+    <div class="sales-card">
+        <table class="sales-table">
+            <thead><tr><th>Mã hóa đơn</th><th>Ngày lập</th><th>Khách hàng</th><th>Nhân viên</th><th>Tổng tiền</th><th>PTTT</th><th>Thao tác</th></tr></thead>
+            <tbody id="invoice-table">
+                <tr data-key="HD001 lê thị cẩm ly trần thị bình tiền mặt"><td><strong>HD001</strong></td><td>2026-04-15</td><td>Lê Thị Cẩm Ly</td><td>Trần Thị Bình</td><td class="green font-weight-600">375.000đ</td><td>Tiền mặt</td><td><button class="action-eye" data-open="invoice-detail"><i class='bx bx-show'></i></button></td></tr>
+                <tr data-key="HD002 phạm văn dũng trần thị bình chuyển khoản"><td><strong>HD002</strong></td><td>2026-04-16</td><td>Phạm Văn Dũng</td><td>Trần Thị Bình</td><td class="green font-weight-600">220.000đ</td><td>Chuyển khoản</td><td><button class="action-eye" data-open="invoice-detail"><i class='bx bx-show'></i></button></td></tr>
+                <tr data-key="HD003 hoàng thị mai lê minh châu tiền mặt"><td><strong>HD003</strong></td><td>2026-04-18</td><td>Hoàng Thị Mai</td><td>Lê Minh Châu</td><td class="green font-weight-600">545.000đ</td><td>Tiền mặt</td><td><button class="action-eye" data-open="invoice-detail"><i class='bx bx-show'></i></button></td></tr>
+                <tr data-key="HD004 nguyễn minh nhật trần thị bình chuyển khoản"><td><strong>HD004</strong></td><td>2026-04-20</td><td>Nguyễn Minh Nhật</td><td>Trần Thị Bình</td><td class="green font-weight-600">320.000đ</td><td>Chuyển khoản</td><td><button class="action-eye" data-open="invoice-detail"><i class='bx bx-show'></i></button></td></tr>
+                <tr data-key="HD005 trần thu hà lê minh châu tiền mặt"><td><strong>HD005</strong></td><td>2026-04-22</td><td>Trần Thu Hà</td><td>Lê Minh Châu</td><td class="green font-weight-600">490.000đ</td><td>Tiền mặt</td><td><button class="action-eye" data-open="invoice-detail"><i class='bx bx-show'></i></button></td></tr>
+                <tr data-key="HD006 võ thanh tùng trần thị bình tiền mặt"><td><strong>HD006</strong></td><td>2026-04-25</td><td>Võ Thanh Tùng</td><td>Trần Thị Bình</td><td class="green font-weight-600">280.000đ</td><td>Tiền mặt</td><td><button class="action-eye" data-open="invoice-detail"><i class='bx bx-show'></i></button></td></tr>
+                <tr data-key="HD007 đỗ bảo ngọc lê minh châu chuyển khoản"><td><strong>HD007</strong></td><td>2026-04-27</td><td>Đỗ Bảo Ngọc</td><td>Lê Minh Châu</td><td class="green font-weight-600">360.000đ</td><td>Chuyển khoản</td><td><button class="action-eye" data-open="invoice-detail"><i class='bx bx-show'></i></button></td></tr>
+                <tr data-key="HD008 bùi gia hân trần thị bình tiền mặt"><td><strong>HD008</strong></td><td>2026-04-29</td><td>Bùi Gia Hân</td><td>Trần Thị Bình</td><td class="green font-weight-600">410.000đ</td><td>Tiền mặt</td><td><button class="action-eye" data-open="invoice-detail"><i class='bx bx-show'></i></button></td></tr>
+                <tr data-key="HD009 phạm ngọc anh lê minh châu chuyển khoản"><td><strong>HD009</strong></td><td>2026-05-01</td><td>Phạm Ngọc Anh</td><td>Lê Minh Châu</td><td class="green font-weight-600">315.000đ</td><td>Chuyển khoản</td><td><button class="action-eye" data-open="invoice-detail"><i class='bx bx-show'></i></button></td></tr>
+                <tr data-key="HD010 ngô minh quân trần thị bình tiền mặt"><td><strong>HD010</strong></td><td>2026-05-02</td><td>Ngô Minh Quân</td><td>Trần Thị Bình</td><td class="green font-weight-600">260.000đ</td><td>Tiền mặt</td><td><button class="action-eye" data-open="invoice-detail"><i class='bx bx-show'></i></button></td></tr>
+                <tr data-key="HD011 huỳnh khánh linh lê minh châu chuyển khoản"><td><strong>HD011</strong></td><td>2026-05-04</td><td>Huỳnh Khánh Linh</td><td>Lê Minh Châu</td><td class="green font-weight-600">520.000đ</td><td>Chuyển khoản</td><td><button class="action-eye" data-open="invoice-detail"><i class='bx bx-show'></i></button></td></tr>
+                <tr data-key="HD012 cao tuấn kiệt trần thị bình tiền mặt"><td><strong>HD012</strong></td><td>2026-05-05</td><td>Cao Tuấn Kiệt</td><td>Trần Thị Bình</td><td class="green font-weight-600">300.000đ</td><td>Tiền mặt</td><td><button class="action-eye" data-open="invoice-detail"><i class='bx bx-show'></i></button></td></tr>
+                <tr data-key="HD013 lý thanh thảo lê minh châu tiền mặt"><td><strong>HD013</strong></td><td>2026-05-06</td><td>Lý Thanh Thảo</td><td>Lê Minh Châu</td><td class="green font-weight-600">445.000đ</td><td>Tiền mặt</td><td><button class="action-eye" data-open="invoice-detail"><i class='bx bx-show'></i></button></td></tr>
+                <tr data-key="HD014 vũ hải nam trần thị bình chuyển khoản"><td><strong>HD014</strong></td><td>2026-05-08</td><td>Vũ Hải Nam</td><td>Trần Thị Bình</td><td class="green font-weight-600">365.000đ</td><td>Chuyển khoản</td><td><button class="action-eye" data-open="invoice-detail"><i class='bx bx-show'></i></button></td></tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="sales-pagination" id="invoice-pagination"></div>
+
+    <div class="sales-modal" id="invoice-create">
+        <div class="sales-dialog">
+            <div class="sales-modal-header"><h3>Tạo hóa đơn mới</h3><button class="modal-close" data-close>&times;</button></div>
+            <div class="sales-modal-body">
+                <div class="form-grid">
+                    <div class="field"><label>Khách hàng <span class="required">*</span></label><select><option>-- Chọn khách hàng --</option><option>Lê Thị Cẩm Ly</option><option>Nguyễn Minh Nhật</option></select></div>
+                    <div class="field"><label>Ngày lập hóa đơn</label><input type="date" value="2026-05-06"></div>
+                    <div class="field full"><label>Ghi chú</label><input type="text" placeholder="Ghi chú hóa đơn (tùy chọn)..."></div>
+                </div>
+                <h4 class="section-title add-title">Thêm sản phẩm</h4>
+                <div class="add-product">
+                    <div class="field"><label>Chọn sản phẩm</label><select><option>-- Chọn sản phẩm --</option><option>Áo thun Mickey Mouse</option><option>Áo thun Elsa Frozen</option></select></div>
+                    <div class="field"><label>Số lượng</label><input type="number" min="1" value="1"></div>
+                    <button class="sales-btn primary"><i class='bx bx-plus'></i> Thêm SP</button>
+                </div>
+                <div class="sales-card"><table class="sales-table"><thead><tr><th>STT</th><th>Mã SP</th><th>Sản phẩm</th><th>SL</th><th>Đơn giá</th><th>Thành tiền</th><th>Thao tác</th></tr></thead><tbody><tr><td colspan="7" class="empty-row">Chưa có sản phẩm. Thêm sản phẩm ở trên.</td></tr></tbody></table></div>
+                <div class="modal-actions invoice-actions"><a class="add-customer-link" href="#"><i class='bx bx-user-plus'></i> Thêm khách hàng mới</a><div class="action-buttons"><button class="sales-btn light" data-close>Hủy</button><button class="sales-btn primary">Tạo hóa đơn</button></div></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="sales-modal" id="invoice-detail">
+        <div class="sales-dialog detail"><div class="sales-modal-body">
+            <h2 class="detail-title">Chi tiết hóa đơn HD001</h2>
+            <div class="detail-grid"><div class="detail-item"><span>Khách hàng</span><strong>Lê Thị Cẩm Ly</strong></div><div class="detail-item"><span>Nhân viên</span><strong>Trần Thị Bình</strong></div><div class="detail-item"><span>Ngày lập</span><strong>2026-04-15</strong></div><div class="detail-item"><span>Phương thức thanh toán</span><strong>Tiền mặt</strong></div><div class="detail-item"><span>Ghi chú</span><strong>Khách hàng quen</strong></div></div>
+            <h3 class="section-title">Chi tiết sản phẩm</h3>
+            <table class="sales-table"><thead><tr><th>Sản phẩm</th><th>Đơn giá</th><th>SL</th><th>Giảm giá</th><th>Thành tiền</th></tr></thead><tbody><tr><td>Áo thun Mickey Mouse</td><td>120.000đ</td><td>2</td><td>0đ</td><td><strong>240.000đ</strong></td></tr><tr><td>Áo thun Elsa Frozen</td><td>135.000đ</td><td>1</td><td>0đ</td><td><strong>135.000đ</strong></td></tr></tbody></table>
+            <div class="total-line">Tổng tiền: <span class="green">375.000đ</span></div><button class="sales-btn primary block" data-close>Đóng</button>
+        </div></div>
+    </div>
+</div>

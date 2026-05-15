@@ -1,0 +1,153 @@
+/* =========================================================
+   SALE COMMON - Dùng chung cho hóa đơn, đổi hàng, trả hàng
+   ========================================================= */
+.sales-page { color: #111827; }
+.sales-toolbar { display: flex; gap: 12px; align-items: center; margin-bottom: 18px; }
+.sales-search { flex: 1; display: flex; align-items: center; gap: 10px; background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 0 14px; height: 44px; }
+.sales-search:focus-within { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, .12); }
+.sales-search i { color: #94a3b8; font-size: 20px; }
+.sales-search input { border: 0; outline: 0; width: 100%; font-size: 14px; background: transparent; }
+
+.sales-btn { border: 0; border-radius: 10px; padding: 12px 16px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
+.sales-btn.primary { background: #2f80ed; color: #fff; }
+.sales-btn.light { background: #fff; color: #475569; border: 1px solid #e5e7eb; }
+.sales-btn.block { width: 100%; justify-content: center; }
+.btn-pink { background: #fb7185 !important; }
+.btn-green { background: #4ade80 !important; }
+
+.green { color: #00a651 !important; }
+.blue { color: #2563eb !important; }
+.purple { color: #8b5cf6 !important; }
+.red { color: #ef0000 !important; }
+.mt-28 { margin-top: 28px; }
+
+/* =========================================================
+   SALE STATS - Các thẻ số liệu ở đầu trang
+   ========================================================= */
+.sales-stats { display: grid; grid-template-columns: repeat(4, minmax(150px, 1fr)); gap: 18px; margin-bottom: 18px; }
+.sales-stat { background: #fff; border: 1px solid #eef2f7; border-radius: 10px; padding: 18px; }
+.sales-stat span { color: #64748b; font-size: 13px; }
+.sales-stat strong { display: block; margin-top: 8px; font-size: 22px; }
+
+/* =========================================================
+   SALE TABLE - Bảng danh sách và bảng chi tiết trong modal
+   ========================================================= */
+.sales-card { background: #fff; border: 1px solid #eef2f7; border-radius: 12px; overflow: hidden; }
+.sales-table { width: 100%; border-collapse: collapse; }
+.sales-table th { background: #f8fafc; color: #64748b; font-size: 12px; font-weight: 700; text-transform: none; text-align: left; }
+.sales-table th, .sales-table td { padding: 14px 16px; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
+.sales-table tr:last-child td { border-bottom: 0; }
+.action-group { display: inline-flex; align-items: center; gap: 8px; }
+.action-btn { border: 0; background: transparent; cursor: pointer; font-size: 18px; width: 28px; height: 28px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; }
+.action-btn.view { color: #2563eb; }
+.action-btn.edit { color: #f59e0b; }
+.action-btn.delete { color: #ef4444; }
+.action-btn:hover { background: #f1f5f9; }
+.action-eye { border: 0; background: transparent; color: #2563eb; cursor: pointer; font-size: 18px; }
+.empty-row { text-align: center; color: #94a3b8; padding: 42px !important; }
+
+/* =========================================================
+   SALE MODAL - Khung popup tạo mới và xem chi tiết
+   ========================================================= */
+.sales-modal { position: fixed; inset: 0; background: rgba(15, 23, 42, .35); display: none; align-items: center; justify-content: center; z-index: 3000; padding: 24px; }
+.sales-modal.active { display: flex; }
+.sales-dialog { background: #fff; width: min(980px, 100%); max-height: 92vh; overflow: auto; border-radius: 12px; box-shadow: 0 24px 60px rgba(15, 23, 42, .18); }
+.sales-dialog.detail { width: min(760px, 100%); }
+.sales-modal-header { display: flex; align-items: center; justify-content: space-between; padding: 22px 28px; border-bottom: 1px solid #eef2f7; }
+.sales-modal-header h3 { font-size: 18px; }
+.modal-close { border: 0; background: transparent; color: #64748b; font-size: 24px; cursor: pointer; }
+.sales-modal-body { padding: 24px 28px 28px; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 12px; padding-top: 20px; margin-top: 20px; border-top: 1px solid #eef2f7; }
+
+/* =========================================================
+   SALE FORM - Input/select dùng trong các form tạo mới
+   ========================================================= */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.field label { display: block; color: #475569; font-weight: 600; font-size: 14px; margin-bottom: 8px; }
+.field input, .field select { width: 100%; height: 42px; border: 1px solid #e5e7eb; border-radius: 10px; padding: 0 14px; outline: none; color: #334155; background: #fff; }
+.field.full { grid-column: 1 / -1; }
+.required { color: #ef4444; }
+
+/* =========================================================
+   DETAIL VIEW - Layout các dòng thông tin trong modal chi tiết
+   ========================================================= */
+.detail-title { margin-bottom: 26px; }
+.section-title { margin-bottom: 14px; }
+.add-title { margin-top: 22px; }
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 26px 80px; margin-bottom: 24px; }
+.detail-item span { display: block; color: #64748b; font-weight: 600; margin-bottom: 6px; }
+.detail-item strong { font-size: 16px; }
+.total-line { text-align: right; font-size: 20px; font-weight: 700; margin: 22px 0; }
+
+/* =========================================================
+   INVOICES - Giao diện riêng của tạo hóa đơn
+   ========================================================= */
+.add-product { background: #eaf3ff; border: 1px solid #d7e8ff; border-radius: 12px; padding: 16px; display: grid; grid-template-columns: 1fr 120px auto; gap: 12px; align-items: end; margin: 16px 0; }
+.invoice-actions { align-items: center; justify-content: space-between; }
+.invoice-actions .action-buttons { display: flex; gap: 12px; }
+.add-customer-link { display: inline-flex; align-items: center; gap: 8px; color: #2563eb; font-weight: 600; padding: 12px 0; }
+.add-customer-link i { font-size: 20px; }
+.product-code-link { color: #2563eb; font-weight: 700; text-decoration: none; }
+.product-code-link:hover { text-decoration: underline; }
+.invoice-code-link { color: #1d4ed8; font-weight: 600; text-decoration: none; }
+.invoice-code-link:hover { text-decoration: underline; }
+.draft-actions { display: inline-flex; align-items: center; gap: 8px; }
+.draft-action { border: 0; background: transparent; width: 30px; height: 30px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; }
+.draft-action.edit { color: #f59e0b; }
+.draft-action.delete { color: #ef4444; }
+.draft-action:hover { background: #f1f5f9; }
+
+/* Phân trang bảng hóa đơn, đặt dưới góc phải bảng */
+.sales-pagination { display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin-top: 14px; }
+.page-btn { min-width: 36px; height: 36px; border: 1px solid #e5e7eb; background: #fff; color: #475569; border-radius: 9px; cursor: pointer; font-weight: 600; }
+.page-btn:hover { border-color: #2f80ed; color: #2f80ed; }
+.page-btn.active { background: #2f80ed; border-color: #2f80ed; color: #fff; }
+.page-btn:disabled { opacity: .45; cursor: not-allowed; }
+
+/* =========================================================
+   EXCHANGES - Giao diện riêng của tạo phiếu đổi hàng
+   ========================================================= */
+.swap-panel { border-radius: 12px; padding: 16px; display: grid; grid-template-columns: 1fr 120px auto; gap: 12px; align-items: end; margin: 14px 0; }
+.swap-panel.old { background: #fff1f2; border: 1px solid #fecdd3; }
+.swap-panel.new { background: #ecfdf5; border: 1px solid #bbf7d0; }
+.dot-title { display: flex; align-items: center; gap: 8px; font-weight: 700; color: #334155; margin-top: 18px; }
+.dot-title::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #ef4444; }
+.dot-title.new::before { background: #22c55e; }
+
+/* =========================================================
+   RETURNS - Giao diện riêng của tạo phiếu trả hàng
+   ========================================================= */
+.return-panel { background: #fff1f2; border: 1px solid #fecdd3; border-radius: 12px; padding: 16px; display: grid; grid-template-columns: 1fr 120px auto; gap: 12px; align-items: end; margin: 14px 0; }
+
+/* Dòng hiển thị sản phẩm vừa chọn trong form đổi/trả */
+.selected-items { display: flex; justify-content: space-between; gap: 12px; margin: -6px 0 12px; padding: 10px 14px; border-radius: 10px; background: #f8fafc; color: #334155; font-size: 14px; }
+.selected-items strong { color: #111827; }
+
+/* =========================================================
+   RESPONSIVE - Co layout trên tablet/mobile
+   ========================================================= */
+@media (max-width: 900px) {
+    .sales-stats { grid-template-columns: repeat(2, 1fr); }
+    .add-product, .swap-panel, .return-panel, .form-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 640px) {
+    .sales-toolbar { flex-direction: column; align-items: stretch; }
+    .sales-stats { grid-template-columns: 1fr; }
+    .sales-card { overflow-x: auto; }
+    .detail-grid { grid-template-columns: 1fr; }
+    .invoice-actions { align-items: stretch; flex-direction: column; }
+    .invoice-actions .action-buttons { justify-content: flex-end; }
+}
+/* =========================================================
+   EDIT/DELETE MODAL - Popup sửa và xác nhận xóa ở giữa màn hình
+   ========================================================= */
+.edit-dialog { max-width: 860px; }
+.edit-summary { color: #64748b; margin-bottom: 18px; line-height: 1.5; }
+.edit-grid { margin-bottom: 20px; }
+.edit-section-title { margin-top: 18px; }
+.sales-btn.danger { background: #ef4444; color: #fff; }
+.delete-message { text-align: center; padding: 14px 10px 4px; }
+.delete-message i { color: #ef4444; font-size: 48px; margin-bottom: 12px; }
+.delete-message p { font-size: 18px; font-weight: 600; color: #111827; margin-bottom: 8px; }
+.delete-message span { color: #64748b; font-size: 14px; }

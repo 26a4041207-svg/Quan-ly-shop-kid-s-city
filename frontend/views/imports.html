@@ -1,0 +1,70 @@
+<div class="import-page" id="import-page">
+    <div class="page-header">
+        <h1>Quản lý nhập hàng</h1>
+        <p>Quản lý phiếu nhập hàng</p>
+    </div>
+
+    <div class="import-stats">
+        <div class="import-stat"><span>Tổng phiếu nhập</span><strong>10</strong></div>
+    </div>
+
+    <div class="import-toolbar">
+        <label class="import-search"><i class='bx bx-search'></i><input type="text" id="import-search" placeholder="Tìm kiếm phiếu nhập..."></label>
+        <button class="import-btn primary" data-import-open="import-create"><i class='bx bx-plus'></i> Tạo phiếu nhập</button>
+    </div>
+
+    <div class="import-card">
+        <table class="import-table">
+            <thead><tr><th>Mã phiếu nhập</th><th>Ngày nhập</th><th>Người nhập</th><th>Thao tác</th></tr></thead>
+            <tbody id="import-table">
+                <tr data-key="NH001 2026-04-01 nguyễn văn an"><td><strong>NH001</strong></td><td>2026-04-01</td><td>Nguyễn Văn An</td><td></td></tr>
+                <tr data-key="NH002 2026-04-05 nguyễn văn an"><td><strong>NH002</strong></td><td>2026-04-05</td><td>Nguyễn Văn An</td><td></td></tr>
+                <tr data-key="NH003 2026-04-08 nguyễn văn an"><td><strong>NH003</strong></td><td>2026-04-08</td><td>Nguyễn Văn An</td><td></td></tr>
+                <tr data-key="NH004 2026-04-12 nguyễn văn an"><td><strong>NH004</strong></td><td>2026-04-12</td><td>Nguyễn Văn An</td><td></td></tr>
+                <tr data-key="NH005 2026-04-15 nguyễn văn an"><td><strong>NH005</strong></td><td>2026-04-15</td><td>Nguyễn Văn An</td><td></td></tr>
+                <tr data-key="NH006 2026-04-18 nguyễn văn an"><td><strong>NH006</strong></td><td>2026-04-18</td><td>Nguyễn Văn An</td><td></td></tr>
+                <tr data-key="NH007 2026-04-22 lê minh châu"><td><strong>NH007</strong></td><td>2026-04-22</td><td>Lê Minh Châu</td><td></td></tr>
+                <tr data-key="NH008 2026-04-25 trần thị bình"><td><strong>NH008</strong></td><td>2026-04-25</td><td>Trần Thị Bình</td><td></td></tr>
+                <tr data-key="NH009 2026-04-29 nguyễn văn an"><td><strong>NH009</strong></td><td>2026-04-29</td><td>Nguyễn Văn An</td><td></td></tr>
+                <tr data-key="NH010 2026-05-02 lê minh châu"><td><strong>NH010</strong></td><td>2026-05-02</td><td>Lê Minh Châu</td><td></td></tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="import-pagination" id="import-pagination"></div>
+
+    <div class="import-modal" id="import-create">
+        <div class="import-dialog">
+            <div class="import-modal-header"><h3>Tạo phiếu nhập hàng</h3><button class="modal-close" data-import-close>&times;</button></div>
+            <div class="import-modal-body">
+                <div class="form-grid">
+                    <div class="field"><label>Nhà cung cấp <span class="required">*</span></label><input data-import-field="supplier" type="text" placeholder="Tên nhà cung cấp..."></div>
+                    <div class="field"><label>Ngày nhập</label><input data-import-field="date" type="date" value="2026-05-06"></div>
+                    <div class="field full"><label>Ghi chú</label><input data-import-field="note" type="text" placeholder="Ghi chú phiếu nhập..."></div>
+                </div>
+
+                <h4 class="import-section-title">Thêm sản phẩm</h4>
+                <div class="import-add-product">
+                    <div class="field"><label>Chọn hoặc nhập sản phẩm</label><input data-import-product list="import-product-options" type="text" placeholder="Chọn hoặc nhập tên sản phẩm..."><datalist id="import-product-options"><option value="Áo thun Mickey Mouse"><option value="Áo thun Elsa Frozen"><option value="Áo thun Spider-Man"><option value="Váy hoa nhí công chúa"></datalist></div>
+                    <div class="field"><label>Số lượng</label><input data-import-qty type="number" min="1" value="1"></div>
+                    <div class="field"><label>Giá nhập (đ)</label><input data-import-price type="number" min="0" placeholder="Tự động"></div>
+                    <button class="import-btn primary" data-import-add-product><i class='bx bx-plus'></i> Thêm SP</button>
+                </div>
+
+                <div class="import-card"><table class="import-table"><thead><tr><th>STT</th><th>SẢN PHẨM</th><th>SL</th><th>ĐƠN GIÁ</th><th>THÀNH TIỀN</th><th>THAO TÁC</th></tr></thead><tbody data-import-product-list><tr><td colspan="6" class="empty-row">Chưa có sản phẩm. Thêm ở trên.</td></tr></tbody></table></div>
+                <div class="import-modal-actions"><button class="import-btn light" data-import-close>Hủy</button><button class="import-btn primary" data-import-save-create>Tạo phiếu nhập</button></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="import-modal" id="import-detail">
+        <div class="import-dialog detail">
+            <div class="import-modal-body">
+                <h2 class="detail-title">Chi tiết phiếu nhập NH001</h2>
+                <div class="detail-grid"><div class="detail-item"><span>Người nhập</span><strong>Nguyễn Văn An</strong></div><div class="detail-item"><span>Ngày nhập</span><strong>2026-04-01</strong></div></div>
+                <h3 class="import-section-title">Chi tiết sản phẩm</h3>
+                <table class="import-table"><thead><tr><th>Sản phẩm</th><th>Số lượng nhập</th></tr></thead><tbody><tr><td>Áo thun Mickey Mouse</td><td><strong>100</strong></td></tr><tr><td>Áo thun Elsa Frozen</td><td><strong>80</strong></td></tr><tr><td>Áo thun Spider-Man</td><td><strong>120</strong></td></tr></tbody></table>
+                <button class="import-btn primary block" data-import-close>Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
