@@ -1,4 +1,12 @@
 document.addEventListener("DOMContentLoaded", () => {
+    // 0. CẬP NHẬT TÊN HIỂN THỊ TỪ LOCALSTORAGE
+    const currentUser = localStorage.getItem('currentUser');
+    if (currentUser) {
+        // Cập nhật tên ở các vị trí nếu muốn (Optional)
+        const profileUser = document.getElementById('profile-username');
+        if(profileUser) profileUser.innerText = currentUser;
+    }
+
     // 1. CHUYỂN TRANG (SPA ROUTING)
     const loadPage = async (page) => {
         const content = document.getElementById('main-content');
@@ -6,32 +14,13 @@ document.addEventListener("DOMContentLoaded", () => {
             const res = await fetch(`views/${page}.html`);
             if (!res.ok) throw new Error();
             content.innerHTML = await res.text();
-            if (window.initSalePage) window.initSalePage(content);
-            if (window.initImportPage) window.initImportPage(content);
         } catch {
-            content.innerHTML = "<h2>Trang đang cập nhật...</h2>";
+            content.innerHTML = `<div style="background: white; padding: 30px; border-radius: 15px;"><h2>Trang đang cập nhật...</h2></div>`;
         }
     };
-    loadPage('dashboard'); // Mặc định load dashboard
+    loadPage('dashboard');
 
-    document.querySelectorAll('[data-target]').forEach(link => {
-        link.addEventListener('click', (e) => {
-            e.preventDefault();
-            loadPage(link.dataset.target);
-
-            document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
-            document.querySelectorAll('.submenu a').forEach(item => item.classList.remove('active'));
-
-            const currentItem = link.closest('.menu-item');
-            if (currentItem) {
-                currentItem.classList.add('active');
-                if (currentItem.classList.contains('has-submenu')) currentItem.classList.add('open');
-            }
-
-            if (link.closest('.submenu')) link.classList.add('active');
-        });
-    });
-    // 2. SIDEBAR MENU TOGGLE
+    // 2. SIDEBAR MENU TOGGLE & ACTIVE
     document.querySelectorAll('.menu-toggle').forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.preventDefault();
@@ -39,14 +28,44 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    // 3. DROPDOWN HEADER
-    const userDrop = document.getElementById('user-dropdown');
-    userDrop.addEventListener('click', (e) => {
-        e.stopPropagation();
-        userDrop.querySelector('.dropdown-menu').classList.toggle('show');
+    document.querySelectorAll('.menu-item > a').forEach(link => {
+        link.addEventListener('click', function() {
+            if(!this.classList.contains('menu-toggle')) {
+                document.querySelectorAll('.menu-item').forEach(li => li.classList.remove('active'));
+                this.parentElement.classList.add('active');
+            }
+        });
     });
 
-    // 4. MODALS (PROFILE & PASSWORD)
+    // 3. DROPDOWNS (User & Notifications)
+    const userDrop = document.getElementById('user-dropdown');
+    const notiDrop = document.getElementById('notification-dropdown');
+
+    const closeAllDropdowns = () => {
+        document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('show'));
+    };
+
+    userDrop.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const menu = userDrop.querySelector('.dropdown-menu');
+        const isShowing = menu.classList.contains('show');
+        closeAllDropdowns();
+        if (!isShowing) menu.classList.add('show');
+    });
+
+    notiDrop.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const menu = notiDrop.querySelector('.dropdown-menu');
+        const isShowing = menu.classList.contains('show');
+        closeAllDropdowns();
+        if (!isShowing) menu.classList.add('show');
+        
+        // Ẩn chấm đỏ khi click xem thông báo
+        const dot = notiDrop.querySelector('.badge-dot');
+        if (dot) dot.style.display = 'none';
+    });
+
+    // 4. MODALS
     const profileModal = document.getElementById('modal-profile');
     const passwordModal = document.getElementById('modal-password');
 
@@ -60,41 +79,24 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    // CLICK RA NGOÀI ĐỂ ĐÓNG TẤT CẢ
+    // 5. ĐĂNG XUẤT (LOGOUT LỖI TỪ LOCALSTORAGE VÀ CHUYỂN TRANG)
+    const logoutBtn = document.querySelector('.logout-item');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => {
+            if(confirm("Bạn có chắc chắn muốn đăng xuất?")) {
+                localStorage.removeItem('isLoggedIn');
+                localStorage.removeItem('currentUser');
+                window.location.href = 'login.html';
+            }
+        });
+    }
+
+    // 6. CLICK OUTSIDE
     window.addEventListener('click', (e) => {
-        document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('show'));
+        closeAllDropdowns();
         if (e.target.classList.contains('modal-overlay')) {
             profileModal.classList.remove('active');
             passwordModal.classList.remove('active');
         }
-    });
-
-// Xử lý Dropdown thông báo
-    const notiBtn = document.getElementById('notification-dropdown');
-
-    if (notiBtn) {
-        notiBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            
-            // Đóng các dropdown khác nếu đang mở
-            document.querySelectorAll('.dropdown-menu').forEach(menu => {
-                if (menu !== this.querySelector('.dropdown-menu')) {
-                    menu.classList.remove('show');
-                }
-            });
-
-            // Toggle menu thông báo
-            this.querySelector('.dropdown-menu').classList.toggle('show');
-            
-            // (Tùy chọn) Ẩn chấm đỏ sau khi người dùng bấm xem
-            const dot = this.querySelector('.badge-dot');
-            if (dot) dot.style.display = 'none'; 
-        });
-    }
-
-    // Bấm ra ngoài màn hình thì đóng menu
-    window.addEventListener('click', function() {
-        const menus = document.querySelectorAll('.dropdown-menu');
-        menus.forEach(m => m.classList.remove('show'));
     });
 });

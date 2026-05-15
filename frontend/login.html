@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng nhập - Kid's City</title>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: #1e3a8a; background-image: radial-gradient(circle at 30% 50%, rgba(255,255,255,0.08) 0%, transparent 40%), radial-gradient(circle at 30% 50%, rgba(255,255,255,0.04) 0%, transparent 60%); display: flex; height: 100vh; align-items: center; justify-content: center; color: #fff; }
+        .login-wrapper { display: flex; width: 100%; max-width: 1000px; align-items: center; gap: 60px; padding: 20px; }
+        .login-left { flex: 1; display: flex; flex-direction: column; align-items: center; text-align: center; }
+        .logo-box { width: 80px; height: 80px; background: rgba(255, 255, 255, 0.2); border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 40px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .login-left h1 { font-size: 36px; font-weight: 700; margin-bottom: 10px; }
+        .login-left p { color: #bfdbfe; font-size: 15px; margin-bottom: 40px; }
+        .stats-grid { display: flex; gap: 15px; }
+        .stat-item { background: rgba(255, 255, 255, 0.1); padding: 15px 20px; border-radius: 12px; backdrop-filter: blur(10px); min-width: 110px; }
+        .stat-item h3 { font-size: 20px; margin-bottom: 4px; }
+        .stat-item span { font-size: 12px; color: #bfdbfe; }
+        .login-right { flex: 1; display: flex; justify-content: flex-end; }
+        .login-card { background: #fff; color: #333; width: 100%; max-width: 420px; padding: 40px; border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.2); }
+        .login-card h2 { font-size: 24px; margin-bottom: 8px; color: #1e293b; }
+        .login-card > p { font-size: 14px; color: #64748b; margin-bottom: 30px; }
+        .form-group { margin-bottom: 20px; position: relative; }
+        .form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 8px; color: #334155; }
+        .input-wrapper { position: relative; }
+        .form-control { width: 100%; padding: 12px 15px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 14px; outline: none; transition: 0.3s; }
+        .form-control:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+        .toggle-password { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #94a3b8; cursor: pointer; font-size: 18px; }
+        .btn-login { width: 100%; padding: 14px; background: #2563eb; color: #fff; border: none; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.3s; }
+        .btn-login:hover { background: #1d4ed8; }
+        .test-accounts { margin-top: 30px; }
+        .divider { display: flex; align-items: center; text-align: center; font-size: 11px; color: #94a3b8; font-weight: 600; margin-bottom: 15px; }
+        .divider::before, .divider::after { content: ''; flex: 1; border-bottom: 1px solid #e2e8f0; margin: 0 10px; }
+        .test-cards { display: flex; gap: 10px; }
+        .test-card { flex: 1; padding: 12px; border-radius: 10px; cursor: pointer; border: 1px solid transparent; transition: 0.2s; }
+        .test-card.admin { background: #f0f7ff; border-color: #e0f2fe; }
+        .test-card.admin:hover { border-color: #bae6fd; }
+        .test-card.admin .role { color: #0284c7; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 4px; margin-bottom: 4px;}
+        .test-card.staff { background: #f0fdf4; border-color: #dcfce7; }
+        .test-card.staff:hover { border-color: #bbf7d0; }
+        .test-card.staff .role { color: #16a34a; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 4px; margin-bottom: 4px;}
+        .test-card p { font-size: 11px; color: #64748b; margin-bottom: 2px; }
+        .hint-text { text-align: center; font-size: 11px; color: #94a3b8; margin-top: 15px; }
+        @media (max-width: 768px) { .login-wrapper { flex-direction: column; gap: 30px; } .login-left { margin-bottom: 20px; } }
+    </style>
+</head>
+<body>
+    <div class="login-wrapper">
+        <div class="login-left">
+            <div class="logo-box"><i class='bx bxs-face'></i></div>
+            <h1>Kid's City</h1>
+            <p>Hệ thống quản lý bán hàng nội bộ</p>
+            <div class="stats-grid">
+                <div class="stat-item"><h3>10+</h3><span>Nhân viên</span></div>
+                <div class="stat-item"><h3>200+</h3><span>Sản phẩm</span></div>
+                <div class="stat-item"><h3>1K+</h3><span>Đơn hàng</span></div>
+            </div>
+        </div>
+        <div class="login-right">
+            <div class="login-card">
+                <h2>Đăng nhập</h2>
+                <p>Chào mừng trở lại! Nhập thông tin để tiếp tục.</p>
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label>Tên đăng nhập</label>
+                        <input type="text" id="username" class="form-control" placeholder="Nhập tên đăng nhập" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Mật khẩu</label>
+                        <div class="input-wrapper">
+                            <input type="password" id="password" class="form-control" placeholder="Nhập mật khẩu" required>
+                            <i class='bx bx-show toggle-password' id="togglePassword"></i>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-login"><i class='bx bx-log-in-circle'></i> Đăng nhập</button>
+                </form>
+                <div class="test-accounts">
+                    <div class="divider">TÀI KHOẢN THỬ NGHIỆM</div>
+                    <div class="test-cards">
+                        <div class="test-card admin" onclick="fillTestAccount('admin', 'admin123')">
+                            <span class="role"><i class='bx bxs-crown' style="color: #ea580c;"></i> Chủ shop</span>
+                            <p>admin</p><p>admin123</p>
+                        </div>
+                        <div class="test-card staff" onclick="fillTestAccount('staff1', 'staff123')">
+                            <span class="role"><i class='bx bxs-user'></i> Nhân viên</span>
+                            <p>staff1</p><p>staff123</p>
+                        </div>
+                    </div>
+                    <p class="hint-text">Nhấn vào ô để tự động điền thông tin</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // KIỂM TRA ĐĂNG NHẬP: Nếu đã đăng nhập thì tự chuyển sang index
+        if (localStorage.getItem('isLoggedIn') === 'true') {
+            window.location.href = 'index.html';
+        }
+
+        const togglePassword = document.getElementById('togglePassword');
+        const passwordInput = document.getElementById('password');
+        togglePassword.addEventListener('click', function () {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            this.classList.toggle('bx-show');
+            this.classList.toggle('bx-hide');
+        });
+
+        function fillTestAccount(username, password) {
+            document.getElementById('username').value = username;
+            document.getElementById('password').value = password;
+            document.querySelector('.btn-login').focus();
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault(); 
+            const username = document.getElementById('username').value;
+            const btn = document.querySelector('.btn-login');
+            btn.innerHTML = "<i class='bx bx-loader-alt bx-spin'></i> Đang xử lý...";
+            btn.style.opacity = "0.8";
+
+            setTimeout(() => {
+                localStorage.setItem('isLoggedIn', 'true');
+                localStorage.setItem('currentUser', username);
+                window.location.href = 'index.html';
+            }, 800);
+        });
+    </script>
+</body>
+</html>

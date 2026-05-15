@@ -1,0 +1,169 @@
+/* ========================================================
+   USERS MANAGEMENT PAGE
+   ======================================================== */
+
+.page-header {
+    margin-bottom: 25px;
+}
+.page-header h2 {
+    font-size: 24px;
+    color: #1e293b;
+}
+.page-header p {
+    color: #64748b;
+    font-size: 14px;
+    margin-top: 5px;
+}
+
+/* Toolbar */
+.users-toolbar {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    gap: 15px;
+}
+.search-box {
+    position: relative;
+    width: 100%;
+    max-width: 400px;
+}
+.search-box i {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+    font-size: 18px;
+}
+.search-box input {
+    width: 100%;
+    padding: 10px 15px 10px 40px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 14px;
+    outline: none;
+    transition: 0.2s;
+}
+.search-box input:focus { border-color: #2563eb; }
+
+/* Nút bấm chung */
+.btn-primary {
+    background: #2563eb;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: 0.2s;
+}
+.btn-primary:hover { background: #1d4ed8; }
+
+.btn-outline {
+    background: #fff;
+    color: #475569;
+    border: 1px solid #e2e8f0;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.btn-outline:hover { background: #f8fafc; }
+
+/* Table Styles */
+.user-info { display: flex; align-items: center; gap: 10px; }
+.avatar {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 600; color: #fff;
+}
+.avatar.bg-blue { background: #60a5fa; }
+.avatar.bg-light { background: #bfdbfe; color: #1e3a8a; }
+
+/* Badges */
+.role-badge { padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+.role-badge.shop-owner { background: #f3e8ff; color: #9333ea; }
+.role-badge.staff { background: #eff6ff; color: #2563eb; }
+
+.status-badge.active { background: #dcfce7; color: #16a34a; }
+.status-badge.inactive { background: #fef9c3; color: #ca8a04; }
+.status-badge.locked { background: #fee2e2; color: #ef4444; }
+
+/* Cột thao tác */
+.actions { display: flex; gap: 8px; }
+.icon-btn {
+    background: transparent; border: none; font-size: 18px; color: #94a3b8;
+    cursor: pointer; transition: 0.2s;
+}
+.icon-btn:hover { color: #2563eb; }
+
+.pagination-info { margin-top: 15px; font-size: 13px; color: #64748b; }
+
+/* ================= MODALS (POPUP) ================= */
+.modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.4);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1000;
+    opacity: 0; visibility: hidden;
+    transition: 0.2s ease-in-out;
+}
+.modal-overlay.active { opacity: 1; visibility: visible; }
+
+.modal-box {
+    background: #fff; border-radius: 16px; width: 100%; max-width: 600px;
+    transform: translateY(-20px); transition: 0.3s ease-in-out;
+}
+.modal-overlay.active .modal-box { transform: translateY(0); }
+
+.modal-header {
+    padding: 20px 25px; border-bottom: 1px solid #f1f5f9;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.modal-header h3 { font-size: 18px; color: #1e293b; }
+.close-btn { background: none; border: none; font-size: 24px; color: #94a3b8; cursor: pointer; }
+
+.modal-body { padding: 25px; }
+.form-row { display: flex; gap: 15px; margin-bottom: 15px; }
+.form-row .form-group { flex: 1; }
+.form-group { margin-bottom: 15px; }
+.form-group label { display: block; font-size: 13px; font-weight: 500; color: #475569; margin-bottom: 8px; }
+.form-control {
+    width: 100%; padding: 10px 15px; border: 1px solid #e2e8f0;
+    border-radius: 8px; font-size: 14px; outline: none; transition: 0.2s; box-sizing: border-box;
+}
+.form-control:focus { border-color: #2563eb; }
+.input-icon-right { position: relative; }
+.input-icon-right i { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #94a3b8; cursor: pointer; }
+
+.info-alert {
+    background: #eff6ff; padding: 12px 15px; border-radius: 8px;
+    font-size: 12px; color: #1e3a8a; display: flex; align-items: center; gap: 8px; margin-top: 10px;
+}
+.info-alert i { font-size: 16px; color: #3b82f6; }
+
+.modal-footer {
+    padding: 15px 25px; border-top: 1px solid #f1f5f9;
+    display: flex; justify-content: flex-end; gap: 10px;
+}
+
+/* ================= TOAST NOTIFICATION ================= */
+#global-toast {
+    position: fixed; top: 20px; right: -300px;
+    background: #dcfce7; color: #166534;
+    padding: 12px 20px; border-radius: 8px;
+    font-size: 14px; font-weight: 500;
+    display: flex; align-items: center; gap: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    z-index: 9999;
+    transition: right 0.4s ease-in-out;
+}
+#global-toast.show { right: 20px; }
+#global-toast i { font-size: 20px; color: #16a34a; }

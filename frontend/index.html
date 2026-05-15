@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="assets/css/index.css">
     <link rel="stylesheet" href="assets/css/sale.css">
     <link rel="stylesheet" href="assets/css/import.css">
+    <link rel="stylesheet" href="assets/css/dashboard.css">
 </head>
 <body>
 
@@ -24,12 +25,12 @@
 
         <ul class="menu">
             <li class="menu-item active">
-                <a href="#" data-target="dashboard">
+                <a href="views/dashboard.html" data-target="dashboard">
                     <i class='bx bx-grid-alt'></i> Tổng quan
                 </a>
             </li>
             <li class="menu-item">
-                <a href="#">
+                <a href="views/users.html" data-target="users">
                     <i class='bx bx-user'></i> Quản lý người dùng
                 </a>
             </li>
@@ -39,17 +40,17 @@
                 </a>
             </li>
             <li class="menu-item has-submenu">
-                <a href="#" class="menu-toggle">
+                <a href="views/products.html" data-target="products" class="menu-toggle">
                     <i class='bx bx-cube'></i> <span>Quản lý sản phẩm</span>
                     <i class='bx bx-chevron-down arrow'></i>
                 </a>
                 <ul class="submenu">
-                    <li><a href="#"><i class='bx bx-purchase-tag-alt'></i> Danh mục</a></li>
-                    <li><a href="#"><i class='bx bx-package'></i> Sản phẩm</a></li>
+                    <li><a href="views/categories.html" data-target="categories"><i class='bx bx-purchase-tag-alt'></i> Danh mục</a></li>
+                    <li><a href="views/products.html" data-target="products"><i class='bx bx-package'></i> Sản phẩm</a></li>
                 </ul>
             </li>
             <li class="menu-item has-submenu">
-                <a href="#" class="menu-toggle">
+                <a href="views/sales.html" data-target="sales" class="menu-toggle">
                     <i class='bx bx-cart'></i> <span>Quản lý bán hàng</span>
                     <i class='bx bx-chevron-down arrow'></i>
                 </a>
@@ -60,19 +61,19 @@
                 </ul>
             </li>
             <li class="menu-item">
-                <a href="#">
+                <a href="views/customers.html" data-target="customers">
                     <i class='bx bx-user-pin'></i> Quản lý khách hàng
                 </a>
             </li>
             <li class="menu-item has-submenu">
-                <a href="#" class="menu-toggle">
+                <a href="views/reports.html" class="menu-toggle">
                     <i class='bx bx-bar-chart-alt-2'></i> <span>Quản lý báo cáo</span>
                     <i class='bx bx-chevron-down arrow'></i>
                 </a>
                 <ul class="submenu">
-                    <li><a href="#"><i class='bx bx-line-chart'></i> Doanh thu</a></li>
-                    <li><a href="#"><i class='bx bx-box'></i> Sản phẩm</a></li>
-                    <li><a href="#"><i class='bx bx-group'></i> Khách hàng</a></li>
+                    <li><a href="views/reports/revenue.html" data-target="reports/revenue"><i class='bx bx-line-chart'></i> Doanh thu</a></li>
+                    <li><a href="views/reports/products.html" data-target="reports/products"><i class='bx bx-box'></i> Sản phẩm</a></li>
+                    <li><a href="views/reports/customers.html" data-target="reports/customers"><i class='bx bx-group'></i> Khách hàng</a></li>
                 </ul>
             </li>
         </ul>
@@ -209,7 +210,9 @@
         </header>
 
         <main id="main-content" class="content-body">
-            </main>
+            
+        </main>
+        
     </div>
 
     <script src="js/sale.js"></script>

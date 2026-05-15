@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kid's City - Quản lý bán hàng</title>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="assets/css/index.css">
+    <link rel="stylesheet" href="assets/css/sale.css">
+    <link rel="stylesheet" href="assets/css/import.css">
+    <link rel="stylesheet" href="assets/css/dashboard.css">
+    <link rel="stylesheet" href="assets/css/users.css">
+</head>
+<body>
+
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <i class='bx bxs-face'></i>
+                <div>
+                    <h2>Kid's City</h2>
+                    <p>Quản lý bán hàng</p>
+                </div>
+            </div>
+        </div>
+
+        <ul class="menu">
+            <li class="menu-item active">
+                <a href="views/dashboard.html" data-target="dashboard">
+                    <i class='bx bx-grid-alt'></i> Tổng quan
+                </a>
+            </li>
+            <li class="menu-item">
+                <a href="views/users.html" data-target="users">
+                    <i class='bx bx-user'></i> Quản lý người dùng
+                </a>
+            </li>
+            <li class="menu-item">
+                <a href="views/imports.html" data-target="imports">
+                    <i class='bx bx-box'></i> Quản lý nhập hàng
+                </a>
+            </li>
+            <li class="menu-item has-submenu">
+                <a href="views/products.html" data-target="products" class="menu-toggle">
+                    <i class='bx bx-cube'></i> <span>Quản lý sản phẩm</span>
+                    <i class='bx bx-chevron-down arrow'></i>
+                </a>
+                <ul class="submenu">
+                    <li><a href="views/categories.html" data-target="categories"><i class='bx bx-purchase-tag-alt'></i> Danh mục</a></li>
+                    <li><a href="views/products.html" data-target="products"><i class='bx bx-package'></i> Sản phẩm</a></li>
+                </ul>
+            </li>
+            <li class="menu-item has-submenu">
+                <a href="views/sales.html" data-target="sales" class="menu-toggle">
+                    <i class='bx bx-cart'></i> <span>Quản lý bán hàng</span>
+                    <i class='bx bx-chevron-down arrow'></i>
+                </a>
+                <ul class="submenu">
+                    <li><a href="views/sales/invoices.html" data-target="sales/invoices"><i class='bx bx-receipt'></i> Hóa đơn</a></li>
+                    <li><a href="views/sales/exchanges.html" data-target="sales/exchanges"><i class='bx bx-transfer'></i> Đổi hàng</a></li>
+                    <li><a href="views/sales/returns.html" data-target="sales/returns"><i class='bx bx-revision'></i> Trả hàng</a></li>
+                </ul>
+            </li>
+            <li class="menu-item">
+                <a href="views/customers.html" data-target="customers">
+                    <i class='bx bx-user-pin'></i> Quản lý khách hàng
+                </a>
+            </li>
+            <li class="menu-item has-submenu">
+                <a href="views/reports.html" class="menu-toggle">
+                    <i class='bx bx-bar-chart-alt-2'></i> <span>Quản lý báo cáo</span>
+                    <i class='bx bx-chevron-down arrow'></i>
+                </a>
+                <ul class="submenu">
+                    <li><a href="views/reports/revenue.html" data-target="reports/revenue"><i class='bx bx-line-chart'></i> Doanh thu</a></li>
+                    <li><a href="views/reports/products.html" data-target="reports/products"><i class='bx bx-box'></i> Sản phẩm</a></li>
+                    <li><a href="views/reports/customers.html" data-target="reports/customers"><i class='bx bx-group'></i> Khách hàng</a></li>
+                </ul>
+            </li>
+        </ul>
+
+        <div class="sidebar-user">
+            <div class="avatar">N</div>
+            <div class="user-info">
+                <h4>Nguyễn Văn An</h4>
+                <p>Chủ Shop</p>
+            </div>
+        </div>
+    </aside>
+
+    <div class="main-wrapper">
+        <header class="top-header">
+            <div style="display: flex; align-items: center;">
+                <i class='bx bx-menu' id="mobile-menu-btn"></i>
+                
+                <div class="search-bar">
+                    <i class='bx bx-search'></i>
+                    <input type="text" placeholder="Tìm kiếm tại đây...">
+                </div>
+            </div>
+            
+            <div class="header-actions">
+                <div class="dropdown" id="notification-dropdown">
+                        <div class="icon-wrapper">
+                            <i class='bx bx-bell notification-icon'></i>
+                            <span class="badge-dot"></span> </div>
+                        
+                        <div class="dropdown-menu">
+                            <div class="dropdown-header">Thông báo mới</div>
+                            <ul class="dropdown-list">
+                                <li>
+                                    <i class='bx bx-cart-alt'></i>
+                                    <div>
+                                        <p>Có đơn hàng mới <strong>#ORD011</strong></p>
+                                        <span>2 phút trước</span>
+                                    </div>
+                                </li>
+                                <li>
+                                    <i class='bx bx-error-circle'></i>
+                                    <div>
+                                        <p>Sản phẩm <strong>Áo thun</strong> sắp hết hàng</p>
+                                        <span>1 giờ trước</span>
+                                    </div>
+                                </li>
+                            </ul>
+                            <a href="#" class="dropdown-footer">Xem tất cả thông báo</a>
+                        </div>
+                    </div>
+
+                <div class="dropdown" id="user-dropdown">
+                    <div class="header-user">
+                        <div class="avatar blue-bg">N</div>
+                        <div class="user-info mobile-hidden">
+                            <h4>Nguyễn Văn An</h4>
+                            <p>Chủ shop</p>
+                        </div>
+                        <i class='bx bx-chevron-down'></i>
+                    </div>
+
+                    <div class="dropdown-menu account-menu">
+                        <ul class="dropdown-list">
+                            <li id="open-profile">
+                                <i class='bx bx-user'></i> <span>Thông tin cá nhân</span>
+                            </li>
+                            <li id="open-password">
+                                <i class='bx bx-lock-alt'></i> <span>Đổi mật khẩu</span>
+                            </li>
+                            <li class="divider"></li>
+                            <li class="logout-item">
+                                <i class='bx bx-log-out-circle'></i> <span>Đăng xuất</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-overlay" id="modal-profile">
+                <div class="modal-content profile-modal">
+                    <div class="modal-header">
+                        <h3>Thông tin cá nhân</h3>
+                    </div>
+                    <div class="modal-body">
+                        <div class="profile-main">
+                            <div class="avatar-large blue-bg">N</div>
+                            <div class="profile-info-header">
+                                <h4>Nguyễn Văn An</h4>
+                                <p>admin@kidscity.vn</p>
+                                <span class="badge-role">Chủ shop</span>
+                            </div>
+                        </div>
+                        <div class="profile-details">
+                            <div class="detail-row">
+                                <span class="label">Tên đăng nhập</span>
+                                <span class="value">admin</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="label">Điện thoại</span>
+                                <span class="value">0901234567</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="label">Ngày tạo</span>
+                                <span class="value">2024-01-01</span>
+                            </div>
+                        </div>
+                        <button class="btn-primary-block close-modal">Đóng</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-overlay" id="modal-password">
+                <div class="modal-content password-modal">
+                    <div class="modal-header">
+                        <h3>Đổi mật khẩu</h3>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label>Mật khẩu cũ</label>
+                            <input type="password" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label>Mật khẩu mới</label>
+                            <input type="password" class="form-control">
+                        </div>
+                        <div class="modal-footer-btns">
+                            <button class="btn-outline close-modal">Hủy</button>
+                            <button class="btn-primary">Lưu thay đổi</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main id="main-content" class="content-body">
+            <div class="page-header">
+                <h2>Quản lý người dùng</h2>
+                <p>Quản lý tài khoản nhân viên và phân quyền hệ thống</p>
+            </div>
+
+            <div class="dash-card">
+                <div class="users-toolbar">
+                    <div class="search-box">
+                        <i class='bx bx-search'></i>
+                        <input type="text" placeholder="Tìm kiếm người dùng...">
+                    </div>
+                    <button class="btn-primary" onclick="openModal('addUserModal')">
+                        <i class='bx bx-plus'></i> Thêm người dùng
+                    </button>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="dash-table users-table">
+                        <thead>
+                            <tr>
+                                <th>HỌ TÊN</th>
+                                <th>TÊN ĐĂNG NHẬP</th>
+                                <th>EMAIL</th>
+                                <th>ĐIỆN THOẠI</th>
+                                <th>VAI TRÒ</th>
+                                <th>TRẠNG THÁI</th>
+                                <th>NGÀY TẠO</th>
+                                <th>THAO TÁC</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <div class="user-info">
+                                        <div class="avatar bg-blue">N</div>
+                                        <span class="fw-bold">Nguyễn Văn An</span>
+                                    </div>
+                                </td>
+                                <td>admin</td>
+                                <td>admin@kidscity.vn</td>
+                                <td>0901234567</td>
+                                <td><span class="role-badge shop-owner">Chủ shop</span></td>
+                                <td><span class="status-badge active">Đã kích hoạt</span></td>
+                                <td>1/1/2024</td>
+                                <td class="actions">
+                                    <button class="icon-btn" onclick="openModal('editUserModal')" title="Chỉnh sửa"><i class='bx bx-pencil'></i></button>
+                                    <button class="icon-btn" onclick="openModal('resetPasswordModal')" title="Đổi mật khẩu"><i class='bx bx-key'></i></button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="user-info">
+                                        <div class="avatar bg-light">T</div>
+                                        <span class="fw-bold">Trần Thị Bình</span>
+                                    </div>
+                                </td>
+                                <td>staff1</td>
+                                <td>binh@kidscity.vn</td>
+                                <td>0912345678</td>
+                                <td><span class="role-badge staff">Nhân viên</span></td>
+                                <td><span class="status-badge active">Đã kích hoạt</span></td>
+                                <td>15/1/2024</td>
+                                <td class="actions">
+                                    <button class="icon-btn" onclick="openModal('editUserModal')"><i class='bx bx-pencil'></i></button>
+                                    <button class="icon-btn" onclick="openModal('resetPasswordModal')"><i class='bx bx-key'></i></button>
+                                    <button class="icon-btn" onclick="showToast('Đã khóa tài khoản.')" title="Khóa/Mở khóa"><i class='bx bx-lock-alt'></i></button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="user-info">
+                                        <div class="avatar bg-light">P</div>
+                                        <span class="fw-bold">Phạm Thị Dung</span>
+                                    </div>
+                                </td>
+                                <td>staff3</td>
+                                <td>dung@kidscity.vn</td>
+                                <td>0934567890</td>
+                                <td><span class="role-badge staff">Nhân viên</span></td>
+                                <td><span class="status-badge inactive">Chưa kích hoạt</span></td>
+                                <td>15/2/2024</td>
+                                <td class="actions">
+                                    <button class="icon-btn" onclick="openModal('editUserModal')"><i class='bx bx-pencil'></i></button>
+                                    <button class="icon-btn" onclick="openModal('resetPasswordModal')"><i class='bx bx-key'></i></button>
+                                    <button class="icon-btn" onclick="showToast('Đã khóa tài khoản.')"><i class='bx bx-lock-alt'></i></button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="user-info">
+                                        <div class="avatar bg-light">H</div>
+                                        <span class="fw-bold">Hoàng Văn Em</span>
+                                    </div>
+                                </td>
+                                <td>staff4</td>
+                                <td>em@kidscity.vn</td>
+                                <td>0945678901</td>
+                                <td><span class="role-badge staff">Nhân viên</span></td>
+                                <td><span class="status-badge locked">Đã khóa</span></td>
+                                <td>1/3/2024</td>
+                                <td class="actions">
+                                    <button class="icon-btn" onclick="openModal('editUserModal')"><i class='bx bx-pencil'></i></button>
+                                    <button class="icon-btn" onclick="openModal('resetPasswordModal')"><i class='bx bx-key'></i></button>
+                                    <button class="icon-btn" onclick="showToast('Đã mở khóa tài khoản.')"><i class='bx bx-lock-open-alt'></i></button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="pagination-info">
+                    <p>Hiển thị 4 / 4 người dùng</p>
+                </div>
+            </div>
+
+            <div class="modal-overlay" id="addUserModal">
+                <div class="modal-box">
+                    <div class="modal-header">
+                        <h3>Thêm người dùng mới</h3>
+                        <button class="close-btn" onclick="closeModal('addUserModal')"><i class='bx bx-x'></i></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Họ và tên *</label>
+                                <input type="text" class="form-control" placeholder="Nhập họ và tên">
+                            </div>
+                            <div class="form-group">
+                                <label>Vai trò *</label>
+                                <select class="form-control">
+                                    <option>Nhân viên</option>
+                                    <option>Chủ shop</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Tên đăng nhập *</label>
+                            <input type="text" class="form-control" placeholder="Nhập tên đăng nhập">
+                        </div>
+                        <div class="form-group">
+                            <label>Mật khẩu *</label>
+                            <div class="input-icon-right">
+                                <input type="password" class="form-control" placeholder="Nhập mật khẩu">
+                                <i class='bx bx-show'></i>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Email</label>
+                                <input type="email" class="form-control" placeholder="Nhập email">
+                            </div>
+                            <div class="form-group">
+                                <label>Điện thoại</label>
+                                <input type="text" class="form-control" placeholder="Nhập số điện thoại">
+                            </div>
+                        </div>
+                        <div class="info-alert">
+                            <i class='bx bxs-info-circle'></i> Người dùng mới sẽ có trạng thái <strong>Chưa kích hoạt</strong> và được kích hoạt khi đăng nhập lần đầu.
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn-outline" onclick="closeModal('addUserModal')">Hủy</button>
+                        <button class="btn-primary" onclick="closeModal('addUserModal'); showToast('Thêm người dùng thành công!')">Thêm mới</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-overlay" id="editUserModal">
+                <div class="modal-box">
+                    <div class="modal-header">
+                        <h3>Chỉnh sửa người dùng</h3>
+                        <button class="close-btn" onclick="closeModal('editUserModal')"><i class='bx bx-x'></i></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Họ và tên *</label>
+                                <input type="text" class="form-control" value="Nguyễn Văn An">
+                            </div>
+                            <div class="form-group">
+                                <label>Vai trò *</label>
+                                <select class="form-control">
+                                    <option selected>Chủ shop</option>
+                                    <option>Nhân viên</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Tên đăng nhập *</label>
+                            <input type="text" class="form-control" value="admin" disabled style="background: #f8fafc; cursor: not-allowed;">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Email</label>
+                                <input type="email" class="form-control" value="admin@kidscity.vn">
+                            </div>
+                            <div class="form-group">
+                                <label>Điện thoại</label>
+                                <input type="text" class="form-control" value="0901234567">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn-outline" onclick="closeModal('editUserModal')">Hủy</button>
+                        <button class="btn-primary" onclick="closeModal('editUserModal'); showToast('Cập nhật thành công!')">Cập nhật</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-overlay" id="resetPasswordModal">
+                <div class="modal-box" style="max-width: 450px;">
+                    <div class="modal-header">
+                        <h3>Đặt lại mật khẩu</h3>
+                        <button class="close-btn" onclick="closeModal('resetPasswordModal')"><i class='bx bx-x'></i></button>
+                    </div>
+                    <div class="modal-body">
+                        <p style="margin-bottom: 15px; color: #475569; font-size: 14px;">Đặt lại mật khẩu cho <strong>Nguyễn Văn An</strong></p>
+                        <div class="form-group">
+                            <label>Mật khẩu mới *</label>
+                            <input type="password" class="form-control" placeholder="Tối thiểu 6 ký tự">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn-outline" onclick="closeModal('resetPasswordModal')">Hủy</button>
+                        <button class="btn-primary" onclick="closeModal('resetPasswordModal'); showToast('Đã đặt lại mật khẩu!')">Đặt lại</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+    </div>
+
+    <script src="js/sale.js"></script>
+    <script src="js/import.js"></script>
+    <script src="js/index.js"></script>
+</body>
+</html>
