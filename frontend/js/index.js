@@ -6,12 +6,31 @@ document.addEventListener("DOMContentLoaded", () => {
             const res = await fetch(`views/${page}.html`);
             if (!res.ok) throw new Error();
             content.innerHTML = await res.text();
+            if (window.initSalePage) window.initSalePage(content);
+            if (window.initImportPage) window.initImportPage(content);
         } catch {
             content.innerHTML = "<h2>Trang đang cập nhật...</h2>";
         }
     };
     loadPage('dashboard'); // Mặc định load dashboard
 
+    document.querySelectorAll('[data-target]').forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            loadPage(link.dataset.target);
+
+            document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
+            document.querySelectorAll('.submenu a').forEach(item => item.classList.remove('active'));
+
+            const currentItem = link.closest('.menu-item');
+            if (currentItem) {
+                currentItem.classList.add('active');
+                if (currentItem.classList.contains('has-submenu')) currentItem.classList.add('open');
+            }
+
+            if (link.closest('.submenu')) link.classList.add('active');
+        });
+    });
     // 2. SIDEBAR MENU TOGGLE
     document.querySelectorAll('.menu-toggle').forEach(btn => {
         btn.addEventListener('click', (e) => {

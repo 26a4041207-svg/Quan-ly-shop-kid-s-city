@@ -49,6 +49,15 @@ ul { list-style: none; }
 .menu-item.open .submenu { display: block; }
 .submenu a { display: flex; align-items: center; gap: 10px; color: #a5b4fc; padding: 8px 0; font-size: 14px; }
 .submenu a:hover { color: #fff; }
+.submenu a.active {
+    color: #fff;
+    font-weight: 700;
+    background: rgba(255, 255, 255, 0.14);
+    border-radius: 8px;
+    padding: 8px 10px;
+    margin-left: -10px;
+}
+.submenu a.active i { color: #fff; }
 
 .sidebar-user { padding: 15px 20px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 12px; background: #23397b; }
 .avatar { width: 40px; height: 40px; border-radius: 50%; background: #2563eb; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #fff;}

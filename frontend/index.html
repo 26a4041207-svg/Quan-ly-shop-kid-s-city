@@ -6,6 +6,8 @@
     <title>Kid's City - Quản lý bán hàng</title>
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <link rel="stylesheet" href="assets/css/index.css">
+    <link rel="stylesheet" href="assets/css/sale.css">
+    <link rel="stylesheet" href="assets/css/import.css">
 </head>
 <body>
 
@@ -32,7 +34,7 @@
                 </a>
             </li>
             <li class="menu-item">
-                <a href="#">
+                <a href="views/imports.html" data-target="imports">
                     <i class='bx bx-box'></i> Quản lý nhập hàng
                 </a>
             </li>
@@ -52,9 +54,9 @@
                     <i class='bx bx-chevron-down arrow'></i>
                 </a>
                 <ul class="submenu">
-                    <li><a href="#"><i class='bx bx-receipt'></i> Hóa đơn</a></li>
-                    <li><a href="#"><i class='bx bx-transfer'></i> Đổi hàng</a></li>
-                    <li><a href="#"><i class='bx bx-revision'></i> Trả hàng</a></li>
+                    <li><a href="views/sales/invoices.html" data-target="sales/invoices"><i class='bx bx-receipt'></i> Hóa đơn</a></li>
+                    <li><a href="views/sales/exchanges.html" data-target="sales/exchanges"><i class='bx bx-transfer'></i> Đổi hàng</a></li>
+                    <li><a href="views/sales/returns.html" data-target="sales/returns"><i class='bx bx-revision'></i> Trả hàng</a></li>
                 </ul>
             </li>
             <li class="menu-item">
@@ -210,6 +212,8 @@
             </main>
     </div>
 
+    <script src="js/sale.js"></script>
+    <script src="js/import.js"></script>
     <script src="js/index.js"></script>
 </body>
 </html>
