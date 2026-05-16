@@ -45,3 +45,95 @@ window.showToast = function(message) {
         toast.classList.remove('show');
     }, 3000);
 };
+// ==========================================
+// XU LY MENU VA HEADER RIENG CHO TRANG USERS
+// users.html la trang day du, khong nap index.js de tranh router ghi de noi dung.
+// ==========================================
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.menu-toggle').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const item = btn.closest('.menu-item');
+            if (item) item.classList.toggle('open');
+        });
+    });
+
+    const closeAllDropdowns = function() {
+        document.querySelectorAll('.dropdown-menu').forEach(function(menu) {
+            menu.classList.remove('show');
+        });
+    };
+
+    const userDrop = document.getElementById('user-dropdown');
+    const notiDrop = document.getElementById('notification-dropdown');
+
+    if (userDrop) {
+        userDrop.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const menu = userDrop.querySelector('.dropdown-menu');
+            if (!menu) return;
+            const isShowing = menu.classList.contains('show');
+            closeAllDropdowns();
+            if (!isShowing) menu.classList.add('show');
+        });
+    }
+
+    if (notiDrop) {
+        notiDrop.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const menu = notiDrop.querySelector('.dropdown-menu');
+            if (!menu) return;
+            const isShowing = menu.classList.contains('show');
+            closeAllDropdowns();
+            if (!isShowing) menu.classList.add('show');
+            const dot = notiDrop.querySelector('.badge-dot');
+            if (dot) dot.style.display = 'none';
+        });
+    }
+
+    const profileModal = document.getElementById('modal-profile');
+    const passwordModal = document.getElementById('modal-password');
+    const openProfile = document.getElementById('open-profile');
+    const openPassword = document.getElementById('open-password');
+
+    if (openProfile && profileModal) {
+        openProfile.addEventListener('click', function() {
+            profileModal.classList.add('active');
+            closeAllDropdowns();
+        });
+    }
+
+    if (openPassword && passwordModal) {
+        openPassword.addEventListener('click', function() {
+            passwordModal.classList.add('active');
+            closeAllDropdowns();
+        });
+    }
+
+    document.querySelectorAll('.close-modal').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            if (profileModal) profileModal.classList.remove('active');
+            if (passwordModal) passwordModal.classList.remove('active');
+        });
+    });
+
+    const logoutBtn = document.querySelector('.logout-item');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', function() {
+            if (confirm('Ban co chac chan muon dang xuat?')) {
+                localStorage.removeItem('isLoggedIn');
+                localStorage.removeItem('currentUser');
+                window.location.href = '../login.html';
+            }
+        });
+    }
+
+    window.addEventListener('click', function(e) {
+        closeAllDropdowns();
+        if (e.target.classList.contains('modal-overlay')) {
+            e.target.classList.remove('active');
+            if (profileModal) profileModal.classList.remove('active');
+            if (passwordModal) passwordModal.classList.remove('active');
+        }
+    });
+});

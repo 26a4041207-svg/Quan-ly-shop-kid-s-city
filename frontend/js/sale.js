@@ -22,6 +22,23 @@ window.initSalePage = function initSalePage(container) {
     // Dữ liệu mẫu của trang còn lại để chặn một hóa đơn bị đổi/trả nhiều lần khi từng trang được load riêng.
     const initialExchangeInvoiceCodes = ['HD001', 'HD002', 'HD003', 'HD005', 'HD008'];
     const initialReturnInvoiceCodes = ['HD002', 'HD004', 'HD005', 'HD009', 'HD011'];
+    // Dữ liệu chi tiết hóa đơn dùng khi bấm mã hóa đơn ở trang đổi/trả hàng.
+    const invoiceDetails = {
+        HD001: { customer: 'Lê Thị Cẩm Ly', staff: 'Trần Thị Bình', date: '2026-04-15', payment: 'Tiền mặt', note: 'Khách hàng quen', total: '375.000đ', items: [['Áo thun Mickey Mouse', '120.000đ', '2', '0đ', '240.000đ'], ['Áo thun Elsa Frozen', '135.000đ', '1', '0đ', '135.000đ']] },
+        HD002: { customer: 'Phạm Văn Dũng', staff: 'Trần Thị Bình', date: '2026-04-16', payment: 'Chuyển khoản', note: 'Đơn online', total: '220.000đ', items: [['Váy hoa nhí công chúa', '220.000đ', '1', '0đ', '220.000đ']] },
+        HD003: { customer: 'Hoàng Thị Mai', staff: 'Lê Minh Châu', date: '2026-04-18', payment: 'Tiền mặt', note: 'Mua tại cửa hàng', total: '545.000đ', items: [['Áo thun Mickey Mouse', '120.000đ', '2', '0đ', '240.000đ'], ['Váy hoa nhí công chúa', '220.000đ', '1', '0đ', '220.000đ'], ['Phụ kiện tóc', '85.000đ', '1', '0đ', '85.000đ']] },
+        HD004: { customer: 'Nguyễn Minh Nhật', staff: 'Trần Thị Bình', date: '2026-04-20', payment: 'Chuyển khoản', note: 'Khách đổi size nếu không vừa', total: '320.000đ', items: [['Áo thun Mickey Mouse', '120.000đ', '1', '0đ', '120.000đ'], ['Quần short bé trai', '200.000đ', '1', '0đ', '200.000đ']] },
+        HD005: { customer: 'Trần Thu Hà', staff: 'Lê Minh Châu', date: '2026-04-22', payment: 'Tiền mặt', note: 'Khách thân thiết', total: '490.000đ', items: [['Áo thun Elsa Frozen', '135.000đ', '2', '0đ', '270.000đ'], ['Váy hoa nhí công chúa', '220.000đ', '1', '0đ', '220.000đ']] },
+        HD006: { customer: 'Võ Thanh Tùng', staff: 'Trần Thị Bình', date: '2026-04-25', payment: 'Tiền mặt', note: 'Không có', total: '280.000đ', items: [['Bộ đồ bé trai', '280.000đ', '1', '0đ', '280.000đ']] },
+        HD007: { customer: 'Đỗ Bảo Ngọc', staff: 'Lê Minh Châu', date: '2026-04-27', payment: 'Chuyển khoản', note: 'Không có', total: '360.000đ', items: [['Đầm công chúa', '360.000đ', '1', '0đ', '360.000đ']] },
+        HD008: { customer: 'Bùi Gia Hân', staff: 'Trần Thị Bình', date: '2026-04-29', payment: 'Tiền mặt', note: 'Không có', total: '410.000đ', items: [['Áo thun Mickey Mouse', '120.000đ', '1', '0đ', '120.000đ'], ['Giày trẻ em', '290.000đ', '1', '0đ', '290.000đ']] },
+        HD009: { customer: 'Phạm Ngọc Anh', staff: 'Lê Minh Châu', date: '2026-05-01', payment: 'Chuyển khoản', note: 'Không có', total: '315.000đ', items: [['Áo thun Elsa Frozen', '135.000đ', '1', '0đ', '135.000đ'], ['Mũ trẻ em', '90.000đ', '2', '0đ', '180.000đ']] },
+        HD010: { customer: 'Ngô Minh Quân', staff: 'Trần Thị Bình', date: '2026-05-02', payment: 'Tiền mặt', note: 'Không có', total: '260.000đ', items: [['Balo trẻ em', '260.000đ', '1', '0đ', '260.000đ']] },
+        HD011: { customer: 'Huỳnh Khánh Linh', staff: 'Lê Minh Châu', date: '2026-05-04', payment: 'Chuyển khoản', note: 'Không có', total: '520.000đ', items: [['Váy hoa nhí công chúa', '220.000đ', '1', '0đ', '220.000đ'], ['Giày trẻ em', '300.000đ', '1', '0đ', '300.000đ']] },
+        HD012: { customer: 'Cao Tuấn Kiệt', staff: 'Trần Thị Bình', date: '2026-05-05', payment: 'Tiền mặt', note: 'Không có', total: '300.000đ', items: [['Áo khoác trẻ em', '300.000đ', '1', '0đ', '300.000đ']] },
+        HD013: { customer: 'Lý Thanh Thảo', staff: 'Lê Minh Châu', date: '2026-05-06', payment: 'Tiền mặt', note: 'Không có', total: '445.000đ', items: [['Áo thun Elsa Frozen', '135.000đ', '1', '0đ', '135.000đ'], ['Đồ chơi trẻ em', '310.000đ', '1', '0đ', '310.000đ']] },
+        HD014: { customer: 'Vũ Hải Nam', staff: 'Trần Thị Bình', date: '2026-05-08', payment: 'Chuyển khoản', note: 'Không có', total: '365.000đ', items: [['Áo thun Mickey Mouse', '120.000đ', '1', '0đ', '120.000đ'], ['Quần jean trẻ em', '245.000đ', '1', '0đ', '245.000đ']] }
+    };
 
     /* =====================================================
        COMMON HELPERS - Hàm tiện ích dùng chung nhiều trang
@@ -95,9 +112,66 @@ window.initSalePage = function initSalePage(container) {
     const closeModal = (modal) => {
         if (modal) modal.classList.remove('active');
     };
+    const openInvoiceDetailByCode = (code) => {
+        const invoice = invoiceDetails[code];
+        if (!invoice) {
+            alert('Không tìm thấy chi tiết hóa đơn ' + code + '.');
+            return;
+        }
+
+        let modal = root.querySelector('#linked-invoice-detail');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.className = 'sales-modal';
+            modal.id = 'linked-invoice-detail';
+            modal.addEventListener('click', (event) => {
+                if (event.target === modal) closeModal(modal);
+            });
+            root.appendChild(modal);
+        }
+
+        const rows = invoice.items.map((item) => `
+            <tr>
+                <td>${item[0]}</td>
+                <td>${item[1]}</td>
+                <td>${item[2]}</td>
+                <td>${item[3]}</td>
+                <td><strong>${item[4]}</strong></td>
+            </tr>
+        `).join('');
+
+        modal.innerHTML = `
+            <div class="sales-dialog detail">
+                <div class="sales-modal-body">
+                    <h2 class="detail-title">Chi tiết hóa đơn ${code}</h2>
+                    <div class="detail-grid">
+                        <div class="detail-item"><span>Khách hàng</span><strong>${invoice.customer}</strong></div>
+                        <div class="detail-item"><span>Nhân viên</span><strong>${invoice.staff}</strong></div>
+                        <div class="detail-item"><span>Ngày lập</span><strong>${invoice.date}</strong></div>
+                        <div class="detail-item"><span>Phương thức thanh toán</span><strong>${invoice.payment}</strong></div>
+                        <div class="detail-item"><span>Ghi chú</span><strong>${invoice.note}</strong></div>
+                    </div>
+                    <h3 class="section-title">Chi tiết sản phẩm</h3>
+                    <table class="sales-table">
+                        <thead><tr><th>Sản phẩm</th><th>Đơn giá</th><th>SL</th><th>Giảm giá</th><th>Thành tiền</th></tr></thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                    <div class="total-line">Tổng tiền: <span class="green">${invoice.total}</span></div>
+                    <button class="sales-btn primary block" data-close>Đóng</button>
+                </div>
+            </div>
+        `;
+        modal.classList.add('active');
+    };
 
     root.addEventListener('click', (event) => {
-        const openBtn = event.target.closest('[data-open]');
+                const invoiceCodeLink = event.target.closest('.invoice-code-link');
+        if (invoiceCodeLink && root.contains(invoiceCodeLink)) {
+            event.preventDefault();
+            openInvoiceDetailByCode(invoiceCodeLink.textContent.trim());
+            return;
+        }
+const openBtn = event.target.closest('[data-open]');
         if (openBtn && root.contains(openBtn)) {
             openModal(openBtn.dataset.open);
             return;

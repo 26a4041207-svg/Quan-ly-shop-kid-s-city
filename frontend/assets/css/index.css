@@ -7,7 +7,7 @@ a { text-decoration: none; }
 ul { list-style: none; }
 
 /* --- SIDEBAR --- */
-.sidebar { width: 260px; background-color: #2b4592; color: #fff; display: flex; flex-direction: column; height: 100%; transition: left 0.3s ease;}
+.sidebar { width: 280px; background-color: #2b4592; color: #fff; display: flex; flex-direction: column; height: 100%; transition: left 0.3s ease;}
 .sidebar-header { padding: 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); }
 .logo { display: flex; align-items: center; gap: 10px; }
 .logo i { font-size: 32px; background: #fff; color: #2b4592; border-radius: 50%; padding: 5px; }
@@ -36,6 +36,7 @@ ul { list-style: none; }
 }
 .menu-item > a > span {
     flex: 1; /* Chiếm phần không gian còn lại */
+    white-space: nowrap;
 }
 .menu-item .arrow { 
     margin-left: auto; /* Đẩy mũi tên trượt sang lề phải */
@@ -59,7 +60,6 @@ ul { list-style: none; }
 }
 .submenu a.active i { color: #fff; }
 
-.sidebar-user { padding: 15px 20px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 12px; background: #23397b; }
 .avatar { width: 40px; height: 40px; border-radius: 50%; background: #2563eb; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #fff;}
 .user-info h4 { font-size: 14px; font-weight: 600; }
 .user-info p { font-size: 12px; color: #a5b4fc; }
@@ -165,7 +165,7 @@ table td { padding: 15px 10px; font-size: 14px; border-bottom: 1px solid #f3f4f6
 
     .sidebar {
         position: fixed;
-        left: -260px;
+        left: -280px;
         top: 0; bottom: 0;
         z-index: 100;
     }

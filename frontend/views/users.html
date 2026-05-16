@@ -5,11 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kid's City - Quản lý bán hàng</title>
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-    <link rel="stylesheet" href="assets/css/index.css">
-    <link rel="stylesheet" href="assets/css/sale.css">
-    <link rel="stylesheet" href="assets/css/import.css">
-    <link rel="stylesheet" href="assets/css/dashboard.css">
-    <link rel="stylesheet" href="assets/css/users.css">
+    <link rel="stylesheet" href="../assets/css/index.css">
+    <link rel="stylesheet" href="../assets/css/sale.css">
+    <link rel="stylesheet" href="../assets/css/import.css">
+    <link rel="stylesheet" href="../assets/css/dashboard.css">
+    <link rel="stylesheet" href="../assets/css/users.css">
 </head>
 <body>
 
@@ -26,66 +26,58 @@
 
         <ul class="menu">
             <li class="menu-item active">
-                <a href="views/dashboard.html" data-target="dashboard">
+                <a href="../index.html">
                     <i class='bx bx-grid-alt'></i> Tổng quan
                 </a>
             </li>
             <li class="menu-item">
-                <a href="views/users.html" data-target="users">
+                <a href="users.html">
                     <i class='bx bx-user'></i> Quản lý người dùng
                 </a>
             </li>
             <li class="menu-item">
-                <a href="views/imports.html" data-target="imports">
+                <a href="../index.html#imports">
                     <i class='bx bx-box'></i> Quản lý nhập hàng
                 </a>
             </li>
             <li class="menu-item has-submenu">
-                <a href="views/products.html" data-target="products" class="menu-toggle">
+                <a href="#" class="menu-toggle">
                     <i class='bx bx-cube'></i> <span>Quản lý sản phẩm</span>
                     <i class='bx bx-chevron-down arrow'></i>
                 </a>
                 <ul class="submenu">
-                    <li><a href="views/categories.html" data-target="categories"><i class='bx bx-purchase-tag-alt'></i> Danh mục</a></li>
-                    <li><a href="views/products.html" data-target="products"><i class='bx bx-package'></i> Sản phẩm</a></li>
+                    <li><a href="products/categories.html"><i class='bx bx-purchase-tag-alt'></i> Danh mục</a></li>
+                    <li><a href="products/list.html"><i class='bx bx-package'></i> Sản phẩm</a></li>
                 </ul>
             </li>
             <li class="menu-item has-submenu">
-                <a href="views/sales.html" data-target="sales" class="menu-toggle">
+                <a href="#" class="menu-toggle">
                     <i class='bx bx-cart'></i> <span>Quản lý bán hàng</span>
                     <i class='bx bx-chevron-down arrow'></i>
                 </a>
                 <ul class="submenu">
-                    <li><a href="views/sales/invoices.html" data-target="sales/invoices"><i class='bx bx-receipt'></i> Hóa đơn</a></li>
-                    <li><a href="views/sales/exchanges.html" data-target="sales/exchanges"><i class='bx bx-transfer'></i> Đổi hàng</a></li>
-                    <li><a href="views/sales/returns.html" data-target="sales/returns"><i class='bx bx-revision'></i> Trả hàng</a></li>
+                    <li><a href="../index.html#sales/invoices"><i class='bx bx-receipt'></i> Hóa đơn</a></li>
+                    <li><a href="../index.html#sales/exchanges"><i class='bx bx-transfer'></i> Đổi hàng</a></li>
+                    <li><a href="../index.html#sales/returns"><i class='bx bx-revision'></i> Trả hàng</a></li>
                 </ul>
             </li>
             <li class="menu-item">
-                <a href="views/customers.html" data-target="customers">
+                <a href="customers.html">
                     <i class='bx bx-user-pin'></i> Quản lý khách hàng
                 </a>
             </li>
             <li class="menu-item has-submenu">
-                <a href="views/reports.html" class="menu-toggle">
+                <a href="#" class="menu-toggle">
                     <i class='bx bx-bar-chart-alt-2'></i> <span>Quản lý báo cáo</span>
                     <i class='bx bx-chevron-down arrow'></i>
                 </a>
                 <ul class="submenu">
-                    <li><a href="views/reports/revenue.html" data-target="reports/revenue"><i class='bx bx-line-chart'></i> Doanh thu</a></li>
-                    <li><a href="views/reports/products.html" data-target="reports/products"><i class='bx bx-box'></i> Sản phẩm</a></li>
-                    <li><a href="views/reports/customers.html" data-target="reports/customers"><i class='bx bx-group'></i> Khách hàng</a></li>
+                    <li><a href="reports/revenue.html"><i class='bx bx-line-chart'></i> Doanh thu</a></li>
+                    <li><a href="reports/products.html"><i class='bx bx-box'></i> Sản phẩm</a></li>
+                    <li><a href="reports/customers.html"><i class='bx bx-group'></i> Khách hàng</a></li>
                 </ul>
             </li>
         </ul>
-
-        <div class="sidebar-user">
-            <div class="avatar">N</div>
-            <div class="user-info">
-                <h4>Nguyễn Văn An</h4>
-                <p>Chủ Shop</p>
-            </div>
-        </div>
     </aside>
 
     <div class="main-wrapper">
@@ -443,8 +435,6 @@
         
     </div>
 
-    <script src="js/sale.js"></script>
-    <script src="js/import.js"></script>
-    <script src="js/index.js"></script>
+    <script src="../js/users.js"></script>
 </body>
 </html>

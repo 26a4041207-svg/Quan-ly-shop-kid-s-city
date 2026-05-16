@@ -14,11 +14,14 @@ document.addEventListener("DOMContentLoaded", () => {
             const res = await fetch(`views/${page}.html`);
             if (!res.ok) throw new Error();
             content.innerHTML = await res.text();
+            if (window.initSalePage) window.initSalePage(content);
+            if (window.initImportPage) window.initImportPage(content);
         } catch {
             content.innerHTML = `<div style="background: white; padding: 30px; border-radius: 15px;"><h2>Trang đang cập nhật...</h2></div>`;
         }
     };
-    loadPage('dashboard');
+    const initialPage = window.location.hash ? window.location.hash.slice(1) : 'dashboard';
+    loadPage(initialPage);
 
     // 2. SIDEBAR MENU TOGGLE & ACTIVE
     document.querySelectorAll('.menu-toggle').forEach(btn => {
@@ -28,15 +31,41 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    document.querySelectorAll('.menu-item > a').forEach(link => {
-        link.addEventListener('click', function() {
-            if(!this.classList.contains('menu-toggle')) {
-                document.querySelectorAll('.menu-item').forEach(li => li.classList.remove('active'));
-                this.parentElement.classList.add('active');
+        const setActiveMenu = (link) => {
+        document.querySelectorAll('.menu-item').forEach(li => li.classList.remove('active'));
+        document.querySelectorAll('.submenu a').forEach(item => item.classList.remove('active'));
+
+        const currentItem = link.closest('.menu-item');
+        if (currentItem) {
+            currentItem.classList.add('active');
+            if (currentItem.classList.contains('has-submenu')) currentItem.classList.add('open');
+        }
+        if (link.closest('.submenu')) link.classList.add('active');
+    };
+
+    document.querySelectorAll('[data-target]').forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (window.location.hash !== '#' + link.dataset.target) {
+                history.pushState(null, '', '#' + link.dataset.target);
             }
+            loadPage(link.dataset.target);
+            setActiveMenu(link);
         });
     });
 
+    document.querySelectorAll('.menu-item > a:not([data-target])').forEach(link => {
+        link.addEventListener('click', function() {
+            if (!this.classList.contains('menu-toggle')) setActiveMenu(this);
+        });
+    });
+
+    window.addEventListener('hashchange', () => {
+        const page = window.location.hash ? window.location.hash.slice(1) : 'dashboard';
+        loadPage(page);
+        const link = document.querySelector(`[data-target="${page}"]`);
+        if (link) setActiveMenu(link);
+    });
     // 3. DROPDOWNS (User & Notifications)
     const userDrop = document.getElementById('user-dropdown');
     const notiDrop = document.getElementById('notification-dropdown');
