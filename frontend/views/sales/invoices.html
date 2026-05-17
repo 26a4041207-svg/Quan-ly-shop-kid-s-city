@@ -45,18 +45,26 @@
             <div class="sales-modal-header"><h3>Tạo hóa đơn mới</h3><button class="modal-close" data-close>&times;</button></div>
             <div class="sales-modal-body">
                 <div class="form-grid">
-                    <div class="field"><label>Khách hàng <span class="required">*</span></label><select><option>-- Chọn khách hàng --</option><option>Lê Thị Cẩm Ly</option><option>Nguyễn Minh Nhật</option></select></div>
+                    <div class="field invoice-customer-field"><label>Khách hàng <span class="required">*</span></label><div class="customer-select-row"><select><option>-- Chọn khách hàng --</option><option>Lê Thị Cẩm Ly</option><option>Nguyễn Minh Nhật</option></select><a class="add-customer-link inline" href="#" data-add-invoice-customer title="Thêm khách hàng mới"><i class='bx bx-user-plus'></i></a></div></div>
                     <div class="field"><label>Ngày lập hóa đơn</label><input type="date" value="2026-05-06"></div>
                     <div class="field full"><label>Ghi chú</label><input type="text" placeholder="Ghi chú hóa đơn (tùy chọn)..."></div>
                 </div>
                 <h4 class="section-title add-title">Thêm sản phẩm</h4>
                 <div class="add-product">
-                    <div class="field"><label>Chọn sản phẩm</label><select><option>-- Chọn sản phẩm --</option><option>Áo thun Mickey Mouse</option><option>Áo thun Elsa Frozen</option></select></div>
+                    <div class="field product-combobox-field">
+                        <label>Chọn sản phẩm</label>
+                        <div class="product-combobox" data-product-combobox>
+                            <input type="text" data-product-search placeholder="Nhập tên hoặc mã sản phẩm..." autocomplete="off">
+                            <input type="hidden" data-product-value>
+                            <button type="button" class="combo-toggle" data-product-toggle aria-label="Mở danh sách sản phẩm"><i class='bx bx-chevron-down'></i></button>
+                            <div class="combo-options" data-product-options></div>
+                        </div>
+                    </div>
                     <div class="field"><label>Số lượng</label><input type="number" min="1" value="1"></div>
                     <button class="sales-btn primary"><i class='bx bx-plus'></i> Thêm SP</button>
                 </div>
                 <div class="sales-card"><table class="sales-table"><thead><tr><th>STT</th><th>Mã SP</th><th>Sản phẩm</th><th>SL</th><th>Đơn giá</th><th>Thành tiền</th><th>Thao tác</th></tr></thead><tbody><tr><td colspan="7" class="empty-row">Chưa có sản phẩm. Thêm sản phẩm ở trên.</td></tr></tbody></table></div>
-                <div class="modal-actions invoice-actions"><a class="add-customer-link" href="#"><i class='bx bx-user-plus'></i> Thêm khách hàng mới</a><div class="action-buttons"><button class="sales-btn light" data-close>Hủy</button><button class="sales-btn primary">Tạo hóa đơn</button></div></div>
+                <div class="modal-actions invoice-actions"><span></span><div class="action-buttons"><button class="sales-btn light" data-close>Hủy</button><button class="sales-btn primary">Tạo hóa đơn</button></div></div>
             </div>
         </div>
     </div>

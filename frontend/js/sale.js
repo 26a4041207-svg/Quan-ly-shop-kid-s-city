@@ -9,14 +9,34 @@ window.initSalePage = function initSalePage(container) {
     const prices = {
         'Áo thun Mickey Mouse': 120000,
         'Áo thun Elsa Frozen': 135000,
-        'Váy hoa nhí công chúa': 220000
+        'Váy hoa nhí công chúa': 220000,
+        'Quần short bé trai': 200000,
+        'Bộ đồ bé trai': 280000,
+        'Đầm công chúa': 360000,
+        'Giày trẻ em': 290000,
+        'Mũ trẻ em': 90000,
+        'Balo trẻ em': 260000,
+        'Áo khoác trẻ em': 300000,
+        'Đồ chơi trẻ em': 310000,
+        'Quần jean trẻ em': 245000,
+        'Phụ kiện tóc': 85000
     };
 
     // Mã sản phẩm hiển thị dạng link trong form tạo hóa đơn. href đang để # để sau này nối sang trang chi tiết sản phẩm.
     const productCodes = {
         'Áo thun Mickey Mouse': 'SP001',
         'Áo thun Elsa Frozen': 'SP002',
-        'Váy hoa nhí công chúa': 'SP003'
+        'Váy hoa nhí công chúa': 'SP003',
+        'Quần short bé trai': 'SP004',
+        'Bộ đồ bé trai': 'SP005',
+        'Đầm công chúa': 'SP006',
+        'Giày trẻ em': 'SP007',
+        'Mũ trẻ em': 'SP008',
+        'Balo trẻ em': 'SP009',
+        'Áo khoác trẻ em': 'SP010',
+        'Đồ chơi trẻ em': 'SP011',
+        'Quần jean trẻ em': 'SP012',
+        'Phụ kiện tóc': 'SP013'
     };
 
     // Dữ liệu mẫu của trang còn lại để chặn một hóa đơn bị đổi/trả nhiều lần khi từng trang được load riêng.
@@ -47,6 +67,87 @@ window.initSalePage = function initSalePage(container) {
     const today = () => new Date().toISOString().slice(0, 10);
     const normalize = (text) => (text || '').trim().toLowerCase();
     const validSelect = (select) => select && select.value && !select.value.includes('--');
+    const invoiceProductOptions = Object.keys(prices).map((name) => ({
+        name,
+        code: productCodes[name] || 'SP000',
+        price: prices[name] || 100000
+    }));
+
+    // Combobox sản phẩm trong form tạo hóa đơn: vừa gõ tìm kiếm, vừa chọn từ danh sách.
+    const renderProductOptions = (modal, keyword = '') => {
+        const optionsBox = modal.querySelector('[data-product-options]');
+        if (!optionsBox) return;
+
+        const normalizedKeyword = normalize(keyword);
+        const results = invoiceProductOptions.filter((item) => {
+            const searchable = `${item.code} ${item.name}`;
+            return normalize(searchable).includes(normalizedKeyword);
+        });
+
+        optionsBox.innerHTML = results.length
+            ? results.map((item) => `
+                <button type="button" class="combo-option" data-product-name="${item.name}">
+                    <span><strong>${item.code}</strong> ${item.name}</span>
+                    <small>${formatMoney(item.price)}</small>
+                </button>
+            `).join('')
+            : '<div class="combo-empty">Không tìm thấy sản phẩm phù hợp.</div>';
+    };
+
+    const setInvoiceProduct = (modal, productName) => {
+        const input = modal.querySelector('[data-product-search]');
+        const value = modal.querySelector('[data-product-value]');
+        const combo = modal.querySelector('[data-product-combobox]');
+        if (!input || !value || !combo) return;
+        input.value = productName;
+        value.value = productName;
+        combo.classList.remove('open');
+    };
+
+    const initInvoiceProductCombobox = () => {
+        const modal = root.querySelector('#invoice-create');
+        if (!modal || modal.dataset.productComboReady === 'true') return;
+        modal.dataset.productComboReady = 'true';
+
+        const combo = modal.querySelector('[data-product-combobox]');
+        const input = modal.querySelector('[data-product-search]');
+        const value = modal.querySelector('[data-product-value]');
+        const toggle = modal.querySelector('[data-product-toggle]');
+        const optionsBox = modal.querySelector('[data-product-options]');
+        if (!combo || !input || !value || !toggle || !optionsBox) return;
+
+        renderProductOptions(modal);
+        input.addEventListener('focus', () => {
+            renderProductOptions(modal, input.value);
+            combo.classList.add('open');
+        });
+        input.addEventListener('input', () => {
+            value.value = '';
+            renderProductOptions(modal, input.value);
+            combo.classList.add('open');
+        });
+        toggle.addEventListener('click', () => {
+            renderProductOptions(modal, input.value);
+            combo.classList.toggle('open');
+            input.focus();
+        });
+        optionsBox.addEventListener('click', (event) => {
+            const option = event.target.closest('[data-product-name]');
+            if (!option) return;
+            setInvoiceProduct(modal, option.dataset.productName);
+        });
+        document.addEventListener('click', (event) => {
+            if (!combo.contains(event.target)) combo.classList.remove('open');
+        });
+    };
+
+    const selectedInvoiceProduct = (modal) => {
+        const value = modal.querySelector('[data-product-value]')?.value.trim();
+        const typed = modal.querySelector('[data-product-search]')?.value.trim();
+        if (value && prices[value]) return value;
+        const exactMatch = invoiceProductOptions.find((item) => normalize(item.name) === normalize(typed) || normalize(item.code) === normalize(typed));
+        return exactMatch?.name || '';
+    };
     const countRows = (tableSelector) => root.querySelectorAll(`${tableSelector} tr`).length;
 
     const nextCode = (tableSelector, prefix) => {
@@ -500,16 +601,16 @@ window.initSalePage = function initSalePage(container) {
 
     const addInvoiceProduct = () => {
         const modal = root.querySelector('#invoice-create');
-        const productSelect = modal.querySelector('.add-product select');
+        const product = selectedInvoiceProduct(modal);
         const qtyInput = modal.querySelector('.add-product input[type="number"]');
         const body = modal.querySelector('.sales-card tbody');
-        if (!validSelect(productSelect)) {
-            alert('Vui lòng chọn sản phẩm.');
+        if (!product) {
+            alert('Vui lòng chọn sản phẩm trong danh sách gợi ý.');
+            modal.querySelector('[data-product-search]')?.focus();
             return;
         }
 
         const quantity = Math.max(1, Number(qtyInput.value || 1));
-        const product = productSelect.value;
         const price = prices[product] || 100000;
         const row = document.createElement('tr');
         row.dataset.product = product;
@@ -521,8 +622,13 @@ window.initSalePage = function initSalePage(container) {
         if (empty) empty.closest('tr').remove();
         body.appendChild(row);
         refreshInvoiceDraftTable(body);
-    };
 
+        modal.querySelector('[data-product-search]').value = '';
+        modal.querySelector('[data-product-value]').value = '';
+        renderProductOptions(modal);
+        qtyInput.value = '1';
+        modal.querySelector('[data-product-search]').focus();
+    };
     const openDraftEditModal = (row) => {
         if (!row) return;
         const productOptions = Object.keys(prices).map((name) => `<option ${row.dataset.product === name ? 'selected' : ''}>${name}</option>`).join('');
@@ -606,12 +712,56 @@ window.initSalePage = function initSalePage(container) {
         closeModal(modal);
     };
 
+    const openInvoiceCustomerModal = () => {
+        const invoiceModal = root.querySelector('#invoice-create');
+        const customerSelect = invoiceModal?.querySelector('.form-grid select');
+        const modal = showWorkModal('invoice-customer-create-modal', 'Thêm khách hàng', `
+            <div class="form-grid edit-grid customer-create-grid">
+                <div class="field full">
+                    <label>Họ tên khách hàng <span class="required">*</span></label>
+                    <input type="text" data-field="customerName" placeholder="Nhập họ tên khách hàng">
+                </div>
+                <div class="field full">
+                    <label>Số điện thoại <span class="required">*</span></label>
+                    <input type="text" data-field="customerPhone" placeholder="Nhập số điện thoại">
+                </div>
+            </div>
+        `, `<button class="sales-btn light" data-close>Hủy</button><button class="sales-btn primary" data-save-invoice-customer>Lưu</button>`);
+
+        modal.querySelector('[data-save-invoice-customer]').onclick = () => {
+            const name = fieldValue(modal, 'customerName');
+            const phone = fieldValue(modal, 'customerPhone');
+            if (!name || !phone) {
+                alert('Vui lòng nhập đầy đủ tên và số điện thoại khách hàng.');
+                return;
+            }
+
+            if (customerSelect) {
+                let option = Array.from(customerSelect.options).find((item) => normalize(item.value) === normalize(name));
+                if (!option) {
+                    option = document.createElement('option');
+                    option.value = name;
+                    option.textContent = name;
+                    option.dataset.phone = phone;
+                    customerSelect.appendChild(option);
+                }
+                customerSelect.value = name;
+            }
+
+            closeModal(modal);
+        };
+    };
     const bindInvoicePage = () => {
         hydrateActionCells('#invoice-table', 'invoice', 'invoice-detail');
         bindInvoicePagination();
         renderInvoicePagination();
+        initInvoiceProductCombobox();
         root.querySelector('#invoice-create .add-product .sales-btn.primary').addEventListener('click', addInvoiceProduct);
         root.querySelector('#invoice-create .modal-actions .sales-btn.primary').addEventListener('click', createInvoice);
+        root.querySelector('[data-add-invoice-customer]')?.addEventListener('click', (event) => {
+            event.preventDefault();
+            openInvoiceCustomerModal();
+        });
         bindInvoiceDraftActions();
     };
 
