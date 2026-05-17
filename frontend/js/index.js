@@ -2,11 +2,16 @@ document.addEventListener("DOMContentLoaded", () => {
     // 0. CẬP NHẬT TÊN HIỂN THỊ TỪ LOCALSTORAGE
     const currentUser = localStorage.getItem('currentUser');
     if (currentUser) {
-        // Cập nhật tên ở các vị trí nếu muốn (Optional)
+        let displayName = currentUser;
+        try {
+            const parsedUser = JSON.parse(currentUser);
+            displayName = parsedUser.fullname || parsedUser.fullName || parsedUser.name || parsedUser.username || currentUser;
+        } catch {
+            displayName = currentUser;
+        }
         const profileUser = document.getElementById('profile-username');
-        if(profileUser) profileUser.innerText = currentUser;
+        if (profileUser) profileUser.innerText = displayName;
     }
-
     // 1. CHUYỂN TRANG (SPA ROUTING)
     const loadPage = async (page) => {
         const content = document.getElementById('main-content');
