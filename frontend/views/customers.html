@@ -58,7 +58,7 @@
             </li>
 
             <!-- PRODUCT -->
-            <li class="menu-item has-submenu open active">
+            <li class="menu-item has-submenu">
 
                 <a href="#" class="menu-toggle">
 
@@ -72,7 +72,7 @@
 
                 <ul class="submenu">
 
-                    <li class="submenu-active">
+                    <li>
 
                         <a href="products/categories.html">
 
@@ -140,7 +140,7 @@
 
             </li>
 
-            <li class="menu-item">
+            <li class="menu-item active">
 
                 <a href="customers.html">
 
@@ -486,7 +486,7 @@
     <div class="modal-content customer-detail-modal">
 
         <!-- HEADER -->
-        <div class="modal-header">
+        <div class="modal-header customer-detail-header">
 
             <h2>Chi tiết khách hàng</h2>
 
@@ -503,7 +503,7 @@
         <div class="modal-body">
 
             <!-- CUSTOMER INFO -->
-            <div class="customer-info"
+            <div class="customer-info detail-grid"
                  id="customerDetail">
 
                 <!-- RENDER JS -->
@@ -513,13 +513,13 @@
             <!-- HISTORY -->
             <div class="history-header">
 
-                <h3>Lịch sử mua hàng</h3>
+                <h3 class="section-title">Lịch sử mua hàng</h3>
 
             </div>
 
             <div class="table-container">
 
-                <table class="history-table">
+                <table class="history-table sales-table">
 
                     <thead>
 
@@ -543,6 +543,11 @@
                 </table>
 
             </div>
+
+            <button class="sales-btn primary block customer-detail-close"
+                    onclick="closeDetailModal()">
+                Đóng
+            </button>
 
         </div>
 

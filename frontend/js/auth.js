@@ -52,6 +52,23 @@
         });
     };
 
+    const removeRevenueReportMenu = () => {
+        document.querySelectorAll('.submenu a').forEach((link) => {
+            const href = (link.getAttribute('href') || '').replace(/\\/g, '/').toLowerCase();
+            const text = link.textContent.trim().toLowerCase();
+            const isRevenueReport =
+                href === 'revenue.html' ||
+                href.endsWith('/revenue.html') ||
+                href.includes('reports/revenue.html') ||
+                text.includes('doanh thu');
+
+            if (isRevenueReport) {
+                const item = link.closest('li');
+                if (item) item.remove();
+            }
+        });
+    };
+
     const updateHeaderProfile = (account) => {
         document.querySelectorAll('.header-user .user-info h4').forEach((item) => {
             item.textContent = account.name;
@@ -122,12 +139,22 @@
         }
     };
 
+    const redirectStaffAwayFromRevenuePage = (account) => {
+        const path = window.location.pathname.replace(/\\/g, '/').toLowerCase();
+        if (account.role !== 'staff' || !path.endsWith('/frontend/views/reports/revenue.html')) return;
+        window.location.replace('products.html');
+    };
+
     window.applyKidCityAuth = function applyKidCityAuth() {
         const account = getCurrentAccount();
         updateHeaderProfile(account);
-        if (account.role === 'staff') removeUserManagementMenu();
+        if (account.role === 'staff') {
+            removeUserManagementMenu();
+            removeRevenueReportMenu();
+        }
         bindMenuStatePersistence();
         redirectStaffAwayFromUsersPage(account);
+        redirectStaffAwayFromRevenuePage(account);
     };
 
     document.addEventListener('DOMContentLoaded', window.applyKidCityAuth);

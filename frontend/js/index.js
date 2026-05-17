@@ -32,7 +32,15 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll('.menu-toggle').forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.preventDefault();
-            btn.parentElement.classList.toggle('open');
+            const menuItem = btn.closest('.menu-item');
+            if (!menuItem) return;
+
+            document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
+            document.querySelectorAll('.submenu a').forEach(item => item.classList.remove('active'));
+            document.querySelectorAll('.submenu-active').forEach(item => item.classList.remove('submenu-active'));
+
+            menuItem.classList.add('active');
+            menuItem.classList.toggle('open');
         });
     });
 
@@ -40,6 +48,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // Chỉ cập nhật tab đang chọn, không đóng các nhóm menu người dùng đã mở.
         document.querySelectorAll('.menu-item').forEach(li => li.classList.remove('active'));
         document.querySelectorAll('.submenu a').forEach(item => item.classList.remove('active'));
+        document.querySelectorAll('.submenu-active').forEach(item => item.classList.remove('submenu-active'));
 
         const currentItem = link.closest('.menu-item');
         if (currentItem) {
@@ -52,6 +61,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const currentSubmenu = link.closest('.submenu');
         if (currentSubmenu) {
             link.classList.add('active');
+            link.closest('li')?.classList.add('submenu-active');
             const parentItem = currentSubmenu.closest('.menu-item');
             if (parentItem) parentItem.classList.add('open');
         }
@@ -73,6 +83,15 @@ document.addEventListener("DOMContentLoaded", () => {
             if (!this.classList.contains('menu-toggle')) setActiveMenu(this);
         });
     });
+
+    document.querySelectorAll('.submenu a:not([data-target])').forEach(link => {
+        link.addEventListener('click', function() {
+            setActiveMenu(this);
+        });
+    });
+
+    const initialActiveLink = document.querySelector(`[data-target="${initialPage}"]`);
+    if (initialActiveLink) setActiveMenu(initialActiveLink);
 
     window.addEventListener('hashchange', () => {
         const page = window.location.hash ? window.location.hash.slice(1) : 'dashboard';

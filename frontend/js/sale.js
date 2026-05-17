@@ -39,6 +39,22 @@ window.initSalePage = function initSalePage(container) {
         'Phụ kiện tóc': 'SP013'
     };
 
+    const productDetails = {
+        'Áo thun Mickey Mouse': { category: 'Áo thun', size: 'M', color: 'Đỏ', stock: 24 },
+        'Áo thun Elsa Frozen': { category: 'Áo thun', size: 'S', color: 'Hồng', stock: 18 },
+        'Váy hoa nhí công chúa': { category: 'Váy bé gái', size: 'M', color: 'Vàng', stock: 3 },
+        'Quần short bé trai': { category: 'Quần short', size: 'L', color: 'Đen', stock: 5 },
+        'Bộ đồ bé trai': { category: 'Bộ đồ', size: 'M', color: 'Xanh dương', stock: 12 },
+        'Đầm công chúa': { category: 'Đầm bé gái', size: 'L', color: 'Trắng', stock: 7 },
+        'Giày trẻ em': { category: 'Giày dép', size: '28', color: 'Trắng', stock: 10 },
+        'Mũ trẻ em': { category: 'Phụ kiện', size: 'Free Size', color: 'Xanh nhạt', stock: 22 },
+        'Balo trẻ em': { category: 'Phụ kiện', size: 'Free Size', color: 'Xanh dương', stock: 8 },
+        'Áo khoác trẻ em': { category: 'Áo khoác', size: 'L', color: 'Đỏ đô', stock: 4 },
+        'Đồ chơi trẻ em': { category: 'Đồ chơi', size: 'Free Size', color: 'Nhiều màu', stock: 16 },
+        'Quần jean trẻ em': { category: 'Quần dài', size: 'M', color: 'Xanh nhạt', stock: 9 },
+        'Phụ kiện tóc': { category: 'Phụ kiện', size: 'Free Size', color: 'Hồng', stock: 30 }
+    };
+
     // Dữ liệu mẫu của trang còn lại để chặn một hóa đơn bị đổi/trả nhiều lần khi từng trang được load riêng.
     const initialExchangeInvoiceCodes = ['HD001', 'HD002', 'HD003', 'HD005', 'HD008'];
     const initialReturnInvoiceCodes = ['HD002', 'HD004', 'HD005', 'HD009', 'HD011'];
@@ -70,7 +86,8 @@ window.initSalePage = function initSalePage(container) {
     const invoiceProductOptions = Object.keys(prices).map((name) => ({
         name,
         code: productCodes[name] || 'SP000',
-        price: prices[name] || 100000
+        price: prices[name] || 100000,
+        ...(productDetails[name] || {})
     }));
 
     // Combobox sản phẩm trong form tạo hóa đơn: vừa gõ tìm kiếm, vừa chọn từ danh sách.
@@ -80,14 +97,22 @@ window.initSalePage = function initSalePage(container) {
 
         const normalizedKeyword = normalize(keyword);
         const results = invoiceProductOptions.filter((item) => {
-            const searchable = `${item.code} ${item.name}`;
+            const searchable = `${item.code} ${item.name} ${item.category || ''} ${item.size || ''} ${item.color || ''} ${item.price || ''} ${item.stock || ''}`;
             return normalize(searchable).includes(normalizedKeyword);
         });
 
         optionsBox.innerHTML = results.length
             ? results.map((item) => `
                 <button type="button" class="combo-option" data-product-name="${item.name}">
-                    <span><strong>${item.code}</strong> ${item.name}</span>
+                    <span class="combo-main">
+                        <span class="combo-title"><strong>${item.code}</strong> ${item.name}</span>
+                        <span class="combo-meta">
+                            <b>${item.category || 'Chưa phân loại'}</b>
+                            <b>Size: ${item.size || '-'}</b>
+                            <b>Màu: ${item.color || '-'}</b>
+                            <b>SL: ${item.stock ?? '-'}</b>
+                        </span>
+                    </span>
                     <small>${formatMoney(item.price)}</small>
                 </button>
             `).join('')
@@ -572,12 +597,18 @@ window.initSalePage = function initSalePage(container) {
     const renderInvoiceDraftRow = (row, index) => {
         const product = row.dataset.product;
         const code = row.dataset.productCode || 'SP000';
+        const detail = productDetails[product] || {};
         const quantity = Number(row.dataset.quantity || 1);
         const price = Number(row.dataset.price || 0);
         row.innerHTML = `
             <td>${index}</td>
             <td><a class="product-code-link" href="#">${code}</a></td>
-            <td>${product}</td>
+            <td>
+                <strong>${product}</strong>
+                <div class="draft-product-meta">
+                    Size: ${detail.size || '-'} · Màu: ${detail.color || '-'} · Tồn: ${detail.stock ?? '-'}
+                </div>
+            </td>
             <td>${quantity}</td>
             <td>${formatMoney(price)}</td>
             <td><strong>${formatMoney(price * quantity)}</strong></td>

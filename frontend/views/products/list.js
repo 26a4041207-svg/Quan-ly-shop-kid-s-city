@@ -221,6 +221,8 @@ const table = document.getElementById("productTable");
 
 const categoryFilter = document.getElementById("categoryFilter");
 
+const productSearch = document.getElementById("productSearch");
+
 
 
 const minPrice = document.getElementById("minPrice");
@@ -264,6 +266,10 @@ let pendingStopProductId = null;
 // FORM
 
 const productName = document.getElementById("productName");
+
+const productImage = document.getElementById("productImage");
+
+const productImagePreview = document.getElementById("productImagePreview");
 
 const productCategory = document.getElementById("productCategory");
 
@@ -376,6 +382,24 @@ function getVisibleProducts() {
 // RENDER PRODUCTS
 // =========================
 
+function svgProductImage(product) {
+    const title = (product.name || "SP").slice(0, 22);
+    const colorMap = { "Đỏ": "#ef4444", "Đỏ đô": "#991b1b", "Hồng": "#f472b6", "Vàng": "#facc15", "Đen": "#111827", "Trắng": "#f8fafc", "Xanh dương": "#2563eb", "Xanh nhạt": "#7dd3fc", "Xám": "#94a3b8", "Kem": "#fde68a" };
+    const accent = colorMap[product.color] || "#60a5fa";
+    const safeTitle = title.replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[char]));
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="320" height="240" viewBox="0 0 320 240"><rect width="320" height="240" rx="28" fill="#eef4ff"/><path d="M104 72l38-24h36l38 24 28 38-32 20-18-24v82H126v-82l-18 24-32-20 28-38z" fill="${accent}"/><path d="M142 48c4 13 32 13 36 0" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="8" stroke-linecap="round"/><rect x="54" y="184" width="212" height="30" rx="15" fill="rgba(255,255,255,.9)"/><text x="160" y="205" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="700" fill="#0f172a">${safeTitle}</text></svg>`;
+    return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+}
+
+function getProductImage(product) {
+    return product.image || svgProductImage(product);
+}
+
+function updateProductImagePreview(product = {}) {
+    if (!productImagePreview) return;
+    const image = product.image || productImage?.value.trim() || svgProductImage({ name: productName?.value.trim() || product.name || "Sản phẩm", color: productColor?.value.trim() || product.color || "Xanh dương" });
+    productImagePreview.innerHTML = `<img src="${image}" alt="Ảnh sản phẩm">`;
+}
 function renderProducts(data = getVisibleProducts()) {
 
     table.innerHTML = "";
@@ -410,7 +434,9 @@ function renderProducts(data = getVisibleProducts()) {
 
                     <div class="product-image">
 
-                        <i class='bx bx-image'></i>
+                        <img src="${getProductImage(product)}"
+                             alt="Ảnh sản phẩm"
+                             onerror="this.src='${svgProductImage(product)}'">
 
                     </div>
 
@@ -547,6 +573,20 @@ function filterProducts() {
 
     let filtered = getVisibleProducts();
 
+    const keyword = (productSearch?.value || "").trim().toLowerCase();
+
+    if (keyword) {
+
+        filtered = filtered.filter(product => {
+
+            const searchable = `${product.id} ${product.name} ${product.category} ${product.size} ${product.color}`.toLowerCase();
+
+            return searchable.includes(keyword);
+
+        });
+
+    }
+
     if (categoryFilter.value) {
 
         filtered = filtered.filter(product =>
@@ -574,7 +614,6 @@ function filterProducts() {
     renderProducts(filtered);
 
 }
-
 function setupPriceRange() {
 
     const visibleProducts = getVisibleProducts();
@@ -633,6 +672,17 @@ function handlePriceRangeInput(event) {
 
 }
 // =========================
+if (productImage) {
+    productImage.addEventListener("input", () => updateProductImagePreview());
+}
+
+if (productName) {
+    productName.addEventListener("input", () => updateProductImagePreview());
+}
+
+if (productColor) {
+    productColor.addEventListener("input", () => updateProductImagePreview());
+}
 // FILTER EVENTS
 // =========================
 
@@ -640,6 +690,13 @@ categoryFilter.addEventListener(
     "change",
     filterProducts
 );
+
+if (productSearch) {
+    productSearch.addEventListener(
+        "input",
+        filterProducts
+    );
+}
 
 minPrice.addEventListener(
     "input",
@@ -774,7 +831,9 @@ saveProductBtn.addEventListener("click", () => {
                 .toISOString()
                 .split("T")[0],
 
-        status: productStatus.value
+        status: productStatus.value,
+
+        image: productImage.value.trim()
 
     };
 
@@ -976,6 +1035,10 @@ function fillForm(product) {
 
     productName.value = product.name;
 
+    productImage.value = product.image || "";
+
+    updateProductImagePreview(product);
+
     productCategory.value = product.category;
 
     productSize.value = product.size;
@@ -996,6 +1059,8 @@ function clearForm() {
 
     productName.value = "";
 
+    productImage.value = "";
+
     productCategory.value = "";
 
     productSize.value = "";
@@ -1009,6 +1074,8 @@ function clearForm() {
     productStatus.value = "selling";
 
     productCreatedAt.value = getTodayDate();
+
+    updateProductImagePreview();
 
 }
 

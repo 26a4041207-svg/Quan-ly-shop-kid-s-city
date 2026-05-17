@@ -126,6 +126,81 @@ const purchaseHistory = [
     }
 ];
 
+const invoiceDetails = {
+    HD001: {
+        customer: "Lê Thị Cẩm Ly",
+        staff: "Trần Thị Bình",
+        date: "2026-04-15",
+        payment: "Tiền mặt",
+        note: "Khách hàng quen",
+        total: "375.000đ",
+        items: [["Áo thun Mickey Mouse", "120.000đ", "2", "0đ", "240.000đ"], ["Áo thun Elsa Frozen", "135.000đ", "1", "0đ", "135.000đ"]]
+    },
+    HD002: {
+        customer: "Nguyễn Minh Anh",
+        staff: "Nguyễn Văn An",
+        date: "2026-05-05",
+        payment: "Chuyển khoản",
+        note: "Khách đặt thêm sản phẩm",
+        total: "780.000đ",
+        items: [["Áo hoodie", "450.000đ", "1", "0đ", "450.000đ"], ["Quần short kaki", "330.000đ", "1", "0đ", "330.000đ"]]
+    },
+    HD003: {
+        customer: "Trần Hoàng Nam",
+        staff: "Nguyễn Văn An",
+        date: "2026-05-06",
+        payment: "Tiền mặt",
+        note: "Không có",
+        total: "250.000đ",
+        items: [["Áo thun bé trai", "250.000đ", "1", "0đ", "250.000đ"]]
+    },
+    HD004: {
+        customer: "Lê Gia Hân",
+        staff: "Nguyễn Văn An",
+        date: "2026-05-07",
+        payment: "Chuyển khoản",
+        note: "Không có",
+        total: "920.000đ",
+        items: [["Váy hoa công chúa", "420.000đ", "1", "0đ", "420.000đ"], ["Váy ren dự tiệc", "500.000đ", "1", "0đ", "500.000đ"]]
+    },
+    HD005: {
+        customer: "Phạm Đức Long",
+        staff: "Nguyễn Văn An",
+        date: "2026-05-08",
+        payment: "Tiền mặt",
+        note: "Không có",
+        total: "330.000đ",
+        items: [["Quần short kaki bé trai", "330.000đ", "1", "0đ", "330.000đ"]]
+    },
+    HD006: {
+        customer: "Võ Ngọc Linh",
+        staff: "Nguyễn Văn An",
+        date: "2026-05-09",
+        payment: "Chuyển khoản",
+        note: "Đơn giá trị cao",
+        total: "1.500.000đ",
+        items: [["Áo khoác phao trẻ em", "650.000đ", "1", "0đ", "650.000đ"], ["Váy ren dự tiệc", "520.000đ", "1", "0đ", "520.000đ"], ["Quần short jean bé gái", "330.000đ", "1", "0đ", "330.000đ"]]
+    },
+    HD007: {
+        customer: "Đặng Quốc Bảo",
+        staff: "Nguyễn Văn An",
+        date: "2026-05-10",
+        payment: "Tiền mặt",
+        note: "Không có",
+        total: "690.000đ",
+        items: [["Quần jogger cotton", "410.000đ", "1", "0đ", "410.000đ"], ["Áo thun cotton tay dài", "280.000đ", "1", "0đ", "280.000đ"]]
+    },
+    HD008: {
+        customer: "Bùi Thanh Thảo",
+        staff: "Nguyễn Văn An",
+        date: "2026-05-11",
+        payment: "Chuyển khoản",
+        note: "Không có",
+        total: "820.000đ",
+        items: [["Váy hoa công chúa", "420.000đ", "1", "0đ", "420.000đ"], ["Quần dài thể thao bé trai", "400.000đ", "1", "0đ", "400.000đ"]]
+    }
+};
+
 /* =========================
    RENDER TABLE
 ========================= */
@@ -276,6 +351,20 @@ document
     .getElementById("searchCustomer")
     .addEventListener("keyup", filterCustomers);
 
+document.addEventListener("click", event => {
+
+    const invoiceLink =
+        event.target.closest(".invoice-link");
+
+    if(!invoiceLink) return;
+
+    event.preventDefault();
+
+    openInvoiceDetailModal(
+        invoiceLink.textContent.trim()
+    );
+});
+
 /* =========================
    OPEN ADD MODAL
 ========================= */
@@ -312,6 +401,129 @@ function closeDetailModal(){
     document
         .getElementById("detailModal")
         .classList.remove("show");
+}
+
+function closeInvoiceDetailModal(){
+
+    const modal =
+        document.getElementById("invoiceDetailModal");
+
+    if(modal){
+
+        modal.remove();
+    }
+}
+
+function openInvoiceDetailModal(invoiceCode){
+
+    const invoice =
+        invoiceDetails[invoiceCode];
+
+    if(!invoice){
+
+        alert("Không tìm thấy chi tiết hóa đơn " + invoiceCode);
+
+        return;
+    }
+
+    closeInvoiceDetailModal();
+
+    const rows =
+        invoice.items
+            .map(item => `
+
+                <tr>
+                    <td>${item[0]}</td>
+                    <td>${item[1]}</td>
+                    <td>${item[2]}</td>
+                    <td>${item[3]}</td>
+                    <td><strong>${item[4]}</strong></td>
+                </tr>
+
+            `)
+            .join("");
+
+    const modal =
+        document.createElement("div");
+
+    modal.className = "sales-modal active";
+    modal.id = "invoiceDetailModal";
+
+    modal.innerHTML = `
+
+        <div class="sales-dialog detail">
+            <div class="sales-modal-body">
+
+                <h2 class="detail-title">
+                    Chi tiết hóa đơn ${invoiceCode}
+                </h2>
+
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <span>Khách hàng</span>
+                        <strong>${invoice.customer}</strong>
+                    </div>
+
+                    <div class="detail-item">
+                        <span>Nhân viên</span>
+                        <strong>${invoice.staff}</strong>
+                    </div>
+
+                    <div class="detail-item">
+                        <span>Ngày lập</span>
+                        <strong>${invoice.date}</strong>
+                    </div>
+
+                    <div class="detail-item">
+                        <span>Phương thức thanh toán</span>
+                        <strong>${invoice.payment}</strong>
+                    </div>
+
+                    <div class="detail-item">
+                        <span>Ghi chú</span>
+                        <strong>${invoice.note}</strong>
+                    </div>
+                </div>
+
+                <h3 class="section-title">
+                    Chi tiết sản phẩm
+                </h3>
+
+                <table class="sales-table">
+                    <thead>
+                        <tr>
+                            <th>Sản phẩm</th>
+                            <th>Đơn giá</th>
+                            <th>SL</th>
+                            <th>Giảm giá</th>
+                            <th>Thành tiền</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                </table>
+
+                <div class="total-line">
+                    Tổng tiền: <span>${invoice.total}</span>
+                </div>
+
+                <button class="sales-btn primary block"
+                        onclick="closeInvoiceDetailModal()">
+                    Đóng
+                </button>
+
+            </div>
+        </div>
+    `;
+
+    modal.addEventListener("click", event => {
+
+        if(event.target === modal){
+
+            closeInvoiceDetailModal();
+        }
+    });
+
+    document.body.appendChild(modal);
 }
 
 /* =========================
@@ -420,64 +632,29 @@ function viewCustomer(id){
 
     document.getElementById("customerDetail").innerHTML = `
 
-        <div class="info-item">
-
-            <div class="info-label">
-                Mã khách hàng
-            </div>
-
-            <div class="info-value">
-                ${customer.maKhachHang}
-            </div>
-
+        <div class="detail-item">
+            <span>Mã khách hàng</span>
+            <strong>${customer.maKhachHang}</strong>
         </div>
 
-        <div class="info-item">
-
-            <div class="info-label">
-                Tên khách hàng
-            </div>
-
-            <div class="info-value">
-                ${customer.tenKhachHang}
-            </div>
-
+        <div class="detail-item">
+            <span>Tên khách hàng</span>
+            <strong>${customer.tenKhachHang}</strong>
         </div>
 
-        <div class="info-item">
-
-            <div class="info-label">
-                Số điện thoại
-            </div>
-
-            <div class="info-value">
-                ${customer.soDienThoai}
-            </div>
-
+        <div class="detail-item">
+            <span>Số điện thoại</span>
+            <strong>${customer.soDienThoai}</strong>
         </div>
 
-        <div class="info-item">
-
-            <div class="info-label">
-                Ngày tạo
-            </div>
-
-            <div class="info-value">
-                ${formatDate(customer.ngayTao)}
-            </div>
-
+        <div class="detail-item">
+            <span>Ngày tạo</span>
+            <strong>${formatDate(customer.ngayTao)}</strong>
         </div>
 
-        <div class="info-item">
-
-            <div class="info-label">
-                Ngày cập nhật
-            </div>
-
-            <div class="info-value">
-                ${formatDate(customer.ngayCapNhat)}
-            </div>
-
+        <div class="detail-item">
+            <span>Ngày cập nhật</span>
+            <strong>${formatDate(customer.ngayCapNhat)}</strong>
         </div>
     `;
 
@@ -521,7 +698,7 @@ function viewCustomer(id){
 
                     <td>
 
-                        <a href="../sales/invoices.html?id=${item.maHoaDon}"
+                        <a href="#"
                            class="invoice-link">
 
                             ${item.maHoaDon}
