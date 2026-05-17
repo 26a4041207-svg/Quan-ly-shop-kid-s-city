@@ -123,6 +123,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (confirm('Ban co chac chan muon dang xuat?')) {
                 localStorage.removeItem('isLoggedIn');
                 localStorage.removeItem('currentUser');
+                localStorage.removeItem('currentRole');
                 window.location.href = '../login.html';
             }
         });

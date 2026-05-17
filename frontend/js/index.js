@@ -31,16 +31,25 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-        const setActiveMenu = (link) => {
+    const setActiveMenu = (link) => {
+        // Chỉ cập nhật tab đang chọn, không đóng các nhóm menu người dùng đã mở.
         document.querySelectorAll('.menu-item').forEach(li => li.classList.remove('active'));
         document.querySelectorAll('.submenu a').forEach(item => item.classList.remove('active'));
 
         const currentItem = link.closest('.menu-item');
         if (currentItem) {
             currentItem.classList.add('active');
-            if (currentItem.classList.contains('has-submenu')) currentItem.classList.add('open');
+            if (currentItem.classList.contains('has-submenu')) {
+                currentItem.classList.add('open');
+            }
         }
-        if (link.closest('.submenu')) link.classList.add('active');
+
+        const currentSubmenu = link.closest('.submenu');
+        if (currentSubmenu) {
+            link.classList.add('active');
+            const parentItem = currentSubmenu.closest('.menu-item');
+            if (parentItem) parentItem.classList.add('open');
+        }
     };
 
     document.querySelectorAll('[data-target]').forEach(link => {
@@ -115,6 +124,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if(confirm("Bạn có chắc chắn muốn đăng xuất?")) {
                 localStorage.removeItem('isLoggedIn');
                 localStorage.removeItem('currentUser');
+                localStorage.removeItem('currentRole');
                 window.location.href = 'login.html';
             }
         });

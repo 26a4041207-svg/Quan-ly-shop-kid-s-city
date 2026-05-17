@@ -64,15 +64,20 @@ window.initSalePage = function initSalePage(container) {
     };
 
     const attachActions = (cell, type, detailId) => {
+        const currentRole = localStorage.getItem('currentRole') || 'admin';
+        const canDelete = !(currentRole === 'staff' && type === 'invoice');
+        const deleteButton = canDelete
+            ? `<button class="action-btn delete" data-delete="${type}" title="Xóa"><i class='bx bx-trash'></i></button>`
+            : '';
+
         cell.innerHTML = `
             <div class="action-group">
                 <button class="action-btn view" data-open="${detailId}" title="Xem chi tiết"><i class='bx bx-show'></i></button>
                 <button class="action-btn edit" data-edit="${type}" title="Sửa"><i class='bx bx-edit-alt'></i></button>
-                <button class="action-btn delete" data-delete="${type}" title="Xóa"><i class='bx bx-trash'></i></button>
+                ${deleteButton}
             </div>
         `;
     };
-
     const rowText = (row, index) => row.children[index]?.textContent.trim() || '';
     const invoiceLink = (code) => `<a class="invoice-code-link" href="#">${code}</a>`;
 
@@ -165,13 +170,14 @@ window.initSalePage = function initSalePage(container) {
     };
 
     root.addEventListener('click', (event) => {
-                const invoiceCodeLink = event.target.closest('.invoice-code-link');
+        const invoiceCodeLink = event.target.closest('.invoice-code-link');
         if (invoiceCodeLink && root.contains(invoiceCodeLink)) {
             event.preventDefault();
             openInvoiceDetailByCode(invoiceCodeLink.textContent.trim());
             return;
         }
-const openBtn = event.target.closest('[data-open]');
+
+        const openBtn = event.target.closest('[data-open]');
         if (openBtn && root.contains(openBtn)) {
             openModal(openBtn.dataset.open);
             return;
@@ -191,10 +197,10 @@ const openBtn = event.target.closest('[data-open]');
 
         const deleteBtn = event.target.closest('[data-delete]');
         if (deleteBtn && root.contains(deleteBtn)) {
+            if (localStorage.getItem('currentRole') === 'staff' && deleteBtn.dataset.delete === 'invoice') return;
             openDeleteModal(deleteBtn.closest('tr'), deleteBtn.dataset.delete);
         }
     });
-
     root.querySelectorAll('.sales-modal').forEach((modal) => {
         modal.addEventListener('click', (event) => {
             if (event.target === modal) closeModal(modal);
