@@ -4,6 +4,10 @@ const menuToggles = document.querySelectorAll(".menu-toggle");
 
 menuToggles.forEach(toggle => {
 
+    if (toggle.dataset.kidCityMenuBound === "true") return;
+
+    toggle.dataset.kidCityMenuBound = "true";
+
     toggle.addEventListener("click", (e) => {
 
         e.preventDefault();

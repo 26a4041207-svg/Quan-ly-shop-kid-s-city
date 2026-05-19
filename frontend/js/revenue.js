@@ -5,6 +5,8 @@
 
     const bindHeader = () => {
         document.querySelectorAll('.menu-toggle').forEach((toggle) => {
+            if (toggle.dataset.kidCityMenuBound === 'true') return;
+            toggle.dataset.kidCityMenuBound = 'true';
             toggle.addEventListener('click', (event) => {
                 event.preventDefault();
                 toggle.closest('.menu-item')?.classList.toggle('open');

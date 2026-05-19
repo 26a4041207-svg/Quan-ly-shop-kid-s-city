@@ -51,6 +51,8 @@ window.showToast = function(message) {
 // ==========================================
 document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.menu-toggle').forEach(function(btn) {
+        if (btn.dataset.kidCityMenuBound === 'true') return;
+        btn.dataset.kidCityMenuBound = 'true';
         btn.addEventListener('click', function(e) {
             e.preventDefault();
             const item = btn.closest('.menu-item');

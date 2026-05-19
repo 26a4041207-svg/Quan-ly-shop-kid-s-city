@@ -119,9 +119,25 @@
         });
     };
 
+    const bindMenuToggle = () => {
+        document.querySelectorAll('.menu-toggle').forEach((toggle) => {
+            if (toggle.dataset.kidCityMenuBound === 'true') return;
+            toggle.dataset.kidCityMenuBound = 'true';
+            toggle.addEventListener('click', (event) => {
+                event.preventDefault();
+                const item = toggle.closest('.menu-item');
+                if (!item) return;
+                item.classList.toggle('open');
+                setTimeout(saveOpenMenuState, 0);
+            });
+        });
+    };
+
     const bindMenuStatePersistence = () => {
         restoreOpenMenuState();
         document.querySelectorAll('.menu a').forEach((link) => {
+            if (link.dataset.kidCityStateBound === 'true') return;
+            link.dataset.kidCityStateBound = 'true';
             link.addEventListener('click', () => {
                 if (link.classList.contains('menu-toggle')) {
                     setTimeout(saveOpenMenuState, 0);
@@ -130,6 +146,51 @@
                 saveOpenMenuState();
             });
         });
+    };
+
+    const syncActiveMenu = () => {
+        const menu = document.querySelector('.menu');
+        if (!menu) return;
+
+        menu.querySelectorAll('.menu-item.active').forEach((item) => item.classList.remove('active'));
+        menu.querySelectorAll('.submenu a.active').forEach((item) => item.classList.remove('active'));
+        menu.querySelectorAll('.submenu-active').forEach((item) => item.classList.remove('submenu-active'));
+
+        const currentPath = window.location.pathname.replace(/\\/g, '/').toLowerCase();
+        const currentHash = window.location.hash.replace(/^#/, '').toLowerCase();
+        let activeLink = null;
+
+        if (currentHash) {
+            activeLink = menu.querySelector(`[data-target="${currentHash}"]`);
+            if (!activeLink) {
+                activeLink = Array.from(menu.querySelectorAll('a[href]')).find((link) => {
+                    const href = (link.getAttribute('href') || '').replace(/\\/g, '/').toLowerCase();
+                    return href.endsWith(`#${currentHash}`);
+                });
+            }
+        }
+
+        if (!activeLink) {
+            activeLink = Array.from(menu.querySelectorAll('a[href]:not(.menu-toggle)')).find((link) => {
+                const linkPath = new URL(link.getAttribute('href'), window.location.href).pathname
+                    .replace(/\\/g, '/')
+                    .toLowerCase();
+                return linkPath === currentPath;
+            });
+        }
+
+        if (!activeLink) return;
+
+        const submenu = activeLink.closest('.submenu');
+        if (submenu) {
+            activeLink.classList.add('active');
+            activeLink.closest('li')?.classList.add('submenu-active');
+            const parentItem = submenu.closest('.menu-item');
+            if (parentItem) parentItem.classList.add('active', 'open');
+            return;
+        }
+
+        activeLink.closest('.menu-item')?.classList.add('active');
     };
 
     const redirectStaffAwayFromUsersPage = (account) => {
@@ -152,6 +213,8 @@
             removeUserManagementMenu();
             removeRevenueReportMenu();
         }
+        syncActiveMenu();
+        bindMenuToggle();
         bindMenuStatePersistence();
         redirectStaffAwayFromUsersPage(account);
         redirectStaffAwayFromRevenuePage(account);

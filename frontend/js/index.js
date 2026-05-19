@@ -30,6 +30,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // 2. SIDEBAR MENU TOGGLE & ACTIVE
     document.querySelectorAll('.menu-toggle').forEach(btn => {
+        if (btn.dataset.kidCityMenuBound === 'true') return;
+        btn.dataset.kidCityMenuBound = 'true';
         btn.addEventListener('click', (e) => {
             e.preventDefault();
             const menuItem = btn.closest('.menu-item');
