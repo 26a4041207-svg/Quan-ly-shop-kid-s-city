@@ -32,6 +32,12 @@ window.initImportPage = function initImportPage(container) {
         try { return JSON.parse(row.dataset.products || '[]'); }
         catch { return []; }
     };
+    const searchableImportRow = (row) => {
+        const products = getProducts(row)
+            .map((item) => `${item.product || ''} ${item.quantity || ''} ${item.price || ''}`)
+            .join(' ');
+        return normalize(`${row.dataset.key || ''} ${row.dataset.supplier || ''} ${row.textContent || ''} ${products}`);
+    };
     const setProducts = (row, products) => {
         row.dataset.products = JSON.stringify(products);
     };
@@ -152,7 +158,7 @@ window.initImportPage = function initImportPage(container) {
        ===================================================== */
     const filteredRows = () => {
         const keyword = normalize(root.querySelector('#import-search').value);
-        return Array.from(root.querySelectorAll('#import-table tr')).filter((row) => normalize(row.dataset.key).includes(keyword));
+        return Array.from(root.querySelectorAll('#import-table tr')).filter((row) => searchableImportRow(row).includes(keyword));
     };
 
     const renderPagination = () => {

@@ -307,22 +307,17 @@ function filterCustomers(){
     const filtered =
         customers.filter(customer => {
 
-            const matchKeyword =
+            const searchable = [
+                customer.maKhachHang,
+                customer.tenKhachHang,
+                customer.soDienThoai,
+                customer.ngayTao,
+                customer.ngayCapNhat,
+                customer.soDonHang,
+                customer.tongChiTieu
+            ].join(" ").toLowerCase();
 
-                customer.tenKhachHang
-                .toLowerCase()
-                .includes(keyword)
-
-                ||
-
-                customer.soDienThoai
-                .includes(keyword)
-
-                ||
-
-                customer.maKhachHang
-                .toLowerCase()
-                .includes(keyword);
+            const matchKeyword = searchable.includes(keyword);
 
             let matchDate = true;
 

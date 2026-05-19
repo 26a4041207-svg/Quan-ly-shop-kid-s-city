@@ -65,9 +65,9 @@
             let visible = 0;
             rows.forEach((row) => {
                 const text = row.textContent.toLowerCase();
-                const tags = row.dataset.tags || 'all';
+                const period = row.dataset.period || '';
                 const matchKeyword = !keyword || text.includes(keyword);
-                const matchFilter = selected === 'all' || tags.includes(selected);
+                const matchFilter = !selected || period.split(/\s+/).includes(selected);
                 const show = matchKeyword && matchFilter;
                 row.style.display = show ? '' : 'none';
                 if (show) visible += 1;

@@ -19,6 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const res = await fetch(`views/${page}.html`);
             if (!res.ok) throw new Error();
             content.innerHTML = await res.text();
+            window.resetKidCitySearchInputs?.(content);
             if (window.initSalePage) window.initSalePage(content);
             if (window.initImportPage) window.initImportPage(content);
         } catch {

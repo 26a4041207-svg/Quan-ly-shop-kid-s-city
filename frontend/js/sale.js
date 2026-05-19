@@ -191,7 +191,8 @@ window.initSalePage = function initSalePage(container) {
 
     const attachActions = (cell, type, detailId) => {
         const currentRole = localStorage.getItem('currentRole') || 'admin';
-        const canDelete = !(currentRole === 'staff' && type === 'invoice');
+        const staffBlockedDeletes = ['invoice', 'exchange', 'return'];
+        const canDelete = !(currentRole === 'staff' && staffBlockedDeletes.includes(type));
         const deleteButton = canDelete
             ? `<button class="action-btn delete" data-delete="${type}" title="Xóa"><i class='bx bx-trash'></i></button>`
             : '';
@@ -205,6 +206,7 @@ window.initSalePage = function initSalePage(container) {
         `;
     };
     const rowText = (row, index) => row.children[index]?.textContent.trim() || '';
+    const searchableRowText = (row) => normalize(`${row.dataset.key || ''} ${row.textContent || ''}`);
     const invoiceLink = (code) => `<a class="invoice-code-link" href="#">${code}</a>`;
 
     const usedInvoiceCodes = () => {
@@ -323,7 +325,8 @@ window.initSalePage = function initSalePage(container) {
 
         const deleteBtn = event.target.closest('[data-delete]');
         if (deleteBtn && root.contains(deleteBtn)) {
-            if (localStorage.getItem('currentRole') === 'staff' && deleteBtn.dataset.delete === 'invoice') return;
+            const staffBlockedDeletes = ['invoice', 'exchange', 'return'];
+            if (localStorage.getItem('currentRole') === 'staff' && staffBlockedDeletes.includes(deleteBtn.dataset.delete)) return;
             openDeleteModal(deleteBtn.closest('tr'), deleteBtn.dataset.delete);
         }
     });
@@ -346,7 +349,7 @@ window.initSalePage = function initSalePage(container) {
 
         const keyword = normalize(searchInput ? searchInput.value : '');
         return Array.from(tableBody.querySelectorAll('tr')).filter((row) => {
-            return normalize(row.dataset.key).includes(keyword);
+            return searchableRowText(row).includes(keyword);
         });
     };
 
@@ -586,7 +589,7 @@ window.initSalePage = function initSalePage(container) {
 
             const value = normalize(searchInput.value);
             tableBody.querySelectorAll('tr').forEach((row) => {
-                row.style.display = normalize(row.dataset.key).includes(value) ? '' : 'none';
+                row.style.display = searchableRowText(row).includes(value) ? '' : 'none';
             });
         });
     };

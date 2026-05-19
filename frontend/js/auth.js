@@ -1,14 +1,14 @@
 (function () {
     const accounts = {
-        admin: { role: 'admin', roleLabel: 'Chủ shop', name: 'Nguyễn Văn An', email: 'admin@kidscity.vn' },
-        staff1: { role: 'staff', roleLabel: 'Nhân viên', name: 'Trần Thị Bình', email: 'binh@kidscity.vn' },
-        staff3: { role: 'staff', roleLabel: 'Nhân viên', name: 'Phạm Thị Dung', email: 'dung@kidscity.vn' },
-        staff4: { role: 'staff', roleLabel: 'Nhân viên', name: 'Hoàng Văn Em', email: 'em@kidscity.vn' }
+        '0901234567': { role: 'admin', roleLabel: 'Chủ shop', name: 'Nguyễn Văn An', email: 'admin@kidscity.vn' },
+        '0912345678': { role: 'staff', roleLabel: 'Nhân viên', name: 'Trần Thị Bình', email: 'binh@kidscity.vn' },
+        '0934567890': { role: 'staff', roleLabel: 'Nhân viên', name: 'Phạm Thị Dung', email: 'dung@kidscity.vn' },
+        '0945678901': { role: 'staff', roleLabel: 'Nhân viên', name: 'Hoàng Văn Em', email: 'em@kidscity.vn' }
     };
 
     const parseCurrentUser = () => {
         const raw = localStorage.getItem('currentUser');
-        if (!raw) return { username: 'admin' };
+        if (!raw) return { username: '0901234567' };
 
         try {
             const parsed = JSON.parse(raw);
@@ -29,10 +29,10 @@
 
     const getCurrentAccount = () => {
         const user = parseCurrentUser();
-        const username = user.username || user.userName || user.account || user.fullname || user.name || 'admin';
+        const username = user.username || user.userName || user.account || user.phone || user.soDienThoai || '0901234567';
         const savedRole = normalizeRole(localStorage.getItem('currentRole'));
         const objectRole = normalizeRole(user.role || user.vaiTro || user.permission || user.type);
-        const fallbackRole = String(username).toLowerCase().startsWith('staff') ? 'staff' : 'admin';
+        const fallbackRole = String(username) === '0901234567' ? 'admin' : 'staff';
         const account = accounts[username] || {};
         const role = savedRole || objectRole || account.role || fallbackRole;
 
@@ -49,23 +49,6 @@
         document.querySelectorAll('a[href$="users.html"]').forEach((link) => {
             const item = link.closest('.menu-item') || link.closest('li');
             if (item) item.remove();
-        });
-    };
-
-    const removeRevenueReportMenu = () => {
-        document.querySelectorAll('.submenu a').forEach((link) => {
-            const href = (link.getAttribute('href') || '').replace(/\\/g, '/').toLowerCase();
-            const text = link.textContent.trim().toLowerCase();
-            const isRevenueReport =
-                href === 'revenue.html' ||
-                href.endsWith('/revenue.html') ||
-                href.includes('reports/revenue.html') ||
-                text.includes('doanh thu');
-
-            if (isRevenueReport) {
-                const item = link.closest('li');
-                if (item) item.remove();
-            }
         });
     };
 
@@ -89,6 +72,21 @@
             const label = row.querySelector('.label')?.textContent.trim();
             const value = row.querySelector('.value');
             if (label === 'Tên đăng nhập' && value) value.textContent = account.username;
+        });
+    };
+
+    window.resetKidCitySearchInputs = function resetKidCitySearchInputs(scope = document) {
+        const root = scope instanceof Element || scope instanceof Document ? scope : document;
+        root.querySelectorAll([
+            '.search-bar input',
+            '.sales-search input[id$="-search"]',
+            '.report-search input',
+            '#userSearch',
+            '#productSearch',
+            '#import-search'
+        ].join(',')).forEach((input) => {
+            input.setAttribute('autocomplete', 'off');
+            input.value = '';
         });
     };
 
@@ -200,25 +198,22 @@
         }
     };
 
-    const redirectStaffAwayFromRevenuePage = (account) => {
-        const path = window.location.pathname.replace(/\\/g, '/').toLowerCase();
-        if (account.role !== 'staff' || !path.endsWith('/frontend/views/reports/revenue.html')) return;
-        window.location.replace('products.html');
-    };
-
     window.applyKidCityAuth = function applyKidCityAuth() {
         const account = getCurrentAccount();
         updateHeaderProfile(account);
+        window.resetKidCitySearchInputs();
         if (account.role === 'staff') {
             removeUserManagementMenu();
-            removeRevenueReportMenu();
         }
         syncActiveMenu();
         bindMenuToggle();
         bindMenuStatePersistence();
         redirectStaffAwayFromUsersPage(account);
-        redirectStaffAwayFromRevenuePage(account);
     };
 
     document.addEventListener('DOMContentLoaded', window.applyKidCityAuth);
+    window.addEventListener('pageshow', () => {
+        window.resetKidCitySearchInputs();
+        setTimeout(() => window.resetKidCitySearchInputs(), 50);
+    });
 })();

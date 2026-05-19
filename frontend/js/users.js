@@ -45,11 +45,81 @@ window.showToast = function(message) {
         toast.classList.remove('show');
     }, 3000);
 };
+
+window.openUserDetail = function(button) {
+    const row = button.closest('tr');
+    if (!row) return;
+
+    const data = row.dataset;
+    const setText = (id, value) => {
+        const element = document.getElementById(id);
+        if (element) element.textContent = value || '-';
+    };
+
+    setText('detailAvatar', (data.name || 'N').trim().charAt(0).toUpperCase());
+    setText('detailName', data.name);
+    setText('detailEmail', data.email);
+    setText('detailFullName', data.name);
+    setText('detailUsername', data.username);
+    setText('detailUserEmail', data.email);
+    setText('detailPhone', data.phone);
+    setText('detailCccd', data.cccd);
+    setText('detailAddress', data.address);
+    setText('detailRole', data.role);
+    setText('detailStatus', data.status);
+    setText('detailCreated', data.created);
+
+    openModal('viewUserModal');
+};
+
+window.openUserEdit = function(button) {
+    const row = button.closest('tr');
+    if (!row) return;
+
+    const data = row.dataset;
+    const setValue = (id, value) => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.value = value || '';
+        }
+    };
+
+    setValue('editName', data.name);
+    setValue('editRole', data.role);
+    setValue('editUsername', data.username);
+    setValue('editEmail', data.email);
+    setValue('editPhone', data.phone);
+    setValue('editCccd', data.cccd);
+    setValue('editAddress', data.address);
+    setValue('editStatus', data.status);
+    setValue('editCreated', data.created);
+
+    openModal('editUserModal');
+};
+
+const normalizeSearchText = (text) => String(text || '').trim().toLowerCase();
+
+const bindUserSearch = () => {
+    const input = document.getElementById('userSearch');
+    const rows = Array.from(document.querySelectorAll('.users-table tbody tr'));
+    if (!input || !rows.length) return;
+
+    input.addEventListener('input', () => {
+        const keyword = normalizeSearchText(input.value);
+        rows.forEach((row) => {
+            const dataText = Object.values(row.dataset).join(' ');
+            const searchable = normalizeSearchText(`${row.textContent} ${dataText}`);
+            row.style.display = searchable.includes(keyword) ? '' : 'none';
+        });
+    });
+};
 // ==========================================
 // XU LY MENU VA HEADER RIENG CHO TRANG USERS
 // users.html la trang day du, khong nap index.js de tranh router ghi de noi dung.
 // ==========================================
 document.addEventListener('DOMContentLoaded', function() {
+    bindUserSearch();
+
     document.querySelectorAll('.menu-toggle').forEach(function(btn) {
         if (btn.dataset.kidCityMenuBound === 'true') return;
         btn.dataset.kidCityMenuBound = 'true';

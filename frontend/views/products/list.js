@@ -266,6 +266,7 @@ const okStopSuccessBtn = document.getElementById("okStopSuccessBtn");
 const stopSuccessMessage = document.getElementById("stopSuccessMessage");
 
 let pendingStopProductId = null;
+const isStaffRole = () => (localStorage.getItem("currentRole") || "").toLowerCase() === "staff";
 
 // FORM
 
@@ -500,7 +501,7 @@ function renderProducts(data = getVisibleProducts()) {
 
                         </button>
 
-                        ${product.status === "selling"
+                        ${isStaffRole() ? "" : product.status === "selling"
 
                 ?
 
@@ -583,7 +584,18 @@ function filterProducts() {
 
         filtered = filtered.filter(product => {
 
-            const searchable = `${product.id} ${product.name} ${product.category} ${product.size} ${product.color}`.toLowerCase();
+            const searchable = [
+                product.id,
+                product.name,
+                product.category,
+                product.size,
+                product.color,
+                product.price,
+                product.quantity,
+                product.createdAt,
+                product.updatedAt,
+                product.status === "selling" ? "đang bán selling" : "ngừng bán stopped"
+            ].join(" ").toLowerCase();
 
             return searchable.includes(keyword);
 
@@ -961,6 +973,8 @@ function editProduct(id) {
 
 function stopSelling(id) {
 
+    if (isStaffRole()) return;
+
     pendingStopProductId = id;
 
     stopConfirmModal.classList.add("show");
@@ -978,6 +992,8 @@ function closeStopConfirmModal() {
 }
 
 function confirmStopSelling() {
+
+    if (isStaffRole()) return;
 
     if (!pendingStopProductId) return;
 
@@ -1016,6 +1032,8 @@ function closeStopSuccessModal() {
 // =========================
 
 function restoreProduct(id) {
+
+    if (isStaffRole()) return;
 
     const product = products.find(product =>
 

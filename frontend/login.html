@@ -65,7 +65,7 @@
                 <form id="loginForm">
                     <div class="form-group">
                         <label>Tên đăng nhập</label>
-                        <input type="text" id="username" class="form-control" placeholder="Nhập tên đăng nhập" required>
+                        <input type="text" id="username" class="form-control" placeholder="Nhập số điện thoại" required>
                     </div>
                     <div class="form-group">
                         <label>Mật khẩu</label>
@@ -79,13 +79,13 @@
                 <div class="test-accounts">
                     <div class="divider">TÀI KHOẢN THỬ NGHIỆM</div>
                     <div class="test-cards">
-                        <div class="test-card admin" onclick="fillTestAccount('admin', 'admin123')">
+                        <div class="test-card admin" onclick="fillTestAccount('0901234567', 'admin123')">
                             <span class="role"><i class='bx bxs-crown' style="color: #ea580c;"></i> Chủ shop</span>
-                            <p>admin</p><p>admin123</p>
+                            <p>0901234567</p><p>admin123</p>
                         </div>
-                        <div class="test-card staff" onclick="fillTestAccount('staff1', 'staff123')">
+                        <div class="test-card staff" onclick="fillTestAccount('0912345678', 'staff123')">
                             <span class="role"><i class='bx bxs-user'></i> Nhân viên</span>
-                            <p>staff1</p><p>staff123</p>
+                            <p>0912345678</p><p>staff123</p>
                         </div>
                     </div>
                     <p class="hint-text">Nhấn vào ô để tự động điền thông tin</p>
@@ -125,7 +125,7 @@
             setTimeout(() => {
                 localStorage.setItem('isLoggedIn', 'true');
                 localStorage.setItem('currentUser', username);
-                localStorage.setItem('currentRole', username.toLowerCase().startsWith('staff') ? 'staff' : 'admin');
+                localStorage.setItem('currentRole', username === '0901234567' ? 'admin' : 'staff');
                 window.location.href = 'index.html';
             }, 800);
         });
