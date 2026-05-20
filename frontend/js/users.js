@@ -46,6 +46,174 @@ window.showToast = function(message) {
     }, 3000);
 };
 
+const USER_ACCOUNTS_KEY = 'kidCityAccounts';
+
+const getStoredUserAccounts = () => {
+    try {
+        return JSON.parse(localStorage.getItem(USER_ACCOUNTS_KEY) || '{}');
+    } catch {
+        return {};
+    }
+};
+
+const saveStoredUserAccounts = (accounts) => {
+    localStorage.setItem(USER_ACCOUNTS_KEY, JSON.stringify(accounts));
+};
+
+const roleCode = (role) => role === 'Chủ shop' ? 'admin' : 'staff';
+
+const roleClass = (role) => role === 'Chủ shop' ? 'shop-owner' : 'staff';
+
+const escapeHtml = (value) => String(value || '').replace(/[&<>"']/g, (char) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;'
+}[char]));
+
+const formatToday = () => {
+    const today = new Date();
+    return `${today.getDate()}/${today.getMonth() + 1}/${today.getFullYear()}`;
+};
+
+const statusSelectHtml = (status) => `
+    <select class="status-select ${statusClass(status)}" data-user-status>
+        <option ${status === 'Đã kích hoạt' ? 'selected' : ''}>Đã kích hoạt</option>
+        <option ${status === 'Chưa kích hoạt' ? 'selected' : ''}>Chưa kích hoạt</option>
+        <option ${status === 'Khóa' ? 'selected' : ''}>Khóa</option>
+    </select>
+`;
+
+const userRowHtml = (account) => {
+    const avatar = (account.name || 'N').trim().charAt(0).toUpperCase() || 'N';
+    const role = account.roleLabel || account.role || 'Nhân viên';
+    const status = account.status || 'Chưa kích hoạt';
+
+    return `
+        <tr data-name="${escapeHtml(account.name)}" data-username="${escapeHtml(account.username)}" data-email="${escapeHtml(account.email)}" data-phone="${escapeHtml(account.phone || account.username)}" data-cccd="${escapeHtml(account.cccd)}" data-address="${escapeHtml(account.address)}" data-role="${escapeHtml(role)}" data-status="${escapeHtml(status)}" data-created="${escapeHtml(account.created)}">
+            <td>
+                <div class="user-info">
+                    <div class="avatar bg-light">${escapeHtml(avatar)}</div>
+                    <span class="fw-bold">${escapeHtml(account.name)}</span>
+                </div>
+            </td>
+            <td>${escapeHtml(account.username)}</td>
+            <td><span class="role-badge ${roleClass(role)}">${escapeHtml(role)}</span></td>
+            <td>${statusSelectHtml(status)}</td>
+            <td class="actions">
+                <button class="icon-btn" onclick="openUserDetail(this)" title="Xem chi tiết"><i class='bx bx-show'></i></button>
+                <button class="icon-btn" onclick="openUserEdit(this)" title="Chỉnh sửa"><i class='bx bx-pencil'></i></button>
+                <button class="icon-btn" onclick="openModal('resetPasswordModal')" title="Đổi mật khẩu"><i class='bx bx-key'></i></button>
+            </td>
+        </tr>
+    `;
+};
+
+const updateUserCount = () => {
+    const total = document.querySelectorAll('.users-table tbody tr').length;
+    const info = document.querySelector('.pagination-info p');
+    if (info) info.textContent = `Hiển thị ${total} / ${total} người dùng`;
+};
+
+const updateStoredAccountFromRow = (row) => {
+    if (!row?.dataset.username) return;
+    const accounts = getStoredUserAccounts();
+    const username = row.dataset.username;
+    accounts[username] = {
+        ...(accounts[username] || {}),
+        username,
+        name: row.dataset.name || username,
+        email: row.dataset.email || '',
+        phone: row.dataset.phone || username,
+        cccd: row.dataset.cccd || '',
+        address: row.dataset.address || '',
+        role: roleCode(row.dataset.role),
+        roleLabel: row.dataset.role || 'Nhân viên',
+        status: row.dataset.status || 'Chưa kích hoạt',
+        created: row.dataset.created || formatToday()
+    };
+    saveStoredUserAccounts(accounts);
+};
+
+const loadStoredUsersIntoTable = () => {
+    const tbody = document.querySelector('.users-table tbody');
+    if (!tbody) return;
+
+    const existingUsernames = new Set(Array.from(tbody.querySelectorAll('tr')).map((row) => row.dataset.username));
+    const rows = Object.values(getStoredUserAccounts())
+        .filter((account) => account?.username && !existingUsernames.has(account.username))
+        .map(userRowHtml)
+        .join('');
+
+    if (rows) {
+        tbody.insertAdjacentHTML('beforeend', rows);
+    }
+
+    updateUserCount();
+};
+
+const resetAddUserForm = () => {
+    ['addName', 'addRole', 'addUsername', 'addPassword', 'addEmail', 'addPhone', 'addCccd', 'addAddress'].forEach((id) => {
+        const field = document.getElementById(id);
+        if (!field) return;
+        field.value = id === 'addRole' ? 'Nhân viên' : '';
+    });
+};
+
+const bindAddUserPhoneSync = () => {
+    const phone = document.getElementById('addPhone');
+    const username = document.getElementById('addUsername');
+    if (!phone || !username || phone.dataset.usernameBound === 'true') return;
+
+    phone.dataset.usernameBound = 'true';
+    phone.addEventListener('input', () => {
+        username.value = phone.value.trim();
+    });
+};
+
+window.createUserFromModal = function createUserFromModal() {
+    const account = {
+        name: document.getElementById('addName')?.value.trim() || '',
+        roleLabel: document.getElementById('addRole')?.value || 'Nhân viên',
+        username: document.getElementById('addUsername')?.value.trim() || document.getElementById('addPhone')?.value.trim() || '',
+        password: document.getElementById('addPassword')?.value || '',
+        email: document.getElementById('addEmail')?.value.trim() || '',
+        phone: document.getElementById('addPhone')?.value.trim() || '',
+        cccd: document.getElementById('addCccd')?.value.trim() || '',
+        address: document.getElementById('addAddress')?.value.trim() || '',
+        status: 'Chưa kích hoạt',
+        created: formatToday()
+    };
+    account.role = roleCode(account.roleLabel);
+
+    if (!account.name || !account.username || !account.password) {
+        alert('Vui lòng nhập đầy đủ họ tên, số điện thoại và mật khẩu.');
+        return;
+    }
+
+    const accounts = getStoredUserAccounts();
+    const existsInTable = document.querySelector(`.users-table tbody tr[data-username="${CSS.escape(account.username)}"]`);
+    if (accounts[account.username] || existsInTable) {
+        alert('Số điện thoại này đã tồn tại trong hệ thống.');
+        return;
+    }
+
+    accounts[account.username] = account;
+    saveStoredUserAccounts(accounts);
+
+    const tbody = document.querySelector('.users-table tbody');
+    if (tbody) {
+        tbody.insertAdjacentHTML('beforeend', userRowHtml(account));
+        bindUserStatusSelects();
+        updateUserCount();
+    }
+
+    resetAddUserForm();
+    closeModal('addUserModal');
+    showToast('Thêm người dùng thành công!');
+};
+
 window.openUserDetail = function(button) {
     const row = button.closest('tr');
     if (!row) return;
@@ -91,21 +259,56 @@ window.openUserEdit = function(button) {
     setValue('editPhone', data.phone);
     setValue('editCccd', data.cccd);
     setValue('editAddress', data.address);
-    setValue('editStatus', data.status);
     setValue('editCreated', data.created);
 
     openModal('editUserModal');
+};
+
+const statusClass = (status) => {
+    if (status === 'Đã kích hoạt') return 'active';
+    if (status === 'Chưa kích hoạt') return 'inactive';
+    return 'locked';
+};
+
+const bindUserStatusSelects = () => {
+    document.querySelectorAll('[data-user-status]').forEach((select) => {
+        if (select.dataset.statusBound === 'true') return;
+        select.dataset.statusBound = 'true';
+        select.dataset.previousStatus = select.value;
+        select.classList.add(statusClass(select.value));
+
+        select.addEventListener('change', () => {
+            const row = select.closest('tr');
+            const oldStatus = select.dataset.previousStatus || row?.dataset.status || '';
+            const newStatus = select.value;
+            const name = row?.dataset.name || 'người dùng này';
+
+            if (!confirm(`Bạn có chắc chắn muốn đổi trạng thái tài khoản ${name} từ "${oldStatus}" sang "${newStatus}" không?`)) {
+                select.value = oldStatus;
+                select.className = `status-select ${statusClass(oldStatus)}`;
+                return;
+            }
+
+            if (row) {
+                row.dataset.status = newStatus;
+                updateStoredAccountFromRow(row);
+            }
+            select.dataset.previousStatus = newStatus;
+            select.className = `status-select ${statusClass(newStatus)}`;
+            showToast('Cập nhật trạng thái thành công!');
+        });
+    });
 };
 
 const normalizeSearchText = (text) => String(text || '').trim().toLowerCase();
 
 const bindUserSearch = () => {
     const input = document.getElementById('userSearch');
-    const rows = Array.from(document.querySelectorAll('.users-table tbody tr'));
-    if (!input || !rows.length) return;
+    if (!input) return;
 
     input.addEventListener('input', () => {
         const keyword = normalizeSearchText(input.value);
+        const rows = Array.from(document.querySelectorAll('.users-table tbody tr'));
         rows.forEach((row) => {
             const dataText = Object.values(row.dataset).join(' ');
             const searchable = normalizeSearchText(`${row.textContent} ${dataText}`);
@@ -118,7 +321,10 @@ const bindUserSearch = () => {
 // users.html la trang day du, khong nap index.js de tranh router ghi de noi dung.
 // ==========================================
 document.addEventListener('DOMContentLoaded', function() {
+    loadStoredUsersIntoTable();
+    bindAddUserPhoneSync();
     bindUserSearch();
+    bindUserStatusSelects();
 
     document.querySelectorAll('.menu-toggle').forEach(function(btn) {
         if (btn.dataset.kidCityMenuBound === 'true') return;

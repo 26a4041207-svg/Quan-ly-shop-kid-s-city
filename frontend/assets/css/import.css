@@ -1,5 +1,5 @@
 /* =========================================================
-   IMPORT COMMON - Layout chung cho trang nhập hàng
+   IMPORT COMMON - Layout chung cho trang hàng nhập
    ========================================================= */
 .import-page { color: #111827; }
 .import-toolbar { display: flex; gap: 12px; align-items: center; margin-bottom: 18px; }
@@ -39,7 +39,7 @@
 .import-action-btn:hover { background: #f1f5f9; }
 
 /* =========================================================
-   IMPORT MODAL - Popup tạo, chi tiết và sửa phiếu nhập
+   IMPORT MODAL - Popup tạo, chi tiết và sửa phiếu hàng nhập
    ========================================================= */
 .import-modal { position: fixed; inset: 0; background: rgba(15, 23, 42, .35); display: none; align-items: center; justify-content: center; z-index: 3000; padding: 24px; }
 .import-modal.active { display: flex; }
@@ -52,13 +52,14 @@
 .modal-close { border: 0; background: transparent; color: #64748b; font-size: 24px; cursor: pointer; }
 
 /* =========================================================
-   IMPORT FORM - Các input trong form tạo/sửa phiếu nhập
+   IMPORT FORM - Các input trong form tạo/sửa phiếu hàng nhập
    ========================================================= */
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
 .field label { display: block; color: #475569; font-weight: 600; font-size: 14px; margin-bottom: 8px; }
 .field input, .field select { width: 100%; height: 42px; border: 1px solid #e5e7eb; border-radius: 10px; padding: 0 14px; outline: none; color: #334155; background: #fff; }
 .field.full { grid-column: 1 / -1; }
-.import-add-product { background: #f1f7ff; border: 1px solid #dbeafe; border-radius: 12px; padding: 16px; display: grid; grid-template-columns: 1fr 110px 140px auto; gap: 12px; align-items: end; margin: 16px 0; }
+.import-add-product { background: #f1f7ff; border: 1px solid #dbeafe; border-radius: 12px; padding: 16px; display: grid; grid-template-columns: 2fr 1.2fr .8fr .9fr .8fr auto; gap: 12px; align-items: end; margin: 16px 0; }
+.import-add-product .image-field { grid-column: 1 / 3; }
 .import-section-title { margin: 22px 0 14px; }
 .detail-title { margin-bottom: 26px; }
 .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 26px 80px; margin-bottom: 24px; }
@@ -79,7 +80,7 @@
     .detail-grid { grid-template-columns: 1fr; }
 }
 /* =========================================================
-   IMPORT PAGINATION - Phân trang danh sách phiếu nhập
+   IMPORT PAGINATION - Phân trang danh sách phiếu hàng nhập
    ========================================================= */
 .import-pagination { display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin-top: 14px; }
 .import-page-btn { min-width: 36px; height: 36px; border: 1px solid #e5e7eb; background: #fff; color: #475569; border-radius: 9px; cursor: pointer; font-weight: 600; }

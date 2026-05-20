@@ -5,6 +5,15 @@
         '0934567890': { role: 'staff', roleLabel: 'Nhân viên', name: 'Phạm Thị Dung', email: 'dung@kidscity.vn' },
         '0945678901': { role: 'staff', roleLabel: 'Nhân viên', name: 'Hoàng Văn Em', email: 'em@kidscity.vn' }
     };
+    const userAccountsKey = 'kidCityAccounts';
+
+    const getStoredAccounts = () => {
+        try {
+            return JSON.parse(localStorage.getItem(userAccountsKey) || '{}');
+        } catch {
+            return {};
+        }
+    };
 
     const parseCurrentUser = () => {
         const raw = localStorage.getItem('currentUser');
@@ -33,7 +42,7 @@
         const savedRole = normalizeRole(localStorage.getItem('currentRole'));
         const objectRole = normalizeRole(user.role || user.vaiTro || user.permission || user.type);
         const fallbackRole = String(username) === '0901234567' ? 'admin' : 'staff';
-        const account = accounts[username] || {};
+        const account = getStoredAccounts()[username] || accounts[username] || {};
         const role = savedRole || objectRole || account.role || fallbackRole;
 
         return {

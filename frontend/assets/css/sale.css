@@ -100,6 +100,14 @@
 .combo-option:hover { background: #eff6ff; color: #1d4ed8; }
 .combo-empty { padding: 12px; color: #94a3b8; font-size: 14px; }
 .draft-product-meta { margin-top: 4px; color: #64748b; font-size: 12px; }
+.invoice-summary { width: min(320px, 100%); margin: 14px 0 0 auto; border-top: 1px solid #eef2f7; padding-top: 12px; display: flex; flex-direction: column; gap: 10px; }
+.summary-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; color: #475569; font-size: 14px; }
+.summary-row span { font-weight: 600; }
+.summary-row strong { color: #0f172a; font-size: 15px; }
+.summary-row input { width: 140px; height: auto; border: 0; border-radius: 0; padding: 0; text-align: right; color: #0f172a; font-size: 15px; font-weight: 700; outline: none; background: transparent; }
+.summary-row input:focus { color: #2563eb; }
+.total-row { border-top: 1px solid #eef2f7; padding-top: 10px; }
+.total-row strong { color: #16a34a; font-size: 18px; }
 .invoice-actions { align-items: center; justify-content: space-between; }
 .invoice-actions .action-buttons { display: flex; gap: 12px; }
 .add-customer-link { display: inline-flex; align-items: center; gap: 8px; color: #2563eb; font-weight: 600; padding: 12px 0; }

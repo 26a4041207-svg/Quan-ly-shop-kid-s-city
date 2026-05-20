@@ -115,17 +115,93 @@
             document.querySelector('.btn-login').focus();
         }
 
+        const USER_ACCOUNTS_KEY = 'kidCityAccounts';
+        const defaultAccounts = {
+            '0901234567': {
+                username: '0901234567',
+                password: 'admin123',
+                role: 'admin',
+                roleLabel: 'Chủ shop',
+                name: 'Nguyễn Văn An',
+                email: 'admin@kidscity.vn',
+                phone: '0901234567',
+                status: 'Đã kích hoạt'
+            },
+            '0912345678': {
+                username: '0912345678',
+                password: 'staff123',
+                role: 'staff',
+                roleLabel: 'Nhân viên',
+                name: 'Trần Thị Bình',
+                email: 'binh@kidscity.vn',
+                phone: '0912345678',
+                status: 'Đã kích hoạt'
+            }
+        };
+
+        const getStoredAccounts = () => {
+            try {
+                return JSON.parse(localStorage.getItem(USER_ACCOUNTS_KEY) || '{}');
+            } catch {
+                return {};
+            }
+        };
+
+        const saveStoredAccounts = (accounts) => {
+            localStorage.setItem(USER_ACCOUNTS_KEY, JSON.stringify(accounts));
+        };
+
+        const restoreLoginButton = () => {
+            const btn = document.querySelector('.btn-login');
+            btn.innerHTML = "<i class='bx bx-log-in-circle'></i> Đăng nhập";
+            btn.style.opacity = "1";
+        };
+
         document.getElementById('loginForm').addEventListener('submit', function(e) {
             e.preventDefault(); 
             const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
             const btn = document.querySelector('.btn-login');
             btn.innerHTML = "<i class='bx bx-loader-alt bx-spin'></i> Đang xử lý...";
             btn.style.opacity = "0.8";
 
             setTimeout(() => {
+                const storedAccounts = getStoredAccounts();
+                const defaultAccount = defaultAccounts[username];
+                const storedAccount = storedAccounts[username];
+                const account = defaultAccount || storedAccount
+                    ? { ...(defaultAccount || {}), ...(storedAccount || {}) }
+                    : null;
+
+                if (!account || account.password !== password) {
+                    alert('Tên đăng nhập hoặc mật khẩu không đúng.');
+                    restoreLoginButton();
+                    return;
+                }
+
+                if (account.status === 'Khóa') {
+                    alert('Tài khoản này đang bị khóa. Vui lòng liên hệ chủ shop.');
+                    restoreLoginButton();
+                    return;
+                }
+
+                if (storedAccounts[username] && account.status === 'Chưa kích hoạt') {
+                    storedAccounts[username] = { ...account, status: 'Đã kích hoạt' };
+                    saveStoredAccounts(storedAccounts);
+                    account.status = 'Đã kích hoạt';
+                }
+
                 localStorage.setItem('isLoggedIn', 'true');
-                localStorage.setItem('currentUser', username);
-                localStorage.setItem('currentRole', username === '0901234567' ? 'admin' : 'staff');
+                localStorage.setItem('currentUser', JSON.stringify({
+                    username: account.username || username,
+                    name: account.name || username,
+                    fullname: account.name || username,
+                    email: account.email || '',
+                    phone: account.phone || username,
+                    role: account.role || 'staff',
+                    roleLabel: account.roleLabel || (account.role === 'admin' ? 'Chủ shop' : 'Nhân viên')
+                }));
+                localStorage.setItem('currentRole', account.role || 'staff');
                 window.location.href = 'index.html';
             }, 800);
         });

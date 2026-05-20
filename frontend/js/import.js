@@ -4,7 +4,7 @@ window.initImportPage = function initImportPage(container) {
     root.dataset.importReady = 'true';
 
     /* =====================================================
-       IMPORT DATA - Dữ liệu mẫu để tính tiền nhập hàng
+       IMPORT DATA - Dữ liệu mẫu để tính tiền hàng nhập
        ===================================================== */
     const prices = {
         'Áo thun Mickey Mouse': 80000,
@@ -12,10 +12,16 @@ window.initImportPage = function initImportPage(container) {
         'Áo thun Spider-Man': 95000,
         'Váy hoa nhí công chúa': 150000
     };
+    const productCatalog = {
+        'Áo thun Mickey Mouse': { category: 'Áo bé trai', size: 'M', color: 'Đỏ', quantity: 100, image: '' },
+        'Áo thun Elsa Frozen': { category: 'Áo bé gái', size: 'S', color: 'Xanh', quantity: 80, image: '' },
+        'Áo thun Spider-Man': { category: 'Áo bé trai', size: 'L', color: 'Đen', quantity: 120, image: '' },
+        'Váy hoa nhí công chúa': { category: 'Đầm váy', size: 'S', color: 'Hồng', quantity: 60, image: '' }
+    };
     const defaultProducts = [
-        { product: 'Áo thun Mickey Mouse', quantity: 100, price: 80000 },
-        { product: 'Áo thun Elsa Frozen', quantity: 80, price: 90000 },
-        { product: 'Áo thun Spider-Man', quantity: 120, price: 95000 }
+        { product: 'Áo thun Mickey Mouse', category: 'Áo bé trai', size: 'M', color: 'Đỏ', quantity: 100, image: '' },
+        { product: 'Áo thun Elsa Frozen', category: 'Áo bé gái', size: 'S', color: 'Xanh', quantity: 80, image: '' },
+        { product: 'Áo thun Spider-Man', category: 'Áo bé trai', size: 'L', color: 'Đen', quantity: 120, image: '' }
     ];
 
     /* =====================================================
@@ -34,7 +40,7 @@ window.initImportPage = function initImportPage(container) {
     };
     const searchableImportRow = (row) => {
         const products = getProducts(row)
-            .map((item) => `${item.product || ''} ${item.quantity || ''} ${item.price || ''}`)
+            .map((item) => `${item.product || ''} ${item.category || ''} ${item.size || ''} ${item.color || ''} ${item.quantity || ''}`)
             .join(' ');
         return normalize(`${row.dataset.key || ''} ${row.dataset.supplier || ''} ${row.textContent || ''} ${products}`);
     };
@@ -42,13 +48,13 @@ window.initImportPage = function initImportPage(container) {
         row.dataset.products = JSON.stringify(products);
     };
     const productRowsHtml = (products, includePrice = false) => {
-        if (!products.length) return '<tr><td colspan="2" class="empty-row">Chưa có sản phẩm.</td></tr>';
+        if (!products.length) return '<tr><td colspan="5" class="empty-row">Chưa có sản phẩm.</td></tr>';
         return products.map((item, index) => {
             if (includePrice) {
                 const total = Number(item.price || 0) * Number(item.quantity || 0);
                 return `<tr><td>${index + 1}</td><td>${item.product}</td><td>${item.quantity}</td><td>${formatMoney(item.price)}</td><td><strong>${formatMoney(total)}</strong></td></tr>`;
             }
-            return `<tr><td>${item.product}</td><td><strong>${item.quantity}</strong></td></tr>`;
+            return `<tr><td>${item.product || ''}</td><td>${item.category || '-'}</td><td>${item.size || '-'}</td><td>${item.color || '-'}</td><td><strong>${item.quantity || 0}</strong></td></tr>`;
         }).join('');
     };
 
@@ -154,7 +160,7 @@ window.initImportPage = function initImportPage(container) {
     });
 
     /* =====================================================
-       IMPORT PAGINATION - Mỗi trang hiển thị 6 phiếu nhập
+       IMPORT PAGINATION - Mỗi trang hiển thị 6 phiếu hàng nhập
        ===================================================== */
     const filteredRows = () => {
         const keyword = normalize(root.querySelector('#import-search').value);
@@ -199,7 +205,7 @@ window.initImportPage = function initImportPage(container) {
     });
 
     /* =====================================================
-       IMPORT SEARCH - Tìm kiếm phiếu nhập theo mã/ngày/người nhập
+       IMPORT SEARCH - Tìm kiếm phiếu hàng nhập theo mã/ngày/người tạo phiếu
        ===================================================== */
     root.querySelector('#import-search').addEventListener('input', () => {
         currentPage = 1;
@@ -207,18 +213,21 @@ window.initImportPage = function initImportPage(container) {
     });
 
     /* =====================================================
-       IMPORT CREATE - Thêm sản phẩm và tạo phiếu nhập mới
+       IMPORT CREATE - Thêm sản phẩm và tạo phiếu hàng nhập mới
        ===================================================== */
     const renderCreateProductRow = (row, index) => {
         const product = row.dataset.product || '';
+        const category = row.dataset.category || '';
+        const size = row.dataset.size || '';
+        const color = row.dataset.color || '';
         const quantity = Number(row.dataset.quantity || 1);
-        const price = Number(row.dataset.price || 0);
         row.innerHTML = `
             <td>${index}</td>
             <td>${product}</td>
+            <td>${category || '-'}</td>
+            <td>${size || '-'}</td>
+            <td>${color || '-'}</td>
             <td>${quantity}</td>
-            <td>${formatMoney(price)}</td>
-            <td><strong>${formatMoney(price * quantity)}</strong></td>
             <td>
                 <div class="import-action-group">
                     <button class="import-action-btn edit" data-import-draft-edit title="Sửa sản phẩm"><i class='bx bx-edit-alt'></i></button>
@@ -232,7 +241,7 @@ window.initImportPage = function initImportPage(container) {
         const list = root.querySelector('[data-import-product-list]');
         const rows = Array.from(list.querySelectorAll('tr')).filter((row) => !row.querySelector('.empty-row'));
         if (!rows.length) {
-            list.innerHTML = '<tr><td colspan="6" class="empty-row">Chưa có sản phẩm. Thêm ở trên.</td></tr>';
+            list.innerHTML = '<tr><td colspan="7" class="empty-row">Chưa có sản phẩm. Thêm ở trên.</td></tr>';
             return;
         }
         rows.forEach((row, index) => renderCreateProductRow(row, index + 1));
@@ -240,29 +249,72 @@ window.initImportPage = function initImportPage(container) {
 
     const addProductToCreateForm = () => {
         const productSelect = root.querySelector('[data-import-product]');
+        const categorySelect = root.querySelector('[data-import-category]');
+        const sizeInput = root.querySelector('[data-import-size]');
+        const colorInput = root.querySelector('[data-import-color]');
         const qtyInput = root.querySelector('[data-import-qty]');
-        const priceInput = root.querySelector('[data-import-price]');
+        const imageInput = root.querySelector('[data-import-image]');
         const list = root.querySelector('[data-import-product-list]');
         const product = productSelect.value.trim();
         if (!product) {
-            alert('Vui lòng chọn hoặc nhập tên sản phẩm.');
+            alert('Vui lòng nhập tên sản phẩm.');
+            return;
+        }
+        if (!validSelect(categorySelect)) {
+            alert('Vui lòng chọn danh mục sản phẩm.');
             return;
         }
 
         const quantity = Math.max(1, Number(qtyInput.value || 1));
-        const price = Number(priceInput.value || prices[product] || 0);
         const empty = list.querySelector('.empty-row');
         if (empty) empty.closest('tr').remove();
 
         const row = document.createElement('tr');
         row.dataset.product = product;
+        row.dataset.category = categorySelect.value;
+        row.dataset.size = sizeInput.value.trim();
+        row.dataset.color = colorInput.value.trim();
         row.dataset.quantity = String(quantity);
-        row.dataset.price = String(price);
+        row.dataset.image = imageInput.value.trim();
         list.appendChild(row);
         refreshCreateProductTable();
         productSelect.value = '';
+        categorySelect.value = '';
+        sizeInput.value = '';
+        colorInput.value = '';
         qtyInput.value = '1';
-        priceInput.value = '';
+        imageInput.value = '';
+    };
+
+    const findCatalogProduct = (name) => {
+        const keyword = normalize(name);
+        return Object.entries(productCatalog).find(([productName]) => normalize(productName) === keyword);
+    };
+
+    const fillProductInfoFromCatalog = () => {
+        const productInput = root.querySelector('[data-import-product]');
+        const categorySelect = root.querySelector('[data-import-category]');
+        const sizeInput = root.querySelector('[data-import-size]');
+        const colorInput = root.querySelector('[data-import-color]');
+        const qtyInput = root.querySelector('[data-import-qty]');
+        const imageInput = root.querySelector('[data-import-image]');
+        const matched = findCatalogProduct(productInput.value.trim());
+
+        if (!matched) {
+            categorySelect.value = '';
+            sizeInput.value = '';
+            colorInput.value = '';
+            qtyInput.value = '1';
+            imageInput.value = '';
+            return;
+        }
+
+        const [, info] = matched;
+        categorySelect.value = info.category || '';
+        sizeInput.value = info.size || '';
+        colorInput.value = info.color || '';
+        qtyInput.value = String(info.quantity || 1);
+        imageInput.value = info.image || '';
     };
 
     const openDraftProductEdit = (row) => {
@@ -282,27 +334,38 @@ window.initImportPage = function initImportPage(container) {
                 <div class="import-modal-header"><h3>Sửa sản phẩm nhập</h3><button class="modal-close" data-import-close>&times;</button></div>
                 <div class="import-modal-body">
                     <div class="form-grid">
-                        <div class="field"><label>Sản phẩm</label><input data-draft-field="product" value="${row.dataset.product || ''}"></div>
+                        <div class="field"><label>Tên sản phẩm</label><input data-draft-field="product" value="${row.dataset.product || ''}"></div>
+                        <div class="field"><label>Danh mục</label><select data-draft-field="category"><option value="">Chọn danh mục</option><option>Áo bé trai</option><option>Áo bé gái</option><option>Đầm váy</option><option>Quần bé trai</option><option>Đồ chơi</option></select></div>
+                        <div class="field"><label>Size</label><input data-draft-field="size" value="${row.dataset.size || ''}"></div>
+                        <div class="field"><label>Màu sắc</label><input data-draft-field="color" value="${row.dataset.color || ''}"></div>
                         <div class="field"><label>Số lượng</label><input type="number" min="1" data-draft-field="quantity" value="${row.dataset.quantity || 1}"></div>
-                        <div class="field"><label>Giá nhập (đ)</label><input type="number" min="0" data-draft-field="price" value="${row.dataset.price || 0}"></div>
+                        <div class="field"><label>Ảnh sản phẩm</label><input data-draft-field="image" value="${row.dataset.image || ''}"></div>
                     </div>
                     <div class="import-modal-actions"><button class="import-btn light" data-import-close>Hủy</button><button class="import-btn primary" data-save-draft-product>Lưu thay đổi</button></div>
                 </div>
             </div>
         `;
         modal.classList.add('active');
+        modal.querySelector('[data-draft-field="category"]').value = row.dataset.category || '';
 
         modal.querySelector('[data-save-draft-product]').onclick = () => {
             const product = modal.querySelector('[data-draft-field="product"]').value.trim();
+            const category = modal.querySelector('[data-draft-field="category"]').value;
             const quantity = Math.max(1, Number(modal.querySelector('[data-draft-field="quantity"]').value || 1));
-            const price = Math.max(0, Number(modal.querySelector('[data-draft-field="price"]').value || 0));
             if (!product) {
                 alert('Vui lòng nhập tên sản phẩm.');
                 return;
             }
+            if (!category) {
+                alert('Vui lòng chọn danh mục sản phẩm.');
+                return;
+            }
             row.dataset.product = product;
+            row.dataset.category = category;
+            row.dataset.size = modal.querySelector('[data-draft-field="size"]').value.trim();
+            row.dataset.color = modal.querySelector('[data-draft-field="color"]').value.trim();
             row.dataset.quantity = String(quantity);
-            row.dataset.price = String(price);
+            row.dataset.image = modal.querySelector('[data-draft-field="image"]').value.trim();
             refreshCreateProductTable();
             closeModal(modal);
         };
@@ -323,8 +386,11 @@ window.initImportPage = function initImportPage(container) {
     const collectCreateProducts = () => {
         return Array.from(root.querySelectorAll('[data-import-product-list] tr')).filter((row) => !row.querySelector('.empty-row')).map((row) => ({
             product: row.dataset.product,
+            category: row.dataset.category,
+            size: row.dataset.size,
+            color: row.dataset.color,
             quantity: Number(row.dataset.quantity || 0),
-            price: Number(row.dataset.price || prices[row.dataset.product] || 0)
+            image: row.dataset.image || ''
         }));
     };
 
@@ -355,6 +421,8 @@ window.initImportPage = function initImportPage(container) {
         closeModal(root.querySelector('#import-create'));
     };
 
+    root.querySelector('[data-import-product]').addEventListener('input', fillProductInfoFromCatalog);
+    root.querySelector('[data-import-product]').addEventListener('change', fillProductInfoFromCatalog);
     root.querySelector('[data-import-add-product]').addEventListener('click', addProductToCreateForm);
     root.querySelector('[data-import-save-create]').addEventListener('click', createImport);
 
@@ -364,14 +432,14 @@ window.initImportPage = function initImportPage(container) {
     const showImportDetail = (row) => {
         const modal = root.querySelector('#import-detail');
         const products = getProducts(row);
-        modal.querySelector('.detail-title').textContent = `Chi tiết phiếu nhập ${rowText(row, 0)}`;
-        modal.querySelector('.detail-grid').innerHTML = `<div class="detail-item"><span>Người nhập</span><strong>${rowText(row, 2)}</strong></div><div class="detail-item"><span>Ngày nhập</span><strong>${rowText(row, 1)}</strong></div>`;
+        modal.querySelector('.detail-title').textContent = `Chi tiết phiếu hàng nhập ${rowText(row, 0)}`;
+        modal.querySelector('.detail-grid').innerHTML = `<div class="detail-item"><span>Người tạo phiếu</span><strong>${rowText(row, 2)}</strong></div><div class="detail-item"><span>Ngày nhập</span><strong>${rowText(row, 1)}</strong></div>`;
         modal.querySelector('tbody').innerHTML = productRowsHtml(products, false);
         openModal('import-detail');
     };
 
     /* =====================================================
-       IMPORT EDIT - Sửa thông tin phiếu nhập và số lượng đã lưu
+       IMPORT EDIT - Sửa thông tin phiếu hàng nhập và số lượng đã lưu
        ===================================================== */
     const openImportEdit = (row) => {
         let modal = root.querySelector('#import-edit');
@@ -389,23 +457,25 @@ window.initImportPage = function initImportPage(container) {
         const editRows = products.map((item, index) => `
             <tr>
                 <td><input data-edit-product="${index}" value="${item.product}"></td>
+                <td><input data-edit-category="${index}" value="${item.category || ''}"></td>
+                <td><input data-edit-size="${index}" value="${item.size || ''}"></td>
+                <td><input data-edit-color="${index}" value="${item.color || ''}"></td>
                 <td><input type="number" min="1" data-edit-quantity="${index}" value="${item.quantity}"></td>
-                <td><input type="number" min="0" data-edit-price="${index}" value="${item.price || prices[item.product] || 0}"></td>
             </tr>
         `).join('');
 
         modal.innerHTML = `
             <div class="import-dialog detail">
-                <div class="import-modal-header"><h3>Sửa phiếu nhập ${rowText(row, 0)}</h3><button class="modal-close" data-import-close>&times;</button></div>
+                <div class="import-modal-header"><h3>Sửa phiếu hàng nhập ${rowText(row, 0)}</h3><button class="modal-close" data-import-close>&times;</button></div>
                 <div class="import-modal-body">
                     <div class="form-grid">
-                        <div class="field"><label>Mã phiếu nhập</label><input data-edit-field="code" value="${rowText(row, 0)}" disabled></div>
+                        <div class="field"><label>Mã phiếu hàng nhập</label><input data-edit-field="code" value="${rowText(row, 0)}" disabled></div>
                         <div class="field"><label>Ngày nhập</label><input type="date" data-edit-field="date" value="${rowText(row, 1)}"></div>
-                        <div class="field"><label>Người nhập</label><input data-edit-field="staff" value="${rowText(row, 2)}"></div>
+                        <div class="field"><label>Người tạo phiếu</label><input data-edit-field="staff" value="${rowText(row, 2)}"></div>
                         <div class="field"><label>Nhà cung cấp</label><input data-edit-field="supplier" value="${row.dataset.supplier || ''}"></div>
                     </div>
                     <h3 class="import-section-title">Chi tiết sản phẩm</h3>
-                    <div class="import-card"><table class="import-table"><thead><tr><th>Sản phẩm</th><th>Số lượng nhập</th><th>Giá nhập</th></tr></thead><tbody>${editRows}</tbody></table></div>
+                    <div class="import-card"><table class="import-table"><thead><tr><th>Sản phẩm</th><th>Danh mục</th><th>Size</th><th>Màu</th><th>Số lượng nhập</th></tr></thead><tbody>${editRows}</tbody></table></div>
                     <div class="import-modal-actions"><button class="import-btn light" data-import-close>Hủy</button><button class="import-btn primary" data-save-import-edit>Lưu thay đổi</button></div>
                 </div>
             </div>
@@ -418,8 +488,11 @@ window.initImportPage = function initImportPage(container) {
             const supplier = modal.querySelector('[data-edit-field="supplier"]').value.trim();
             const updatedProducts = products.map((_, index) => ({
                 product: modal.querySelector(`[data-edit-product="${index}"]`).value.trim(),
+                category: modal.querySelector(`[data-edit-category="${index}"]`).value.trim(),
+                size: modal.querySelector(`[data-edit-size="${index}"]`).value.trim(),
+                color: modal.querySelector(`[data-edit-color="${index}"]`).value.trim(),
                 quantity: Math.max(1, Number(modal.querySelector(`[data-edit-quantity="${index}"]`).value || 1)),
-                price: Math.max(0, Number(modal.querySelector(`[data-edit-price="${index}"]`).value || 0))
+                image: products[index].image || ''
             }));
 
             row.children[1].textContent = date;

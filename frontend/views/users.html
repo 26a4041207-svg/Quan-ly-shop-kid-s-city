@@ -37,7 +37,7 @@
             </li>
             <li class="menu-item">
                 <a href="../index.html#imports">
-                    <i class='bx bx-box'></i> Quản lý nhập hàng
+                    <i class='bx bx-box'></i> Quản lý hàng nhập
                 </a>
             </li>
             <li class="menu-item has-submenu">
@@ -240,7 +240,13 @@
                                 </td>
                                 <td>0901234567</td>
                                 <td><span class="role-badge shop-owner">Chủ shop</span></td>
-                                <td><span class="status-badge active">Đã kích hoạt</span></td>
+                                <td>
+                                    <select class="status-select active" data-user-status>
+                                        <option selected>Đã kích hoạt</option>
+                                        <option>Chưa kích hoạt</option>
+                                        <option>Khóa</option>
+                                    </select>
+                                </td>
                                 <td class="actions">
                                     <button class="icon-btn" onclick="openUserDetail(this)" title="Xem chi tiết"><i class='bx bx-show'></i></button>
                                     <button class="icon-btn" onclick="openUserEdit(this)" title="Chỉnh sửa"><i class='bx bx-pencil'></i></button>
@@ -256,12 +262,17 @@
                                 </td>
                                 <td>0912345678</td>
                                 <td><span class="role-badge staff">Nhân viên</span></td>
-                                <td><span class="status-badge active">Đã kích hoạt</span></td>
+                                <td>
+                                    <select class="status-select active" data-user-status>
+                                        <option selected>Đã kích hoạt</option>
+                                        <option>Chưa kích hoạt</option>
+                                        <option>Khóa</option>
+                                    </select>
+                                </td>
                                 <td class="actions">
                                     <button class="icon-btn" onclick="openUserDetail(this)" title="Xem chi tiết"><i class='bx bx-show'></i></button>
                                     <button class="icon-btn" onclick="openUserEdit(this)"><i class='bx bx-pencil'></i></button>
                                     <button class="icon-btn" onclick="openModal('resetPasswordModal')"><i class='bx bx-key'></i></button>
-                                    <button class="icon-btn" onclick="showToast('Đã khóa tài khoản.')" title="Khóa/Mở khóa"><i class='bx bx-lock-alt'></i></button>
                                 </td>
                             </tr>
                             <tr data-name="Phạm Thị Dung" data-username="0934567890" data-email="dung@kidscity.vn" data-phone="0934567890" data-cccd="001204000003" data-address="Đà Nẵng" data-role="Nhân viên" data-status="Chưa kích hoạt" data-created="15/2/2024">
@@ -273,12 +284,17 @@
                                 </td>
                                 <td>0934567890</td>
                                 <td><span class="role-badge staff">Nhân viên</span></td>
-                                <td><span class="status-badge inactive">Chưa kích hoạt</span></td>
+                                <td>
+                                    <select class="status-select inactive" data-user-status>
+                                        <option>Đã kích hoạt</option>
+                                        <option selected>Chưa kích hoạt</option>
+                                        <option>Khóa</option>
+                                    </select>
+                                </td>
                                 <td class="actions">
                                     <button class="icon-btn" onclick="openUserDetail(this)" title="Xem chi tiết"><i class='bx bx-show'></i></button>
                                     <button class="icon-btn" onclick="openUserEdit(this)"><i class='bx bx-pencil'></i></button>
                                     <button class="icon-btn" onclick="openModal('resetPasswordModal')"><i class='bx bx-key'></i></button>
-                                    <button class="icon-btn" onclick="showToast('Đã khóa tài khoản.')"><i class='bx bx-lock-alt'></i></button>
                                 </td>
                             </tr>
                             <tr data-name="Hoàng Văn Em" data-username="0945678901" data-email="em@kidscity.vn" data-phone="0945678901" data-cccd="001204000004" data-address="Hải Phòng" data-role="Nhân viên" data-status="Khóa" data-created="1/3/2024">
@@ -290,12 +306,17 @@
                                 </td>
                                 <td>0945678901</td>
                                 <td><span class="role-badge staff">Nhân viên</span></td>
-                                <td><span class="status-badge locked">Khóa</span></td>
+                                <td>
+                                    <select class="status-select locked" data-user-status>
+                                        <option>Đã kích hoạt</option>
+                                        <option>Chưa kích hoạt</option>
+                                        <option selected>Khóa</option>
+                                    </select>
+                                </td>
                                 <td class="actions">
                                     <button class="icon-btn" onclick="openUserDetail(this)" title="Xem chi tiết"><i class='bx bx-show'></i></button>
                                     <button class="icon-btn" onclick="openUserEdit(this)"><i class='bx bx-pencil'></i></button>
                                     <button class="icon-btn" onclick="openModal('resetPasswordModal')"><i class='bx bx-key'></i></button>
-                                    <button class="icon-btn" onclick="showToast('Đã mở khóa tài khoản.')"><i class='bx bx-lock-open-alt'></i></button>
                                 </td>
                             </tr>
                         </tbody>
@@ -376,11 +397,11 @@
                         <div class="form-row">
                             <div class="form-group">
                                 <label>Họ và tên *</label>
-                                <input type="text" class="form-control" placeholder="Nhập họ và tên">
+                                <input type="text" class="form-control" id="addName" placeholder="Nhập họ và tên">
                             </div>
                             <div class="form-group">
                                 <label>Vai trò *</label>
-                                <select class="form-control">
+                                <select class="form-control" id="addRole">
                                     <option>Nhân viên</option>
                                     <option>Chủ shop</option>
                                 </select>
@@ -388,30 +409,30 @@
                         </div>
                         <div class="form-group">
                             <label>Tên đăng nhập *</label>
-                            <input type="text" class="form-control" placeholder="Nhập số điện thoại" disabled style="background: #f8fafc; cursor: not-allowed;">
+                            <input type="text" class="form-control" id="addUsername" placeholder="Nhập số điện thoại" disabled style="background: #f8fafc; cursor: not-allowed;">
                         </div>
                         <div class="form-group">
                             <label>Mật khẩu *</label>
-                            <input type="text" class="form-control" placeholder="Nhập mật khẩu">
+                            <input type="text" class="form-control" id="addPassword" placeholder="Nhập mật khẩu">
                         </div>
                         <div class="form-row">
                             <div class="form-group">
                                 <label>Email</label>
-                                <input type="email" class="form-control" placeholder="Nhập email">
+                                <input type="email" class="form-control" id="addEmail" placeholder="Nhập email">
                             </div>
                             <div class="form-group">
                                 <label>Điện thoại</label>
-                                <input type="text" class="form-control" placeholder="Nhập số điện thoại">
+                                <input type="text" class="form-control" id="addPhone" placeholder="Nhập số điện thoại">
                             </div>
                         </div>
                         <div class="form-row">
                             <div class="form-group">
                                 <label>CCCD</label>
-                                <input type="text" class="form-control" placeholder="Nhập số CCCD">
+                                <input type="text" class="form-control" id="addCccd" placeholder="Nhập số CCCD">
                             </div>
                             <div class="form-group">
                                 <label>Địa chỉ</label>
-                                <input type="text" class="form-control" placeholder="Nhập địa chỉ">
+                                <input type="text" class="form-control" id="addAddress" placeholder="Nhập địa chỉ">
                             </div>
                         </div>
                         <div class="info-alert">
@@ -421,7 +442,7 @@
                     </div>
                     <div class="modal-footer">
                         <button class="btn-outline" onclick="closeModal('addUserModal')">Hủy</button>
-                        <button class="btn-primary" onclick="closeModal('addUserModal'); showToast('Thêm người dùng thành công!')">Thêm mới</button>
+                        <button class="btn-primary" onclick="createUserFromModal()">Thêm mới</button>
                     </div>
                 </div>
             </div>
@@ -470,19 +491,9 @@
                                 <input type="text" class="form-control" id="editAddress">
                             </div>
                         </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>Trạng thái</label>
-                                <select class="form-control" id="editStatus">
-                                    <option>Đã kích hoạt</option>
-                                    <option>Chưa kích hoạt</option>
-                                    <option>Khóa</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>Ngày tạo</label>
-                                <input type="text" class="form-control" id="editCreated">
-                            </div>
+                        <div class="form-group">
+                            <label>Ngày tạo</label>
+                            <input type="text" class="form-control" id="editCreated">
                         </div>
                     </div>
                     <div class="modal-footer">

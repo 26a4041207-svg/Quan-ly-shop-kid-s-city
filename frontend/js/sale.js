@@ -628,9 +628,29 @@ window.initSalePage = function initSalePage(container) {
         const rows = Array.from(body.querySelectorAll('tr')).filter((row) => !row.querySelector('.empty-row'));
         if (!rows.length) {
             body.innerHTML = '<tr><td colspan="7" class="empty-row">Chưa có sản phẩm. Thêm sản phẩm ở trên.</td></tr>';
+            updateInvoiceSummary(body.closest('#invoice-create'));
             return;
         }
         rows.forEach((row, index) => renderInvoiceDraftRow(row, index + 1));
+        updateInvoiceSummary(body.closest('#invoice-create'));
+    };
+
+    const updateInvoiceSummary = (modal) => {
+        if (!modal) return;
+        const productRows = Array.from(modal.querySelectorAll('.sales-card tbody tr')).filter((row) => !row.querySelector('.empty-row'));
+        const subtotal = productRows.reduce((sum, row) => sum + Number(row.dataset.price || 0) * Number(row.dataset.quantity || 0), 0);
+        const discountInput = modal.querySelector('[data-invoice-discount]');
+        const subtotalEl = modal.querySelector('[data-invoice-subtotal]');
+        const totalEl = modal.querySelector('[data-invoice-total]');
+
+        if (subtotalEl) subtotalEl.textContent = formatMoney(subtotal);
+        if (discountInput) {
+            discountInput.disabled = false;
+            discountInput.value = subtotal > 1000000 ? formatMoney(Math.round(subtotal * 0.1)) : '0đ';
+        }
+
+        const discount = Math.min(moneyNumber(discountInput?.value), subtotal);
+        if (totalEl) totalEl.textContent = formatMoney(Math.max(0, subtotal - discount));
     };
 
     const addInvoiceProduct = () => {
@@ -727,9 +747,8 @@ window.initSalePage = function initSalePage(container) {
             return;
         }
 
-        const total = productRows.reduce((sum, row) => {
-            return sum + Number(row.dataset.price || 0) * Number(row.dataset.quantity || 0);
-        }, 0);
+        updateInvoiceSummary(modal);
+        const total = moneyNumber(modal.querySelector('[data-invoice-total]')?.textContent);
         const code = nextCode('#invoice-table', 'HD');
         const date = dateInput.value || today();
         const customer = customerSelect.value;
@@ -791,6 +810,14 @@ window.initSalePage = function initSalePage(container) {
         renderInvoicePagination();
         initInvoiceProductCombobox();
         root.querySelector('#invoice-create .add-product .sales-btn.primary').addEventListener('click', addInvoiceProduct);
+        root.querySelector('#invoice-create [data-invoice-discount]')?.addEventListener('input', (event) => {
+            updateInvoiceSummary(event.target.closest('#invoice-create'));
+        });
+        root.querySelector('#invoice-create [data-invoice-discount]')?.addEventListener('blur', (event) => {
+            event.target.value = formatMoney(moneyNumber(event.target.value));
+            updateInvoiceSummary(event.target.closest('#invoice-create'));
+        });
+        updateInvoiceSummary(root.querySelector('#invoice-create'));
         root.querySelector('#invoice-create .modal-actions .sales-btn.primary').addEventListener('click', createInvoice);
         root.querySelector('[data-add-invoice-customer]')?.addEventListener('click', (event) => {
             event.preventDefault();
