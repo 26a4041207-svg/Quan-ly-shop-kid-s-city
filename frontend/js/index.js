@@ -137,12 +137,77 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById('open-profile').addEventListener('click', () => profileModal.classList.add('active'));
     document.getElementById('open-password').addEventListener('click', () => passwordModal.classList.add('active'));
 
+    const clearPasswordForm = () => {
+        passwordModal.querySelectorAll('input[type="password"]').forEach(input => {
+            input.value = '';
+            input.classList.remove('input-error');
+        });
+        const error = document.getElementById('password-match-error');
+        if (error) {
+            error.textContent = '';
+            error.classList.remove('show');
+        }
+    };
+
+    const showPasswordError = (message) => {
+        const newPasswordInput = document.getElementById('new-password');
+        const confirmPasswordInput = document.getElementById('confirm-new-password');
+        const error = document.getElementById('password-match-error');
+
+        newPasswordInput?.classList.add('input-error');
+        confirmPasswordInput?.classList.add('input-error');
+        if (error) {
+            error.textContent = message;
+            error.classList.add('show');
+        }
+    };
+
+    const clearPasswordError = () => {
+        document.getElementById('new-password')?.classList.remove('input-error');
+        document.getElementById('confirm-new-password')?.classList.remove('input-error');
+        const error = document.getElementById('password-match-error');
+        if (error) {
+            error.textContent = '';
+            error.classList.remove('show');
+        }
+    };
+
+    ['new-password', 'confirm-new-password'].forEach(id => {
+        document.getElementById(id)?.addEventListener('input', clearPasswordError);
+    });
+
     document.querySelectorAll('.close-modal').forEach(btn => {
         btn.addEventListener('click', () => {
             profileModal.classList.remove('active');
             passwordModal.classList.remove('active');
+            clearPasswordForm();
         });
     });
+
+    const savePasswordBtn = document.getElementById('save-password-change');
+    if (savePasswordBtn) {
+        savePasswordBtn.addEventListener('click', () => {
+            const oldPassword = document.getElementById('old-password')?.value.trim();
+            const newPassword = document.getElementById('new-password')?.value.trim();
+            const confirmNewPassword = document.getElementById('confirm-new-password')?.value.trim();
+
+            if (!oldPassword || !newPassword || !confirmNewPassword) {
+                showPasswordError('Vui lòng nhập đầy đủ mật khẩu mới và xác nhận lại mật khẩu mới.');
+                return;
+            }
+
+            if (newPassword !== confirmNewPassword) {
+                showPasswordError('Mật khẩu mới và xác nhận lại mật khẩu mới phải giống nhau.');
+                document.getElementById('confirm-new-password')?.focus();
+                return;
+            }
+
+            clearPasswordError();
+            alert('Đổi mật khẩu thành công!');
+            passwordModal.classList.remove('active');
+            clearPasswordForm();
+        });
+    }
 
     // 5. ĐĂNG XUẤT (LOGOUT LỖI TỪ LOCALSTORAGE VÀ CHUYỂN TRANG)
     const logoutBtn = document.querySelector('.logout-item');

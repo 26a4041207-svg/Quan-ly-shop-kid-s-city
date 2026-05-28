@@ -207,6 +207,20 @@
     border-radius: 8px; font-size: 14px; outline: none; transition: 0.2s; box-sizing: border-box;
 }
 .form-control:focus { border-color: #2563eb; }
+.form-control.input-error {
+    border-color: #dc2626;
+    background: #fef2f2;
+}
+.password-error {
+    display: none;
+    margin-top: 6px;
+    color: #dc2626;
+    font-size: 13px;
+    font-weight: 500;
+}
+.password-error.show {
+    display: block;
+}
 .input-icon-right { position: relative; }
 .input-icon-right i { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #94a3b8; cursor: pointer; }
 

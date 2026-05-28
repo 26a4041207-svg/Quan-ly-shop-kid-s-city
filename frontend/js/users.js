@@ -388,12 +388,82 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    const clearPasswordForm = function() {
+        if (!passwordModal) return;
+        passwordModal.querySelectorAll('input[type="password"]').forEach(function(input) {
+            input.value = '';
+            input.classList.remove('input-error');
+        });
+        const error = document.getElementById('password-match-error');
+        if (error) {
+            error.textContent = '';
+            error.classList.remove('show');
+        }
+    };
+
+    const showPasswordError = function(message) {
+        const newPasswordInput = document.getElementById('new-password');
+        const confirmPasswordInput = document.getElementById('confirm-new-password');
+        const error = document.getElementById('password-match-error');
+
+        if (newPasswordInput) newPasswordInput.classList.add('input-error');
+        if (confirmPasswordInput) confirmPasswordInput.classList.add('input-error');
+        if (error) {
+            error.textContent = message;
+            error.classList.add('show');
+        }
+    };
+
+    const clearPasswordError = function() {
+        const newPasswordInput = document.getElementById('new-password');
+        const confirmPasswordInput = document.getElementById('confirm-new-password');
+        const error = document.getElementById('password-match-error');
+
+        if (newPasswordInput) newPasswordInput.classList.remove('input-error');
+        if (confirmPasswordInput) confirmPasswordInput.classList.remove('input-error');
+        if (error) {
+            error.textContent = '';
+            error.classList.remove('show');
+        }
+    };
+
+    ['new-password', 'confirm-new-password'].forEach(function(id) {
+        const input = document.getElementById(id);
+        if (input) input.addEventListener('input', clearPasswordError);
+    });
+
     document.querySelectorAll('.close-modal').forEach(function(btn) {
         btn.addEventListener('click', function() {
             if (profileModal) profileModal.classList.remove('active');
             if (passwordModal) passwordModal.classList.remove('active');
+            clearPasswordForm();
         });
     });
+
+    const savePasswordBtn = document.getElementById('save-password-change');
+    if (savePasswordBtn) {
+        savePasswordBtn.addEventListener('click', function() {
+            const oldPassword = document.getElementById('old-password')?.value.trim();
+            const newPassword = document.getElementById('new-password')?.value.trim();
+            const confirmNewPassword = document.getElementById('confirm-new-password')?.value.trim();
+
+            if (!oldPassword || !newPassword || !confirmNewPassword) {
+                showPasswordError('Vui lòng nhập đầy đủ mật khẩu mới và xác nhận lại mật khẩu mới.');
+                return;
+            }
+
+            if (newPassword !== confirmNewPassword) {
+                showPasswordError('Mật khẩu mới và xác nhận lại mật khẩu mới phải giống nhau.');
+                document.getElementById('confirm-new-password')?.focus();
+                return;
+            }
+
+            clearPasswordError();
+            alert('Đổi mật khẩu thành công!');
+            if (passwordModal) passwordModal.classList.remove('active');
+            clearPasswordForm();
+        });
+    }
 
     const logoutBtn = document.querySelector('.logout-item');
     if (logoutBtn) {

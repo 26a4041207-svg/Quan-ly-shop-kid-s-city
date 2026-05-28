@@ -350,6 +350,20 @@ table td { padding: 15px 10px; font-size: 14px; border-bottom: 1px solid #f3f4f6
     font-size: 14px;
     outline: none;
 }
+.form-control.input-error {
+    border-color: #dc2626;
+    background: #fef2f2;
+}
+.password-error {
+    display: none;
+    margin-top: 6px;
+    color: #dc2626;
+    font-size: 13px;
+    font-weight: 500;
+}
+.password-error.show {
+    display: block;
+}
 .modal-footer-btns {
     display: flex;
     gap: 12px;
