@@ -384,27 +384,7 @@
 
             <div class="form-grid">
 
-                <!-- ẢNH SP -->
-                <div class="form-group full-width">
-                    <label>Ảnh sản phẩm</label>
-                    <div class="product-image-uploader">
-                        <div class="product-image-preview large" id="productImagePreview">
-                            <i class='bx bx-image'></i>
-                        </div>
-                        <input type="text" id="productImage" placeholder="Nhập đường dẫn ảnh hoặc URL ảnh...">
-                    </div>
-                </div>
-                <!-- TÊN SP -->
-                <div class="form-group full-width">
-
-                    <label>Tên sản phẩm *</label>
-
-                    <input type="text"
-                           id="productName">
-
-                </div>
-
-                <!-- DANH MỤC -->
+                <!-- DANH MUC -->
                 <div class="form-group full-width">
 
                     <label>Danh mục *</label>
@@ -430,6 +410,35 @@
                         </button>
 
                     </div>
+
+                </div>
+
+                <!-- ANH SP -->
+                <div class="form-group full-width">
+                    <label>Ảnh sản phẩm</label>
+                    <div class="product-image-uploader">
+                        <div class="product-image-preview large" id="productImagePreview">
+                            <i class='bx bx-image'></i>
+                        </div>
+                        <div class="image-upload-control">
+                            <input type="hidden" id="productImage">
+                            <input type="file" id="productImageFile" accept="image/*">
+                            <label for="productImageFile" class="file-upload-btn">
+                                <i class='bx bx-upload'></i>
+                                Chọn ảnh từ máy
+                            </label>
+                            <span id="productImageFileName">Chưa chọn ảnh</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TEN SP -->
+                <div class="form-group full-width">
+
+                    <label>Tên sản phẩm *</label>
+
+                    <input type="text"
+                           id="productName">
 
                 </div>
 
