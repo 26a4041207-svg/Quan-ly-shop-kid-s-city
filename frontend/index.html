@@ -6,8 +6,8 @@
     <title>Kid's City - Quản lý bán hàng</title>
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <link rel="stylesheet" href="assets/css/index.css">
-    <link rel="stylesheet" href="assets/css/sale.css">
-    <link rel="stylesheet" href="assets/css/import.css">
+    <link rel="stylesheet" href="assets/css/sale.css?v=20260528-invoice-combobox">
+    <link rel="stylesheet" href="assets/css/import.css?v=20260529-import-edit">
     <link rel="stylesheet" href="assets/css/dashboard.css">
 </head>
 <body>
@@ -27,11 +27,6 @@
             <li class="menu-item active">
                 <a href="views/dashboard.html" data-target="dashboard">
                     <i class='bx bx-grid-alt'></i> Tổng quan
-                </a>
-            </li>
-            <li class="menu-item">
-                <a href="views/users.html">
-                    <i class='bx bx-user'></i> Quản lý người dùng
                 </a>
             </li>
             <li class="menu-item">
@@ -185,16 +180,12 @@
                     </div>
                     <div class="modal-body">
                         <div class="form-group">
-                            <label>Mật khẩu cũ</label>
-                            <input type="password" class="form-control" id="old-password">
-                        </div>
-                        <div class="form-group">
                             <label>Mật khẩu mới</label>
-                            <input type="password" class="form-control" id="new-password">
+                            <input type="password" class="form-control" id="new-password" autocomplete="new-password" value="">
                         </div>
                         <div class="form-group">
                             <label>Xác nhận lại mật khẩu mới</label>
-                            <input type="password" class="form-control" id="confirm-new-password">
+                            <input type="password" class="form-control" id="confirm-new-password" autocomplete="new-password" value="">
                             <p class="password-error" id="password-match-error"></p>
                         </div>
                         <div class="modal-footer-btns">
@@ -212,9 +203,11 @@
         
     </div>
 
-    <script src="js/auth.js"></script>
-    <script src="js/sale.js"></script>
-    <script src="js/import.js"></script>
-    <script src="js/index.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js?v=20260531-staff-role-normalize"></script>
+    <script src="js/sale.js?v=20260529-db-only"></script>
+    <script src="js/import.js?v=20260529-db-only"></script>
+    <script src="js/data-bindings.js?v=20260528-db-views"></script>
+    <script src="js/index.js?v=20260601-password"></script>
 </body>
 </html>

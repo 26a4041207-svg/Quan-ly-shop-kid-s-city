@@ -10,7 +10,7 @@
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 
     <link rel="stylesheet" href="../assets/css/index.css">
-    <link rel="stylesheet" href="customers.css">
+    <link rel="stylesheet" href="customers.css?v=20260531-customer-detail-compact">
 
 </head>
 
@@ -29,7 +29,6 @@
                     <h2>Kid's City</h2>
                     <p>Quản lý bán hàng</p>
                 </div>
-
             </div>
 
         </div>
@@ -43,12 +42,6 @@
                 </a>
             </li>
 
-            <li class="menu-item">
-                <a href="users.html">
-                    <i class='bx bx-user'></i>
-                    Quản lý người dùng
-                </a>
-            </li>
 
             <li class="menu-item">
                 <a href="../index.html#imports">
@@ -189,6 +182,8 @@
 
                 <i class='bx bx-bell notification-icon'></i>
 
+                <div class="dropdown" id="user-dropdown">
+
                 <div class="header-user">
 
                     <div class="avatar blue-bg">N</div>
@@ -199,6 +194,23 @@
                     </div>
 
                     <i class='bx bx-chevron-down'></i>
+
+                </div>
+
+                    <div class="dropdown-menu account-menu">
+                        <ul class="dropdown-list">
+                            <li id="open-profile">
+                                <i class='bx bx-user'></i> <span>Th&#244;ng tin c&#225; nh&#226;n</span>
+                            </li>
+                            <li id="open-password">
+                                <i class='bx bx-lock-alt'></i> <span>&#272;&#7893;i m&#7853;t kh&#7849;u</span>
+                            </li>
+                            <li class="divider"></li>
+                            <li class="logout-item">
+                                <i class='bx bx-log-out-circle'></i> <span>&#272;&#259;ng xu&#7845;t</span>
+                            </li>
+                        </ul>
+                    </div>
 
                 </div>
 
@@ -554,8 +566,10 @@
     </div>
 
 </div>
-<script src="../js/auth.js"></script>
-<script src="customers.js"></script>
+<script src="../js/api.js"></script>
+<script src="../js/auth.js?v=20260531-staff-role-normalize"></script>
+<script src="customers.js?v=20260528-db-views"></script>
 </body>
 
 </html>
+

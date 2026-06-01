@@ -18,7 +18,6 @@
         </div>
         <ul class="menu">
             <li class="menu-item"><a href="../../index.html"><i class="bx bx-grid-alt"></i> Tổng quan</a></li>
-            <li class="menu-item"><a href="../users.html"><i class="bx bx-user"></i> Quản lý người dùng</a></li>
             <li class="menu-item"><a href="../../index.html#imports"><i class="bx bx-box"></i> Quản lý hàng nhập</a></li>
             <li class="menu-item has-submenu">
                 <a href="#" class="menu-toggle"><i class="bx bx-cube"></i> <span>Quản lý sản phẩm</span><i class="bx bx-chevron-down arrow"></i></a>
@@ -85,7 +84,7 @@
                 <div class="modal-content profile-modal"><div class="modal-header"><h3>Thông tin cá nhân</h3></div><div class="modal-body"><div class="profile-main"><div class="avatar-large blue-bg">N</div><div class="profile-info-header"><h4>Nguyễn Văn An</h4><p>admin@kidscity.vn</p><span class="badge-role">Chủ shop</span></div></div><div class="profile-details"><div class="detail-row"><span class="label">Tên đăng nhập</span><span class="value">admin</span></div><div class="detail-row"><span class="label">Điện thoại</span><span class="value">0901234567</span></div><div class="detail-row"><span class="label">Ngày tạo</span><span class="value">2024-01-01</span></div></div><button class="btn-primary-block close-modal">Đóng</button></div></div>
             </div>
             <div class="modal-overlay" id="modal-password">
-                <div class="modal-content password-modal"><div class="modal-header"><h3>Đổi mật khẩu</h3></div><div class="modal-body"><div class="form-group"><label>Mật khẩu cũ</label><input type="password" class="form-control"></div><div class="form-group"><label>Mật khẩu mới</label><input type="password" class="form-control"></div><div class="modal-footer-btns"><button class="btn-outline close-modal">Hủy</button><button class="btn-primary">Lưu thay đổi</button></div></div></div>
+                <div class="modal-content password-modal"><div class="modal-header"><h3>Đổi mật khẩu</h3></div><div class="modal-body"><div class="form-group"><label>Mật khẩu mới</label><input type="password" class="form-control" id="new-password" autocomplete="new-password" value=""></div><div class="form-group"><label>Xác nhận lại mật khẩu mới</label><input type="password" class="form-control" id="confirm-new-password" autocomplete="new-password" value=""><p class="password-error" id="password-match-error"></p></div><div class="modal-footer-btns"><button class="btn-outline close-modal">Hủy</button><button class="btn-primary" id="save-password-change">Lưu thay đổi</button></div></div></div>
             </div>
         </header>
         <main id="main-content" class="content-body reports-page" data-report-page="products">
@@ -99,7 +98,8 @@
             <section class="dash-card"><div class="dash-card-header"><div><h3>Báo cáo sản phẩm</h3><p>Tồn kho và hiệu quả bán hàng</p></div></div><div class="table-responsive"><table class="dash-table reports-table"><thead><tr><th>Mã SP</th><th>Tên sản phẩm</th><th>Danh mục</th><th>Đã bán</th><th>Tồn kho</th><th>Doanh thu</th><th>Trạng thái</th></tr></thead><tbody data-report-table><tr data-period="today last7 this-month"><td class="fw-bold text-blue">SP001</td><td>Áo thun Mickey Mouse</td><td>Áo thun</td><td>18</td><td>24</td><td class="fw-bold">2.160.000đ</td><td><span class="report-badge good">Bán chạy</span></td></tr><tr data-period="yesterday last7 this-month"><td class="fw-bold text-blue">SP002</td><td>Áo thun Elsa Frozen</td><td>Áo thun</td><td>9</td><td>18</td><td class="fw-bold">1.215.000đ</td><td><span class="report-badge good">Ổn định</span></td></tr><tr data-period="last7 this-month"><td class="fw-bold text-blue">SP003</td><td>Váy hoa nhí công chúa</td><td>Váy</td><td>11</td><td>3</td><td class="fw-bold">2.420.000đ</td><td><span class="report-badge warn">Sắp hết</span></td></tr><tr data-period="last-month"><td class="fw-bold text-blue">SP004</td><td>Quần short kaki</td><td>Quần short</td><td>5</td><td>5</td><td class="fw-bold">1.600.000đ</td><td><span class="report-badge warn">Cần nhập</span></td></tr></tbody></table></div></section>
         </main>
     </div>
-    <script src="../../js/auth.js"></script>
-    <script src="../../js/revenue.js"></script>
+    <script src="../../js/api.js"></script>
+    <script src="../../js/auth.js?v=20260531-staff-role-normalize"></script>
+    <script src="../../js/revenue.js?v=20260601-password"></script>
 </body>
 </html>

@@ -4,52 +4,44 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đăng nhập - Kid's City</title>
-    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
-        body { background-color: #1e3a8a; background-image: radial-gradient(circle at 30% 50%, rgba(255,255,255,0.08) 0%, transparent 40%), radial-gradient(circle at 30% 50%, rgba(255,255,255,0.04) 0%, transparent 60%); display: flex; height: 100vh; align-items: center; justify-content: center; color: #fff; }
+        @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Inter", sans-serif; }
+        body { background-color: #1e3a8a; background-image: radial-gradient(circle at 30% 50%, rgba(255,255,255,.08) 0%, transparent 40%), radial-gradient(circle at 30% 50%, rgba(255,255,255,.04) 0%, transparent 60%); display: flex; height: 100vh; align-items: center; justify-content: center; color: #fff; }
         .login-wrapper { display: flex; width: 100%; max-width: 1000px; align-items: center; gap: 60px; padding: 20px; }
         .login-left { flex: 1; display: flex; flex-direction: column; align-items: center; text-align: center; }
-        .logo-box { width: 80px; height: 80px; background: rgba(255, 255, 255, 0.2); border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 40px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .logo-box { width: 80px; height: 80px; background: rgba(255,255,255,.2); border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 40px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,.1); }
         .login-left h1 { font-size: 36px; font-weight: 700; margin-bottom: 10px; }
         .login-left p { color: #bfdbfe; font-size: 15px; margin-bottom: 40px; }
         .stats-grid { display: flex; gap: 15px; }
-        .stat-item { background: rgba(255, 255, 255, 0.1); padding: 15px 20px; border-radius: 12px; backdrop-filter: blur(10px); min-width: 110px; }
+        .stat-item { background: rgba(255,255,255,.1); padding: 15px 20px; border-radius: 12px; backdrop-filter: blur(10px); min-width: 110px; }
         .stat-item h3 { font-size: 20px; margin-bottom: 4px; }
         .stat-item span { font-size: 12px; color: #bfdbfe; }
         .login-right { flex: 1; display: flex; justify-content: flex-end; }
-        .login-card { background: #fff; color: #333; width: 100%; max-width: 420px; padding: 40px; border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.2); }
+        .login-card { background: #fff; color: #333; width: 100%; max-width: 420px; padding: 40px; border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,.2); }
         .login-card h2 { font-size: 24px; margin-bottom: 8px; color: #1e293b; }
         .login-card > p { font-size: 14px; color: #64748b; margin-bottom: 30px; }
         .form-group { margin-bottom: 20px; position: relative; }
         .form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 8px; color: #334155; }
         .input-wrapper { position: relative; }
-        .form-control { width: 100%; padding: 12px 15px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 14px; outline: none; transition: 0.3s; }
-        .form-control:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+        .form-control { width: 100%; padding: 12px 15px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 14px; outline: none; transition: .3s; }
+        .form-control:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,.1); }
         .toggle-password { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #94a3b8; cursor: pointer; font-size: 18px; }
-        .btn-login { width: 100%; padding: 14px; background: #2563eb; color: #fff; border: none; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.3s; }
+        .btn-login { width: 100%; padding: 14px; background: #2563eb; color: #fff; border: 0; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: .3s; }
         .btn-login:hover { background: #1d4ed8; }
-        .test-accounts { margin-top: 30px; }
-        .divider { display: flex; align-items: center; text-align: center; font-size: 11px; color: #94a3b8; font-weight: 600; margin-bottom: 15px; }
-        .divider::before, .divider::after { content: ''; flex: 1; border-bottom: 1px solid #e2e8f0; margin: 0 10px; }
-        .test-cards { display: flex; gap: 10px; }
-        .test-card { flex: 1; padding: 12px; border-radius: 10px; cursor: pointer; border: 1px solid transparent; transition: 0.2s; }
-        .test-card.admin { background: #f0f7ff; border-color: #e0f2fe; }
-        .test-card.admin:hover { border-color: #bae6fd; }
-        .test-card.admin .role { color: #0284c7; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 4px; margin-bottom: 4px;}
-        .test-card.staff { background: #f0fdf4; border-color: #dcfce7; }
-        .test-card.staff:hover { border-color: #bbf7d0; }
-        .test-card.staff .role { color: #16a34a; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 4px; margin-bottom: 4px;}
-        .test-card p { font-size: 11px; color: #64748b; margin-bottom: 2px; }
-        .hint-text { text-align: center; font-size: 11px; color: #94a3b8; margin-top: 15px; }
-        @media (max-width: 768px) { .login-wrapper { flex-direction: column; gap: 30px; } .login-left { margin-bottom: 20px; } }
+        .btn-login:disabled { cursor: not-allowed; opacity: .75; }
+        @media (max-width: 768px) {
+            .login-wrapper { flex-direction: column; gap: 30px; }
+            .login-left { margin-bottom: 20px; }
+            .login-right { width: 100%; justify-content: center; }
+        }
     </style>
 </head>
 <body>
     <div class="login-wrapper">
         <div class="login-left">
-            <div class="logo-box"><i class='bx bxs-face'></i></div>
+            <div class="logo-box"><i class="bx bxs-face"></i></div>
             <h1>Kid's City</h1>
             <p>Hệ thống quản lý bán hàng nội bộ</p>
             <div class="stats-grid">
@@ -61,149 +53,80 @@
         <div class="login-right">
             <div class="login-card">
                 <h2>Đăng nhập</h2>
-                <p>Chào mừng trở lại! Nhập thông tin để tiếp tục.</p>
+                <p>Nhập tài khoản đã được tạo trong hệ thống để tiếp tục.</p>
                 <form id="loginForm">
                     <div class="form-group">
                         <label>Tên đăng nhập</label>
-                        <input type="text" id="username" class="form-control" placeholder="Nhập số điện thoại" required>
+                        <input type="text" id="username" class="form-control" placeholder="Nhập tên đăng nhập" required>
                     </div>
                     <div class="form-group">
                         <label>Mật khẩu</label>
                         <div class="input-wrapper">
                             <input type="password" id="password" class="form-control" placeholder="Nhập mật khẩu" required>
-                            <i class='bx bx-show toggle-password' id="togglePassword"></i>
+                            <i class="bx bx-show toggle-password" id="togglePassword"></i>
                         </div>
                     </div>
-                    <button type="submit" class="btn-login"><i class='bx bx-log-in-circle'></i> Đăng nhập</button>
+                    <button type="submit" class="btn-login"><i class="bx bx-log-in-circle"></i> Đăng nhập</button>
                 </form>
-                <div class="test-accounts">
-                    <div class="divider">TÀI KHOẢN THỬ NGHIỆM</div>
-                    <div class="test-cards">
-                        <div class="test-card admin" onclick="fillTestAccount('0901234567', 'admin123')">
-                            <span class="role"><i class='bx bxs-crown' style="color: #ea580c;"></i> Chủ shop</span>
-                            <p>0901234567</p><p>admin123</p>
-                        </div>
-                        <div class="test-card staff" onclick="fillTestAccount('0912345678', 'staff123')">
-                            <span class="role"><i class='bx bxs-user'></i> Nhân viên</span>
-                            <p>0912345678</p><p>staff123</p>
-                        </div>
-                    </div>
-                    <p class="hint-text">Nhấn vào ô để tự động điền thông tin</p>
-                </div>
             </div>
         </div>
     </div>
 
+    <script src="js/api.js?v=20260529-real-login"></script>
     <script>
-        // KIỂM TRA ĐĂNG NHẬP: Nếu đã đăng nhập thì tự chuyển sang index
-        if (localStorage.getItem('isLoggedIn') === 'true') {
-            window.location.href = 'index.html';
+        if (localStorage.getItem("isLoggedIn") === "true" && localStorage.getItem("authToken")) {
+            window.location.href = "index.html";
         }
 
-        const togglePassword = document.getElementById('togglePassword');
-        const passwordInput = document.getElementById('password');
-        togglePassword.addEventListener('click', function () {
-            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-            passwordInput.setAttribute('type', type);
-            this.classList.toggle('bx-show');
-            this.classList.toggle('bx-hide');
+        const togglePassword = document.getElementById("togglePassword");
+        const passwordInput = document.getElementById("password");
+        const loginButton = document.querySelector(".btn-login");
+
+        togglePassword.addEventListener("click", function () {
+            const type = passwordInput.getAttribute("type") === "password" ? "text" : "password";
+            passwordInput.setAttribute("type", type);
+            this.classList.toggle("bx-show");
+            this.classList.toggle("bx-hide");
         });
 
-        function fillTestAccount(username, password) {
-            document.getElementById('username').value = username;
-            document.getElementById('password').value = password;
-            document.querySelector('.btn-login').focus();
-        }
-
-        const USER_ACCOUNTS_KEY = 'kidCityAccounts';
-        const defaultAccounts = {
-            '0901234567': {
-                username: '0901234567',
-                password: 'admin123',
-                role: 'admin',
-                roleLabel: 'Chủ shop',
-                name: 'Nguyễn Văn An',
-                email: 'admin@kidscity.vn',
-                phone: '0901234567',
-                status: 'Đã kích hoạt'
-            },
-            '0912345678': {
-                username: '0912345678',
-                password: 'staff123',
-                role: 'staff',
-                roleLabel: 'Nhân viên',
-                name: 'Trần Thị Bình',
-                email: 'binh@kidscity.vn',
-                phone: '0912345678',
-                status: 'Đã kích hoạt'
-            }
+        const setLoginLoading = (isLoading) => {
+            loginButton.disabled = isLoading;
+            loginButton.innerHTML = isLoading
+                ? "<i class='bx bx-loader-alt bx-spin'></i> Đang xử lý..."
+                : "<i class='bx bx-log-in-circle'></i> Đăng nhập";
         };
 
-        const getStoredAccounts = () => {
+        document.getElementById("loginForm").addEventListener("submit", async function (event) {
+            event.preventDefault();
+            const username = document.getElementById("username").value.trim();
+            const password = document.getElementById("password").value;
+            setLoginLoading(true);
+
             try {
-                return JSON.parse(localStorage.getItem(USER_ACCOUNTS_KEY) || '{}');
-            } catch {
-                return {};
-            }
-        };
-
-        const saveStoredAccounts = (accounts) => {
-            localStorage.setItem(USER_ACCOUNTS_KEY, JSON.stringify(accounts));
-        };
-
-        const restoreLoginButton = () => {
-            const btn = document.querySelector('.btn-login');
-            btn.innerHTML = "<i class='bx bx-log-in-circle'></i> Đăng nhập";
-            btn.style.opacity = "1";
-        };
-
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
-            e.preventDefault(); 
-            const username = document.getElementById('username').value.trim();
-            const password = document.getElementById('password').value;
-            const btn = document.querySelector('.btn-login');
-            btn.innerHTML = "<i class='bx bx-loader-alt bx-spin'></i> Đang xử lý...";
-            btn.style.opacity = "0.8";
-
-            setTimeout(() => {
-                const storedAccounts = getStoredAccounts();
-                const defaultAccount = defaultAccounts[username];
-                const storedAccount = storedAccounts[username];
-                const account = defaultAccount || storedAccount
-                    ? { ...(defaultAccount || {}), ...(storedAccount || {}) }
-                    : null;
-
-                if (!account || account.password !== password) {
-                    alert('Tên đăng nhập hoặc mật khẩu không đúng.');
-                    restoreLoginButton();
-                    return;
-                }
-
-                if (account.status === 'Khóa') {
-                    alert('Tài khoản này đang bị khóa. Vui lòng liên hệ chủ shop.');
-                    restoreLoginButton();
-                    return;
-                }
-
-                if (storedAccounts[username] && account.status === 'Chưa kích hoạt') {
-                    storedAccounts[username] = { ...account, status: 'Đã kích hoạt' };
-                    saveStoredAccounts(storedAccounts);
-                    account.status = 'Đã kích hoạt';
-                }
-
-                localStorage.setItem('isLoggedIn', 'true');
-                localStorage.setItem('currentUser', JSON.stringify({
+                const result = await window.kidCityApi.post("auth/login.php", { username, password });
+                const account = result.user;
+                localStorage.setItem("authToken", result.token);
+                localStorage.setItem("isLoggedIn", "true");
+                localStorage.setItem("currentUser", JSON.stringify({
+                    id: account.id,
                     username: account.username || username,
                     name: account.name || username,
                     fullname: account.name || username,
-                    email: account.email || '',
+                    email: account.email || "",
                     phone: account.phone || username,
-                    role: account.role || 'staff',
-                    roleLabel: account.roleLabel || (account.role === 'admin' ? 'Chủ shop' : 'Nhân viên')
+                    role: account.role || "staff",
+                    roleLabel: account.roleLabel || (account.role === "admin" ? "Chủ shop" : "Nhân viên")
                 }));
-                localStorage.setItem('currentRole', account.role || 'staff');
-                window.location.href = 'index.html';
-            }, 800);
+                localStorage.setItem("currentRole", account.role || "staff");
+                window.location.href = "index.html";
+            } catch (error) {
+                alert(error.message || "Tên đăng nhập hoặc mật khẩu không đúng.");
+                localStorage.removeItem("authToken");
+                localStorage.removeItem("isLoggedIn");
+                localStorage.removeItem("currentUser");
+                localStorage.removeItem("currentRole");
+                setLoginLoading(false);
+            }
         });
     </script>
 </body>

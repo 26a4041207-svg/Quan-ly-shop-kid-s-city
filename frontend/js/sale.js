@@ -56,8 +56,8 @@ window.initSalePage = function initSalePage(container) {
     };
 
     // Dữ liệu mẫu của trang còn lại để chặn một hóa đơn bị đổi/trả nhiều lần khi từng trang được load riêng.
-    const initialExchangeInvoiceCodes = ['HD001', 'HD002', 'HD003', 'HD005', 'HD008'];
-    const initialReturnInvoiceCodes = ['HD002', 'HD004', 'HD005', 'HD009', 'HD011'];
+    const initialExchangeInvoiceCodes = [];
+    const initialReturnInvoiceCodes = [];
     // Dữ liệu chi tiết hóa đơn dùng khi bấm mã hóa đơn ở trang đổi/trả hàng.
     const invoiceDetails = {
         HD001: { customer: 'Lê Thị Cẩm Ly', staff: 'Trần Thị Bình', date: '2026-04-15', payment: 'Tiền mặt', note: 'Khách hàng quen', total: '375.000đ', items: [['Áo thun Mickey Mouse', '120.000đ', '2', '0đ', '240.000đ'], ['Áo thun Elsa Frozen', '135.000đ', '1', '0đ', '135.000đ']] },
@@ -89,6 +89,172 @@ window.initSalePage = function initSalePage(container) {
         price: prices[name] || 100000,
         ...(productDetails[name] || {})
     }));
+    Object.keys(invoiceDetails).forEach((code) => delete invoiceDetails[code]);
+
+    const invoiceCodes = () => Object.keys(invoiceDetails).sort((a, b) => Number(a.replace(/\D/g, '')) - Number(b.replace(/\D/g, '')));
+    const normalizeInvoiceCode = (invoiceCode) => String(invoiceCode || '').trim().toUpperCase();
+    const invoiceCodeKey = (invoiceCode) => invoiceCodes().find((code) => code.toUpperCase() === normalizeInvoiceCode(invoiceCode)) || normalizeInvoiceCode(invoiceCode);
+    const invoiceItemsByCode = (invoiceCode) => invoiceDetails[invoiceCodeKey(invoiceCode)]?.items || [];
+    const invoiceProductNamesByCode = (invoiceCode) => {
+        const names = invoiceItemsByCode(invoiceCode).map((item) => item[0]).filter(Boolean);
+        return Array.from(new Set(names));
+    };
+    const invoiceProductQuantity = (invoiceCode, productName) => {
+        const item = invoiceItemsByCode(invoiceCode).find((row) => row[0] === productName);
+        return Math.max(1, Number(item?.[2] || 1));
+    };
+    const resetSelectedLine = (panel) => {
+        const line = panel?.nextElementSibling;
+        if (line?.classList.contains('selected-items')) line.remove();
+    };
+    const renderInvoiceProductSelect = (select, invoiceCode) => {
+        if (!select) return;
+
+        const products = invoiceDetails[invoiceCodeKey(invoiceCode)] ? invoiceProductNamesByCode(invoiceCode) : [];
+        const placeholder = products.length ? '-- Chọn SP --' : '-- Chọn hóa đơn trước --';
+        select.innerHTML = `<option value="">${placeholder}</option>`;
+
+        products.forEach((productName) => {
+            const option = document.createElement('option');
+            option.value = productName;
+            option.textContent = productName;
+            select.appendChild(option);
+        });
+    };
+    const getInvoiceControl = (modal) => modal?.querySelector('[data-invoice-code]') || modal?.querySelectorAll('.form-grid select')[0];
+    const getTypeSelect = (modal) => {
+        const selects = Array.from(modal?.querySelectorAll('.form-grid select') || []);
+        return selects.find((select) => ['Đổi hàng', 'Trả hàng'].includes(select.value)) || selects[1] || selects[0];
+    };
+    const getNoteInput = (modal) => Array.from(modal?.querySelectorAll('.form-grid input[type="text"]') || [])
+        .find((input) => !input.matches('[data-invoice-code]'));
+    const renderInvoiceCodeOptions = (modal, keyword = '') => {
+        const combo = modal?.querySelector('[data-invoice-combobox]');
+        const optionsBox = modal?.querySelector('[data-invoice-options]');
+        if (!combo || !optionsBox) return;
+
+        const normalizedKeyword = normalizeInvoiceCode(keyword);
+        if (!normalizedKeyword) {
+            combo.classList.remove('open');
+            optionsBox.innerHTML = '';
+            return;
+        }
+
+        const results = invoiceCodes().filter((code) => code.includes(normalizedKeyword));
+        optionsBox.innerHTML = results.length
+            ? results.map((code) => {
+                const invoice = invoiceDetails[code] || {};
+                return `<button type="button" class="invoice-option" data-invoice-option="${code}">
+                    <strong>${code}</strong>
+                    <span>${invoice.customer || ''} ${invoice.date ? '- ' + invoice.date : ''}</span>
+                </button>`;
+            }).join('')
+            : '<div class="combo-empty">Không tìm thấy hóa đơn phù hợp.</div>';
+        combo.classList.add('open');
+    };
+
+    const setInvoiceCode = (modal, code, panelSelector) => {
+        const input = getInvoiceControl(modal);
+        const combo = modal?.querySelector('[data-invoice-combobox]');
+        if (!input) return;
+        input.value = invoiceCodeKey(code);
+        combo?.classList.remove('open');
+        syncInvoiceProductPanel(modal, panelSelector);
+    };
+
+    const enhanceInvoiceControl = (modal, comboId, panelSelector) => {
+        if (!modal) return null;
+        let control = getInvoiceControl(modal);
+        if (!control) return null;
+
+        const field = control.closest('.field');
+        const value = control.value && !String(control.value).includes('--') ? control.value : '';
+        if (field && !field.querySelector('[data-invoice-combobox]')) {
+            field.innerHTML = `
+                <label>Mã hóa đơn gốc <span class="required">*</span></label>
+                <div class="invoice-combobox" data-invoice-combobox id="${comboId}">
+                    <input type="text" data-invoice-code placeholder="Nhập mã hóa đơn, ví dụ HD002" autocomplete="off" value="${value}">
+                    <div class="invoice-options" data-invoice-options></div>
+                </div>
+            `;
+            control = field.querySelector('[data-invoice-code]');
+        }
+
+        const combo = field?.querySelector('[data-invoice-combobox]');
+        const optionsBox = field?.querySelector('[data-invoice-options]');
+        control.removeAttribute('list');
+        control.addEventListener('input', () => {
+            control.value = normalizeInvoiceCode(control.value);
+            renderInvoiceCodeOptions(modal, control.value);
+            syncInvoiceProductPanel(modal, panelSelector);
+        });
+        control.addEventListener('focus', () => renderInvoiceCodeOptions(modal, control.value));
+        optionsBox?.addEventListener('click', (event) => {
+            const option = event.target.closest('[data-invoice-option]');
+            if (!option) return;
+            setInvoiceCode(modal, option.dataset.invoiceOption, panelSelector);
+        });
+        document.addEventListener('click', (event) => {
+            if (!combo?.contains(event.target)) combo?.classList.remove('open');
+        });
+        return control;
+    };
+    const refreshInvoiceDatalist = (modal) => {
+        const control = getInvoiceControl(modal);
+        if (control?.value) renderInvoiceCodeOptions(modal, control.value);
+    };
+    const mergeInvoicesFromApi = async () => {
+        if (!window.kidCityApi) return false;
+
+        try {
+            const invoices = await window.kidCityApi.get('sales/invoices.php');
+            invoices.forEach((invoice) => {
+                if (!invoice.code) return;
+                invoiceDetails[invoice.code] = {
+                    customer: invoice.customer_name || '',
+                    staff: invoice.staff_name || '',
+                    date: invoice.invoice_date || invoice.created_at || '',
+                    payment: invoice.payment_method || '',
+                    note: invoice.note || 'Không có',
+                    total: formatMoney(invoice.total),
+                    items: (invoice.items || []).map((item) => [
+                        item.product_name || item.product_code || 'Sản phẩm',
+                        formatMoney(item.price),
+                        String(item.quantity || 1),
+                        formatMoney(item.discount),
+                        formatMoney(item.line_total)
+                    ])
+                };
+            });
+            return true;
+        } catch (error) {
+            console.warn('Khong the tai hoa don tu API:', error.message);
+            return false;
+        }
+    };
+    const syncInvoiceProductPanel = (modal, panelSelector) => {
+        const invoiceSelect = getInvoiceControl(modal);
+        const panel = modal?.querySelector(panelSelector);
+        const productSelect = panel?.querySelector('select');
+        const quantityInput = panel?.querySelector('input[type="number"]');
+        if (!invoiceSelect || !panel || !productSelect) return;
+
+        renderInvoiceProductSelect(productSelect, invoiceSelect.value);
+        resetSelectedLine(panel);
+        if (quantityInput) {
+            quantityInput.value = '1';
+            quantityInput.removeAttribute('max');
+        }
+
+        productSelect.onchange = () => {
+            const maxQuantity = invoiceProductQuantity(invoiceSelect.value, productSelect.value);
+            if (quantityInput) {
+                quantityInput.max = String(maxQuantity);
+                quantityInput.value = String(Math.min(Math.max(1, Number(quantityInput.value || 1)), maxQuantity));
+            }
+            resetSelectedLine(panel);
+        };
+    };
 
     // Combobox sản phẩm trong form tạo hóa đơn: vừa gõ tìm kiếm, vừa chọn từ danh sách.
     const renderProductOptions = (modal, keyword = '') => {
@@ -234,6 +400,170 @@ window.initSalePage = function initSalePage(container) {
         });
     };
 
+    const mapInvoiceFromApi = (invoice) => ({
+        customer: invoice.customer_name || '',
+        staff: invoice.staff_name || '',
+        date: invoice.invoice_date || invoice.created_at || '',
+        payment: invoice.payment_method || '',
+        note: invoice.note || 'Không có',
+        total: formatMoney(invoice.total),
+        items: (invoice.items || []).map((item) => [
+            item.product_name || item.product_code || 'Sản phẩm',
+            formatMoney(item.price),
+            String(item.quantity || 1),
+            formatMoney(item.discount),
+            formatMoney(item.line_total)
+        ])
+    });
+
+    const showTableLoading = (selector, colspan) => {
+        const body = root.querySelector(selector);
+        if (body) body.innerHTML = `<tr><td colspan="${colspan}" class="empty-row">Đang tải dữ liệu từ database...</td></tr>`;
+    };
+
+    const showTableError = (selector, colspan) => {
+        const body = root.querySelector(selector);
+        if (body) body.innerHTML = `<tr><td colspan="${colspan}" class="empty-row">Không tải được dữ liệu từ database.</td></tr>`;
+    };
+
+    const loadInvoiceFormDataFromApi = async () => {
+        if (!window.kidCityApi || root.id !== 'invoice-page') return;
+        try {
+            const [customers, products] = await Promise.all([
+                window.kidCityApi.get('customers/index.php'),
+                window.kidCityApi.get('products/items.php')
+            ]);
+
+            const customerSelect = root.querySelector('#invoice-create .form-grid select');
+            if (customerSelect && Array.isArray(customers)) {
+                customerSelect.innerHTML = '<option value="">-- Chọn khách hàng --</option>';
+                customers.forEach((customer) => {
+                    const option = document.createElement('option');
+                    option.value = customer.name || '';
+                    option.textContent = customer.name || '';
+                    option.dataset.customerId = customer.id || '';
+                    customerSelect.appendChild(option);
+                });
+            }
+
+            if (Array.isArray(products)) {
+                invoiceProductOptions.splice(0, invoiceProductOptions.length);
+                Object.keys(prices).forEach((key) => delete prices[key]);
+                Object.keys(productCodes).forEach((key) => delete productCodes[key]);
+                Object.keys(productDetails).forEach((key) => delete productDetails[key]);
+                products.forEach((product) => {
+                    if (!product.name) return;
+                    const price = Number(product.price || 0);
+                    prices[product.name] = price;
+                    productCodes[product.name] = product.code || '';
+                    productDetails[product.name] = {
+                        productId: product.id,
+                        category: product.category_name || '',
+                        size: product.size || '',
+                        color: product.color || '',
+                        stock: Number(product.stock || 0)
+                    };
+                    invoiceProductOptions.push({
+                        id: product.id,
+                        name: product.name,
+                        code: product.code || '',
+                        price,
+                        category: product.category_name || '',
+                        size: product.size || '',
+                        color: product.color || '',
+                        stock: Number(product.stock || 0)
+                    });
+                });
+            }
+        } catch (error) {
+            console.warn('Khong the tai khach hang/san pham tu API:', error.message);
+        }
+    };
+
+    const loadInvoiceTableFromApi = async () => {
+        if (!window.kidCityApi || root.id !== 'invoice-page') return;
+        try {
+            const invoices = await window.kidCityApi.get('sales/invoices.php');
+            const body = root.querySelector('#invoice-table');
+            if (!body || !Array.isArray(invoices)) return;
+            body.innerHTML = '';
+            let cashCount = 0;
+            let transferCount = 0;
+            let totalRevenue = 0;
+            invoices.forEach((invoice) => {
+                if (invoice.code) invoiceDetails[invoice.code] = mapInvoiceFromApi(invoice);
+                const payment = invoice.payment_method || '';
+                if (normalize(payment).includes('tiền mặt')) cashCount += 1;
+                if (normalize(payment).includes('chuyển khoản')) transferCount += 1;
+                totalRevenue += Number(invoice.total || 0);
+                const row = document.createElement('tr');
+                row.dataset.key = normalize(`${invoice.code || ''} ${invoice.customer_name || ''} ${invoice.staff_name || ''} ${payment}`);
+                row.innerHTML = `<td><strong>${invoice.code || ''}</strong></td><td>${invoice.invoice_date || ''}</td><td>${invoice.customer_name || ''}</td><td>${invoice.staff_name || ''}</td><td class="green font-weight-600">${formatMoney(invoice.total)}</td><td>${payment}</td><td></td>`;
+                attachActions(row.lastElementChild, 'invoice', 'invoice-detail');
+                body.appendChild(row);
+            });
+            const stats = root.querySelectorAll('.sales-stat strong');
+            if (stats[0]) stats[0].textContent = String(invoices.length);
+            if (stats[1]) stats[1].textContent = formatMoney(totalRevenue);
+            if (stats[2]) stats[2].textContent = String(cashCount);
+            if (stats[3]) stats[3].textContent = String(transferCount);
+            invoiceCurrentPage = 1;
+            renderInvoicePagination();
+        } catch (error) {
+            console.warn('Khong the tai hoa don tu API:', error.message);
+            showTableError('#invoice-table', 7);
+        }
+    };
+
+    const loadExchangeTableFromApi = async () => {
+        if (!window.kidCityApi || root.id !== 'exchange-page') return;
+        try {
+            const exchanges = await window.kidCityApi.get('sales/exchanges.php');
+            const body = root.querySelector('#exchange-table');
+            if (!body || !Array.isArray(exchanges)) return;
+            body.innerHTML = '';
+            exchanges.forEach((item) => {
+                const row = document.createElement('tr');
+                row.dataset.key = normalize(`${item.code || ''} ${item.invoice_code || ''} ${item.staff_name || ''} ${item.reason || ''}`);
+                row.dataset.reason = item.reason || '';
+                row.dataset.oldProduct = item.old_product_name || '';
+                row.dataset.newProduct = item.new_product_name || '-';
+                row.dataset.quantity = String(item.quantity || 1);
+                row.innerHTML = `<td><strong>${item.code || ''}</strong></td><td>${invoiceLink(item.invoice_code || '')}</td><td>${item.exchange_date || ''}</td><td>${item.staff_name || ''}</td><td></td>`;
+                attachActions(row.lastElementChild, 'exchange', 'exchange-detail');
+                body.appendChild(row);
+            });
+            updateFirstStat(exchanges.length);
+        } catch (error) {
+            console.warn('Khong the tai phieu doi hang tu API:', error.message);
+            showTableError('#exchange-table', 5);
+        }
+    };
+
+    const loadReturnTableFromApi = async () => {
+        if (!window.kidCityApi || root.id !== 'return-page') return;
+        try {
+            const returns = await window.kidCityApi.get('sales/returns.php');
+            const body = root.querySelector('#return-table');
+            if (!body || !Array.isArray(returns)) return;
+            body.innerHTML = '';
+            returns.forEach((item) => {
+                const row = document.createElement('tr');
+                row.dataset.key = normalize(`${item.code || ''} ${item.invoice_code || ''} ${item.reason || ''} ${item.staff_name || ''}`);
+                row.dataset.product = item.product_name || '';
+                row.dataset.quantity = String(item.quantity || 1);
+                row.dataset.refund = formatMoney(item.refund_amount);
+                row.innerHTML = `<td><strong>${item.code || ''}</strong></td><td>${invoiceLink(item.invoice_code || '')}</td><td>${item.return_date || ''}</td><td>${item.reason || ''}</td><td>${item.staff_name || ''}</td><td></td>`;
+                attachActions(row.lastElementChild, 'return', 'return-detail');
+                body.appendChild(row);
+            });
+            updateFirstStat(returns.length);
+        } catch (error) {
+            console.warn('Khong the tai phieu tra hang tu API:', error.message);
+            showTableError('#return-table', 6);
+        }
+    };
+
     /* =====================================================
        COMMON MODAL - Mở/đóng popup dùng chung các trang sale
        ===================================================== */
@@ -245,6 +575,51 @@ window.initSalePage = function initSalePage(container) {
     const closeModal = (modal) => {
         if (modal) modal.classList.remove('active');
     };
+
+    const syncExchangeDetailFromRow = (row) => {
+        const detail = root.querySelector('#exchange-detail .sales-modal-body');
+        if (!detail || !row) return;
+        const code = rowText(row, 0);
+        const invoiceCode = rowText(row, 1);
+        detail.querySelector('.detail-title').textContent = `Chi tiết đổi hàng ${code}`;
+        detail.querySelector('.detail-grid').innerHTML = `
+            <div class="detail-item"><span>Mã hóa đơn</span><strong>${invoiceCode}</strong></div>
+            <div class="detail-item"><span>Ngày đổi</span><strong>${rowText(row, 2)}</strong></div>
+            <div class="detail-item"><span>Nhân viên xử lý</span><strong>${rowText(row, 3)}</strong></div>
+            <div class="detail-item"><span>Lý do</span><strong>${row.dataset.reason || 'Không có'}</strong></div>
+        `;
+        detail.querySelector('tbody').innerHTML = `
+            <tr>
+                <td>${row.dataset.oldProduct || '-'}</td>
+                <td>${row.dataset.newProduct || '-'}</td>
+                <td><strong>${row.dataset.quantity || '1'}</strong></td>
+            </tr>
+        `;
+    };
+
+    const syncReturnDetailFromRow = (row) => {
+        const detail = root.querySelector('#return-detail .sales-modal-body');
+        if (!detail || !row) return;
+        const code = rowText(row, 0);
+        const invoiceCode = rowText(row, 1);
+        const refund = row.dataset.refund || '0đ';
+        detail.querySelector('.detail-title').textContent = `Chi tiết trả hàng ${code}`;
+        detail.querySelector('.detail-grid').innerHTML = `
+            <div class="detail-item"><span>Mã hóa đơn</span><strong>${invoiceCode}</strong></div>
+            <div class="detail-item"><span>Ngày trả</span><strong>${rowText(row, 2)}</strong></div>
+            <div class="detail-item"><span>Lý do</span><strong>${rowText(row, 3) || 'Không có'}</strong></div>
+            <div class="detail-item"><span>Nhân viên xử lý</span><strong>${rowText(row, 4)}</strong></div>
+        `;
+        detail.querySelector('tbody').innerHTML = `
+            <tr>
+                <td>${row.dataset.product || '-'}</td>
+                <td><strong>${row.dataset.quantity || '1'}</strong></td>
+                <td class="red font-weight-600">${refund}</td>
+            </tr>
+        `;
+        detail.querySelector('.total-line').innerHTML = `Tổng tiền hoàn: <span class="red">${refund}</span>`;
+    };
+
     const openInvoiceDetailByCode = (code) => {
         const invoice = invoiceDetails[code];
         if (!invoice) {
@@ -307,6 +682,9 @@ window.initSalePage = function initSalePage(container) {
 
         const openBtn = event.target.closest('[data-open]');
         if (openBtn && root.contains(openBtn)) {
+            const row = openBtn.closest('tr');
+            if (openBtn.dataset.open === 'exchange-detail') syncExchangeDetailFromRow(row);
+            if (openBtn.dataset.open === 'return-detail') syncReturnDetailFromRow(row);
             openModal(openBtn.dataset.open);
             return;
         }
@@ -452,6 +830,17 @@ window.initSalePage = function initSalePage(container) {
 
     const openInvoiceEditModal = (row) => {
         const code = rowText(row, 0);
+        const invoice = invoiceDetails[code] || {};
+        const detailRows = (invoice.items || []).length
+            ? invoice.items.map((item) => `
+                <tr>
+                    <td>${item[0] || ''}</td>
+                    <td>${item[1] || '0đ'}</td>
+                    <td>${item[2] || '1'}</td>
+                    <td><strong>${item[4] || item[3] || '0đ'}</strong></td>
+                </tr>
+            `).join('')
+            : '<tr><td colspan="4" class="empty-row">Chưa có chi tiết sản phẩm.</td></tr>';
         const modal = showWorkModal('invoice-edit-modal', `Sửa hóa đơn ${code}`, `
             <div class="edit-summary">Cập nhật thông tin chính của hóa đơn. Phần chi tiết sản phẩm đang sửa ở mức dữ liệu giao diện.</div>
             <div class="form-grid edit-grid">
@@ -463,7 +852,7 @@ window.initSalePage = function initSalePage(container) {
                 <div class="field"><label>PTTT</label><select data-field="payment"><option ${rowText(row, 5) === 'Tiền mặt' ? 'selected' : ''}>Tiền mặt</option><option ${rowText(row, 5) === 'Chuyển khoản' ? 'selected' : ''}>Chuyển khoản</option></select></div>
             </div>
             <h3 class="section-title edit-section-title">Chi tiết hóa đơn</h3>
-            <table class="sales-table"><thead><tr><th>Sản phẩm</th><th>Đơn giá</th><th>SL</th><th>Thành tiền</th></tr></thead><tbody><tr><td>Áo thun Mickey Mouse</td><td>120.000đ</td><td>1</td><td><strong>120.000đ</strong></td></tr></tbody></table>
+            <table class="sales-table"><thead><tr><th>Sản phẩm</th><th>Đơn giá</th><th>SL</th><th>Thành tiền</th></tr></thead><tbody>${detailRows}</tbody></table>
         `, `<button class="sales-btn light" data-close>Hủy</button><button class="sales-btn primary" data-save-edit="invoice">Lưu thay đổi</button>`);
 
         modal.querySelector('[data-save-edit="invoice"]').onclick = () => {
@@ -667,7 +1056,9 @@ window.initSalePage = function initSalePage(container) {
         const quantity = Math.max(1, Number(qtyInput.value || 1));
         const price = prices[product] || 100000;
         const row = document.createElement('tr');
+        const productInfo = invoiceProductOptions.find((item) => item.name === product) || {};
         row.dataset.product = product;
+        row.dataset.productId = productInfo.id || productDetails[product]?.productId || '';
         row.dataset.productCode = productCodes[product] || 'SP000';
         row.dataset.price = String(price);
         row.dataset.quantity = String(quantity);
@@ -733,7 +1124,7 @@ window.initSalePage = function initSalePage(container) {
         });
     };
 
-    const createInvoice = () => {
+    const createInvoice = async () => {
         const modal = root.querySelector('#invoice-create');
         const customerSelect = modal.querySelector('.form-grid select');
         const dateInput = modal.querySelector('input[type="date"]');
@@ -749,6 +1140,31 @@ window.initSalePage = function initSalePage(container) {
 
         updateInvoiceSummary(modal);
         const total = moneyNumber(modal.querySelector('[data-invoice-total]')?.textContent);
+        if (window.kidCityApi) {
+            try {
+                const selectedCustomer = customerSelect.selectedOptions[0];
+                await window.kidCityApi.post('sales/invoices.php', {
+                    customer_id: Number(selectedCustomer?.dataset.customerId || 0),
+                    invoice_date: dateInput.value || today(),
+                    payment_method: 'Tiền mặt',
+                    discount: moneyNumber(modal.querySelector('[data-invoice-discount]')?.value),
+                    items: productRows.map((row) => ({
+                        product_id: Number(row.dataset.productId || 0),
+                        quantity: Number(row.dataset.quantity || 1),
+                        price: Number(row.dataset.price || 0),
+                        discount: 0
+                    }))
+                });
+                closeModal(modal);
+                await loadInvoiceTableFromApi();
+                await mergeInvoicesFromApi();
+                return;
+            } catch (error) {
+                alert(error.message || 'Không thể tạo hóa đơn.');
+                return;
+            }
+        }
+
         const code = nextCode('#invoice-table', 'HD');
         const date = dateInput.value || today();
         const customer = customerSelect.value;
@@ -805,9 +1221,11 @@ window.initSalePage = function initSalePage(container) {
         };
     };
     const bindInvoicePage = () => {
-        hydrateActionCells('#invoice-table', 'invoice', 'invoice-detail');
+        showTableLoading('#invoice-table', 7);
         bindInvoicePagination();
         renderInvoicePagination();
+        loadInvoiceFormDataFromApi();
+        loadInvoiceTableFromApi();
         initInvoiceProductCombobox();
         root.querySelector('#invoice-create .add-product .sales-btn.primary').addEventListener('click', addInvoiceProduct);
         root.querySelector('#invoice-create [data-invoice-discount]')?.addEventListener('input', (event) => {
@@ -844,7 +1262,10 @@ window.initSalePage = function initSalePage(container) {
             panel.after(list);
         }
 
-        const quantity = Math.max(1, Number(qtyInput.value || 1));
+        const maxQuantity = Number(qtyInput.max || 0);
+        const requestedQuantity = Math.max(1, Number(qtyInput.value || 1));
+        const quantity = maxQuantity > 0 ? Math.min(requestedQuantity, maxQuantity) : requestedQuantity;
+        qtyInput.value = String(quantity);
         list.dataset.product = select.value;
         list.dataset.quantity = String(quantity);
         list.innerHTML = `<span>${type}: ${select.value}</span><strong>SL: ${quantity}</strong>`;
@@ -856,8 +1277,7 @@ window.initSalePage = function initSalePage(container) {
     const updateExchangeCreateMode = () => {
         const modal = root.querySelector('#exchange-create');
         if (!modal) return;
-        const selects = modal.querySelectorAll('.form-grid select');
-        const typeSelect = selects[1];
+        const typeSelect = getTypeSelect(modal);
         const newPanel = modal.querySelector('.swap-panel.new');
         const newTitle = newPanel?.previousElementSibling;
         const newSelectedLine = newPanel?.nextElementSibling?.classList.contains('selected-items') ? newPanel.nextElementSibling : null;
@@ -870,11 +1290,10 @@ window.initSalePage = function initSalePage(container) {
 
     const createExchange = () => {
         const modal = root.querySelector('#exchange-create');
-        const selects = modal.querySelectorAll('.form-grid select');
-        const invoiceSelect = selects[0];
-        const typeSelect = selects[1];
+        const invoiceSelect = getInvoiceControl(modal);
+        const typeSelect = getTypeSelect(modal);
         const dateInput = modal.querySelector('input[type="date"]');
-        const noteInput = modal.querySelector('.form-grid input[type="text"]');
+        const noteInput = getNoteInput(modal);
         const oldPanel = modal.querySelector('.swap-panel.old');
         const newPanel = modal.querySelector('.swap-panel.new');
         const oldSelect = oldPanel.querySelector('select');
@@ -901,7 +1320,7 @@ window.initSalePage = function initSalePage(container) {
         const code = nextCode('#exchange-table', 'DH');
         const invoiceCode = invoiceSelect.value;
         const date = dateInput.value || today();
-        const reason = noteInput.value.trim() || (isReturn ? 'Trả hàng' : 'Đổi sang mẫu khác');
+        const reason = noteInput?.value.trim() || (isReturn ? 'Trả hàng' : 'Đổi sang mẫu khác');
         const body = root.querySelector('#exchange-table');
         const row = document.createElement('tr');
         row.dataset.key = normalize(`${code} ${invoiceCode} Nguyễn Văn An ${reason}`);
@@ -918,13 +1337,21 @@ window.initSalePage = function initSalePage(container) {
     };
 
     const bindExchangePage = () => {
-        hydrateActionCells('#exchange-table', 'exchange', 'exchange-detail');
+        showTableLoading('#exchange-table', 5);
+        loadExchangeTableFromApi();
         const modal = root.querySelector('#exchange-create');
-        const typeSelect = modal.querySelectorAll('.form-grid select')[1];
+        const invoiceSelect = enhanceInvoiceControl(modal, 'exchange-invoice-combo', '.swap-panel.old');
+        const typeSelect = getTypeSelect(modal);
         root.querySelector('.swap-panel.old .sales-btn').addEventListener('click', () => addSelectedLine(root.querySelector('.swap-panel.old'), 'SP cũ'));
         root.querySelector('.swap-panel.new .sales-btn').addEventListener('click', () => addSelectedLine(root.querySelector('.swap-panel.new'), 'SP mới'));
-        typeSelect.addEventListener('change', updateExchangeCreateMode);
+        invoiceSelect?.addEventListener('change', () => syncInvoiceProductPanel(modal, '.swap-panel.old'));
+        typeSelect?.addEventListener('change', updateExchangeCreateMode);
         root.querySelector('#exchange-create .modal-actions .sales-btn.primary').addEventListener('click', createExchange);
+        syncInvoiceProductPanel(modal, '.swap-panel.old');
+        mergeInvoicesFromApi().then(() => {
+            refreshInvoiceDatalist(modal);
+            syncInvoiceProductPanel(modal, '.swap-panel.old');
+        });
         updateExchangeCreateMode();
     };
 
@@ -934,8 +1361,7 @@ window.initSalePage = function initSalePage(container) {
     const updateReturnCreateMode = () => {
         const modal = root.querySelector('#return-create');
         if (!modal) return;
-        const selects = modal.querySelectorAll('.form-grid select');
-        const typeSelect = selects[1];
+        const typeSelect = getTypeSelect(modal);
         const isExchange = typeSelect?.value === 'Đổi hàng';
         const exchangeTargets = modal.querySelectorAll('.return-exchange-target');
         const newPanel = modal.querySelector('.swap-panel.new.return-exchange-target');
@@ -949,11 +1375,10 @@ window.initSalePage = function initSalePage(container) {
 
     const createReturn = () => {
         const modal = root.querySelector('#return-create');
-        const selects = modal.querySelectorAll('.form-grid select');
-        const invoiceSelect = selects[0];
-        const typeSelect = selects[1];
+        const invoiceSelect = getInvoiceControl(modal);
+        const typeSelect = getTypeSelect(modal);
         const dateInput = modal.querySelector('input[type="date"]');
-        const noteInput = modal.querySelector('.form-grid input[type="text"]');
+        const noteInput = getNoteInput(modal);
         const panel = modal.querySelector('.return-panel');
         const newPanel = modal.querySelector('.swap-panel.new.return-exchange-target');
         const productSelect = panel.querySelector('select');
@@ -981,7 +1406,7 @@ window.initSalePage = function initSalePage(container) {
         const code = nextCode('#return-table', 'TH');
         const invoiceCode = invoiceSelect.value;
         const date = dateInput.value || today();
-        const reason = noteInput.value.trim() || (isExchange ? 'Đổi hàng' : 'Khách trả hàng');
+        const reason = noteInput?.value.trim() || (isExchange ? 'Đổi hàng' : 'Khách trả hàng');
         const product = productSelect.value;
         const newProduct = newProductSelect?.value || '-';
         const quantity = Math.max(1, Number(qtyInput.value || 1));
@@ -1014,14 +1439,22 @@ window.initSalePage = function initSalePage(container) {
     };
 
     const bindReturnPage = () => {
-        hydrateActionCells('#return-table', 'return', 'return-detail');
+        showTableLoading('#return-table', 6);
+        loadReturnTableFromApi();
         const modal = root.querySelector('#return-create');
-        const typeSelect = modal.querySelectorAll('.form-grid select')[1];
+        const invoiceSelect = enhanceInvoiceControl(modal, 'return-invoice-combo', '.return-panel');
+        const typeSelect = getTypeSelect(modal);
         root.querySelector('.return-panel .sales-btn').addEventListener('click', () => addSelectedLine(root.querySelector('.return-panel'), 'SP trả'));
         const newPanelButton = root.querySelector('.swap-panel.new.return-exchange-target .sales-btn');
         if (newPanelButton) newPanelButton.addEventListener('click', () => addSelectedLine(root.querySelector('.swap-panel.new.return-exchange-target'), 'SP mới'));
-        typeSelect.addEventListener('change', updateReturnCreateMode);
+        invoiceSelect?.addEventListener('change', () => syncInvoiceProductPanel(modal, '.return-panel'));
+        typeSelect?.addEventListener('change', updateReturnCreateMode);
         root.querySelector('#return-create .modal-actions .sales-btn.primary').addEventListener('click', createReturn);
+        syncInvoiceProductPanel(modal, '.return-panel');
+        mergeInvoicesFromApi().then(() => {
+            refreshInvoiceDatalist(modal);
+            syncInvoiceProductPanel(modal, '.return-panel');
+        });
         updateReturnCreateMode();
     };
 

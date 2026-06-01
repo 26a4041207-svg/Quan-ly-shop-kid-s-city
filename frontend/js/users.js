@@ -91,7 +91,7 @@ const userRowHtml = (account) => {
     const status = account.status || 'Chưa kích hoạt';
 
     return `
-        <tr data-name="${escapeHtml(account.name)}" data-username="${escapeHtml(account.username)}" data-email="${escapeHtml(account.email)}" data-phone="${escapeHtml(account.phone || account.username)}" data-cccd="${escapeHtml(account.cccd)}" data-address="${escapeHtml(account.address)}" data-role="${escapeHtml(role)}" data-status="${escapeHtml(status)}" data-created="${escapeHtml(account.created)}">
+        <tr data-id="${escapeHtml(account.id)}" data-name="${escapeHtml(account.name)}" data-username="${escapeHtml(account.username)}" data-email="${escapeHtml(account.email)}" data-phone="${escapeHtml(account.phone || account.username)}" data-cccd="${escapeHtml(account.cccd)}" data-address="${escapeHtml(account.address)}" data-role="${escapeHtml(role)}" data-status="${escapeHtml(status)}" data-created="${escapeHtml(account.created)}">
             <td>
                 <div class="user-info">
                     <div class="avatar bg-light">${escapeHtml(avatar)}</div>
@@ -153,6 +153,23 @@ const loadStoredUsersIntoTable = () => {
     updateUserCount();
 };
 
+const loadUsersFromApi = async () => {
+    if (!window.kidCityApi) return false;
+    const tbody = document.querySelector('.users-table tbody');
+    if (!tbody) return false;
+
+    try {
+        const users = await window.kidCityApi.get('users/index.php');
+        tbody.innerHTML = users.map(userRowHtml).join('');
+        bindUserStatusSelects();
+        updateUserCount();
+        return true;
+    } catch (error) {
+        console.warn('Khong the tai danh sach nguoi dung tu API:', error.message);
+        return false;
+    }
+};
+
 const resetAddUserForm = () => {
     ['addName', 'addRole', 'addUsername', 'addPassword', 'addEmail', 'addPhone', 'addCccd', 'addAddress'].forEach((id) => {
         const field = document.getElementById(id);
@@ -172,7 +189,7 @@ const bindAddUserPhoneSync = () => {
     });
 };
 
-window.createUserFromModal = function createUserFromModal() {
+window.createUserFromModal = async function createUserFromModal() {
     const account = {
         name: document.getElementById('addName')?.value.trim() || '',
         roleLabel: document.getElementById('addRole')?.value || 'Nhân viên',
@@ -192,15 +209,23 @@ window.createUserFromModal = function createUserFromModal() {
         return;
     }
 
-    const accounts = getStoredUserAccounts();
     const existsInTable = document.querySelector(`.users-table tbody tr[data-username="${CSS.escape(account.username)}"]`);
-    if (accounts[account.username] || existsInTable) {
+    if (existsInTable) {
         alert('Số điện thoại này đã tồn tại trong hệ thống.');
         return;
     }
 
-    accounts[account.username] = account;
-    saveStoredUserAccounts(accounts);
+    try {
+        if (window.kidCityApi) {
+            const created = await window.kidCityApi.post('users/index.php', account);
+            account.id = created.id;
+        } else {
+            throw new Error('Không thể kết nối API người dùng.');
+        }
+    } catch (error) {
+        alert(error.message || 'Không thể thêm người dùng.');
+        return;
+    }
 
     const tbody = document.querySelector('.users-table tbody');
     if (tbody) {
@@ -292,6 +317,21 @@ const bindUserStatusSelects = () => {
             if (row) {
                 row.dataset.status = newStatus;
                 updateStoredAccountFromRow(row);
+                if (window.kidCityApi && row.dataset.id) {
+                    window.kidCityApi.put('users/index.php', {
+                        id: row.dataset.id,
+                        name: row.dataset.name,
+                        username: row.dataset.username,
+                        email: row.dataset.email,
+                        phone: row.dataset.phone,
+                        cccd: row.dataset.cccd,
+                        address: row.dataset.address,
+                        role: roleCode(row.dataset.role),
+                        status: newStatus
+                    }).catch((error) => {
+                        alert(error.message || 'Không thể cập nhật trạng thái tài khoản.');
+                    });
+                }
             }
             select.dataset.previousStatus = newStatus;
             select.className = `status-select ${statusClass(newStatus)}`;
@@ -321,7 +361,9 @@ const bindUserSearch = () => {
 // users.html la trang day du, khong nap index.js de tranh router ghi de noi dung.
 // ==========================================
 document.addEventListener('DOMContentLoaded', function() {
-    loadStoredUsersIntoTable();
+    loadUsersFromApi().then(function(loaded) {
+        if (!loaded) updateUserCount();
+    });
     bindAddUserPhoneSync();
     bindUserSearch();
     bindUserStatusSelects();
@@ -345,7 +387,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const userDrop = document.getElementById('user-dropdown');
     const notiDrop = document.getElementById('notification-dropdown');
 
-    if (userDrop) {
+    if (userDrop && userDrop.dataset.kidCityDropdownBound !== 'true') {
+        userDrop.dataset.kidCityDropdownBound = 'true';
         userDrop.addEventListener('click', function(e) {
             e.stopPropagation();
             const menu = userDrop.querySelector('.dropdown-menu');
@@ -356,7 +399,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    if (notiDrop) {
+    if (notiDrop && notiDrop.dataset.kidCityDropdownBound !== 'true') {
+        notiDrop.dataset.kidCityDropdownBound = 'true';
         notiDrop.addEventListener('click', function(e) {
             e.stopPropagation();
             const menu = notiDrop.querySelector('.dropdown-menu');
@@ -374,17 +418,21 @@ document.addEventListener('DOMContentLoaded', function() {
     const openProfile = document.getElementById('open-profile');
     const openPassword = document.getElementById('open-password');
 
-    if (openProfile && profileModal) {
+    if (openProfile && profileModal && openProfile.dataset.kidCityProfileBound !== 'true') {
+        openProfile.dataset.kidCityProfileBound = 'true';
         openProfile.addEventListener('click', function() {
             profileModal.classList.add('active');
             closeAllDropdowns();
         });
     }
 
-    if (openPassword && passwordModal) {
+    if (openPassword && passwordModal && openPassword.dataset.kidCityPasswordBound !== 'true') {
+        openPassword.dataset.kidCityPasswordBound = 'true';
         openPassword.addEventListener('click', function() {
+            clearPasswordForm();
             passwordModal.classList.add('active');
             closeAllDropdowns();
+            setTimeout(clearPasswordForm, 0);
         });
     }
 
@@ -442,12 +490,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const savePasswordBtn = document.getElementById('save-password-change');
     if (savePasswordBtn) {
-        savePasswordBtn.addEventListener('click', function() {
-            const oldPassword = document.getElementById('old-password')?.value.trim();
+        savePasswordBtn.addEventListener('click', async function() {
             const newPassword = document.getElementById('new-password')?.value.trim();
             const confirmNewPassword = document.getElementById('confirm-new-password')?.value.trim();
 
-            if (!oldPassword || !newPassword || !confirmNewPassword) {
+            if (!newPassword || !confirmNewPassword) {
                 showPasswordError('Vui lòng nhập đầy đủ mật khẩu mới và xác nhận lại mật khẩu mới.');
                 return;
             }
@@ -459,20 +506,30 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             clearPasswordError();
-            alert('Đổi mật khẩu thành công!');
-            if (passwordModal) passwordModal.classList.remove('active');
-            clearPasswordForm();
+            try {
+                await window.kidCityApi.post('auth/change_password.php', {
+                    newPassword,
+                    confirmNewPassword
+                });
+                alert('Đổi mật khẩu thành công!');
+                if (passwordModal) passwordModal.classList.remove('active');
+                clearPasswordForm();
+            } catch (error) {
+                showPasswordError(error.message || 'Không thể đổi mật khẩu.');
+            }
         });
     }
 
     const logoutBtn = document.querySelector('.logout-item');
-    if (logoutBtn) {
+    if (logoutBtn && logoutBtn.dataset.kidCityLogoutBound !== 'true') {
+        logoutBtn.dataset.kidCityLogoutBound = 'true';
         logoutBtn.addEventListener('click', function() {
             if (confirm('Ban co chac chan muon dang xuat?')) {
                 localStorage.removeItem('isLoggedIn');
                 localStorage.removeItem('currentUser');
                 localStorage.removeItem('currentRole');
-                window.location.href = '../login.html';
+                localStorage.removeItem('authToken');
+                window.location.href = window.getKidCityLoginPath ? window.getKidCityLoginPath() : '../login.html';
             }
         });
     }

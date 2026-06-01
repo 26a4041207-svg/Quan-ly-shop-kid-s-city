@@ -2,7 +2,7 @@
    DATA
 ========================= */
 
-const customers = [
+let customers = [
     {
         maKhachHang: "KH001",
         tenKhachHang: "Nguyễn Minh Anh",
@@ -68,7 +68,7 @@ const customers = [
     }
 ];
 
-const purchaseHistory = [
+let purchaseHistory = [
     {
         maKhachHang: "KH001",
         maHoaDon: "HD001",
@@ -281,7 +281,7 @@ function updateStats(){
         purchaseHistory.length;
 
     const avg =
-        purchaseHistory.length / customers.length;
+        customers.length ? purchaseHistory.length / customers.length : 0;
 
     document.getElementById("avgOrders").innerText =
         avg.toFixed(1);
@@ -554,7 +554,7 @@ function editCustomer(id){
    SAVE CUSTOMER
 ========================= */
 
-function saveCustomer(){
+async function saveCustomer(){
 
     const id =
         document.getElementById("customerId").value;
@@ -570,6 +570,37 @@ function saveCustomer(){
         alert("Vui lòng nhập đầy đủ thông tin");
 
         return;
+    }
+
+    if(window.kidCityApi){
+        try{
+            if(id){
+                const customer = customers.find(customer => customer.maKhachHang === id);
+                await window.kidCityApi.put("customers/index.php", {
+                    id: customer?.dbId,
+                    code: id,
+                    name,
+                    phone
+                });
+            }else{
+                const nextNumber = customers.reduce((max, customer) => {
+                    const number = Number(String(customer.maKhachHang || "").replace(/\D/g, ""));
+                    return Number.isFinite(number) ? Math.max(max, number) : max;
+                }, 0) + 1;
+                await window.kidCityApi.post("customers/index.php", {
+                    code: `KH${String(nextNumber).padStart(3, "0")}`,
+                    name,
+                    phone
+                });
+            }
+
+            closeCustomerModal();
+            await loadCustomersFromApi();
+            return;
+        }catch(error){
+            alert(error.message || "Không thể lưu khách hàng.");
+            return;
+        }
     }
 
     if(id){
@@ -747,6 +778,70 @@ function getToday(){
         .split("T")[0];
 }
 
+async function loadCustomersFromApi(){
+
+    if(!window.kidCityApi) return;
+
+    try{
+
+        const [apiCustomers, invoices] = await Promise.all([
+            window.kidCityApi.get("customers/index.php"),
+            window.kidCityApi.get("sales/invoices.php")
+        ]);
+
+        if(Array.isArray(apiCustomers)){
+
+            customers = apiCustomers.map((customer, index) => ({
+                dbId: customer.id,
+                maKhachHang: customer.code || `KH${String(index + 1).padStart(3, "0")}`,
+                tenKhachHang: customer.name || "",
+                soDienThoai: customer.phone || "",
+                ngayTao: (customer.created_at || "").slice(0, 10),
+                ngayCapNhat: (customer.updated_at || customer.created_at || "").slice(0, 10)
+            }));
+        }
+
+        if(Array.isArray(invoices)){
+
+            const customerCodeById = new Map(
+                customers.map(customer => [String(customer.dbId || ""), customer.maKhachHang])
+            );
+
+            purchaseHistory = invoices.map(invoice => ({
+                maKhachHang: customerCodeById.get(String(invoice.customer_id || "")) || "",
+                maHoaDon: invoice.code || "",
+                tongTien: Number(invoice.total || 0),
+                ngayMua: invoice.invoice_date || ""
+            })).filter(item => item.maHoaDon);
+
+            invoices.forEach(invoice => {
+                if(!invoice.code) return;
+                invoiceDetails[invoice.code] = {
+                    customer: invoice.customer_name || "",
+                    staff: invoice.staff_name || "",
+                    date: invoice.invoice_date || "",
+                    payment: invoice.payment_method || "",
+                    note: invoice.note || "Không có",
+                    total: `${Number(invoice.total || 0).toLocaleString("vi-VN")}đ`,
+                    items: (invoice.items || []).map(item => [
+                        item.product_name || item.product_code || "",
+                        `${Number(item.price || 0).toLocaleString("vi-VN")}đ`,
+                        String(item.quantity || 1),
+                        `${Number(item.discount || 0).toLocaleString("vi-VN")}đ`,
+                        `${Number(item.line_total || 0).toLocaleString("vi-VN")}đ`
+                    ])
+                };
+            });
+        }
+
+        renderCustomers();
+
+    }catch(error){
+
+        console.warn("Khong the tai khach hang tu API:", error.message);
+    }
+}
+
 /* =========================
    CLOSE MODAL WHEN CLICK OUTSIDE
 ========================= */
@@ -774,4 +869,8 @@ window.onclick = function(event){
    INIT
 ========================= */
 
+customers = [];
+purchaseHistory = [];
+Object.keys(invoiceDetails).forEach(key => delete invoiceDetails[key]);
 renderCustomers();
+loadCustomersFromApi();

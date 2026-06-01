@@ -159,6 +159,85 @@ window.initImportPage = function initImportPage(container) {
         attachActions(row);
     });
 
+    const mapImportProductsFromApi = (items = []) => items.map((item) => ({
+        product: item.product_name || item.product_code || '',
+        category: item.category_name || '-',
+        size: item.size || '-',
+        color: item.color || '-',
+        quantity: Number(item.quantity || 0),
+        price: Number(item.price || 0),
+        image: item.image || ''
+    }));
+
+    const loadImportsFromApi = async () => {
+        if (!window.kidCityApi) return;
+        try {
+            const receipts = await window.kidCityApi.get('imports/index.php');
+            if (!Array.isArray(receipts)) return;
+            const body = root.querySelector('#import-table');
+            body.innerHTML = '';
+            receipts.forEach((receipt) => {
+                const row = document.createElement('tr');
+                const products = mapImportProductsFromApi(receipt.items || []);
+                row.dataset.key = normalize(`${receipt.code || ''} ${receipt.import_date || ''} ${receipt.staff_name || ''} ${receipt.supplier || ''}`);
+                row.dataset.supplier = receipt.supplier || '';
+                setProducts(row, products);
+                row.innerHTML = `<td><strong>${receipt.code || ''}</strong></td><td>${receipt.import_date || ''}</td><td>${receipt.staff_name || ''}</td><td></td>`;
+                attachActions(row);
+                body.appendChild(row);
+            });
+            root.querySelector('.import-stat strong').textContent = String(receipts.length);
+            currentPage = 1;
+            renderPagination();
+        } catch (error) {
+            console.warn('Khong the tai phieu nhap tu API:', error.message);
+        }
+    };
+
+    const loadImportCatalogFromApi = async () => {
+        if (!window.kidCityApi) return;
+        try {
+            const [categories, products] = await Promise.all([
+                window.kidCityApi.get('products/categories.php'),
+                window.kidCityApi.get('products/items.php')
+            ]);
+
+            const categorySelect = root.querySelector('[data-import-category]');
+            if (categorySelect && Array.isArray(categories)) {
+                categorySelect.innerHTML = '<option value="">Chọn danh mục</option>';
+                categories.forEach((category) => {
+                    const option = document.createElement('option');
+                    option.value = category.name || '';
+                    option.textContent = category.name || '';
+                    categorySelect.appendChild(option);
+                });
+            }
+
+            const datalist = root.querySelector('#import-product-options');
+            if (datalist && Array.isArray(products)) {
+                datalist.innerHTML = '';
+                Object.keys(productCatalog).forEach((key) => delete productCatalog[key]);
+                products.forEach((product) => {
+                    if (!product.name) return;
+                    productCatalog[product.name] = {
+                        productId: product.id,
+                        category: product.category_name || '',
+                        size: product.size || '',
+                        color: product.color || '',
+                        quantity: 1,
+                        image: product.image || '',
+                        price: Number(product.import_price || product.price || 0)
+                    };
+                    const option = document.createElement('option');
+                    option.value = product.name;
+                    datalist.appendChild(option);
+                });
+            }
+        } catch (error) {
+            console.warn('Khong the tai danh muc/san pham nhap tu API:', error.message);
+        }
+    };
+
     /* =====================================================
        IMPORT PAGINATION - Mỗi trang hiển thị 6 phiếu hàng nhập
        ===================================================== */
@@ -270,12 +349,15 @@ window.initImportPage = function initImportPage(container) {
         if (empty) empty.closest('tr').remove();
 
         const row = document.createElement('tr');
+        const catalogItem = findCatalogProduct(product)?.[1] || {};
         row.dataset.product = product;
+        row.dataset.productId = catalogItem.productId || '';
         row.dataset.category = categorySelect.value;
         row.dataset.size = sizeInput.value.trim();
         row.dataset.color = colorInput.value.trim();
         row.dataset.quantity = String(quantity);
         row.dataset.image = imageInput.value.trim();
+        row.dataset.price = String(catalogItem.price || 0);
         list.appendChild(row);
         refreshCreateProductTable();
         productSelect.value = '';
@@ -390,11 +472,13 @@ window.initImportPage = function initImportPage(container) {
             size: row.dataset.size,
             color: row.dataset.color,
             quantity: Number(row.dataset.quantity || 0),
-            image: row.dataset.image || ''
+            image: row.dataset.image || '',
+            product_id: row.dataset.productId || '',
+            price: Number(row.dataset.price || 0)
         }));
     };
 
-    const createImport = () => {
+    const createImport = async () => {
         const supplier = root.querySelector('[data-import-field="supplier"]').value.trim();
         const date = root.querySelector('[data-import-field="date"]').value;
         const products = collectCreateProducts();
@@ -405,6 +489,26 @@ window.initImportPage = function initImportPage(container) {
         if (!products.length) {
             alert('Vui lòng thêm ít nhất một sản phẩm.');
             return;
+        }
+
+        if (window.kidCityApi) {
+            try {
+                await window.kidCityApi.post('imports/index.php', {
+                    supplier,
+                    import_date: date,
+                    items: products.map((item) => ({
+                        product_id: Number(item.product_id || 0),
+                        quantity: Number(item.quantity || 1),
+                        price: Number(item.price || 0)
+                    }))
+                });
+                closeModal(root.querySelector('#import-create'));
+                await loadImportsFromApi();
+                return;
+            } catch (error) {
+                alert(error.message || 'Không thể tạo phiếu nhập hàng.');
+                return;
+            }
         }
 
         const code = nextImportCode();
@@ -465,7 +569,7 @@ window.initImportPage = function initImportPage(container) {
         `).join('');
 
         modal.innerHTML = `
-            <div class="import-dialog detail">
+            <div class="import-dialog detail import-edit-dialog">
                 <div class="import-modal-header"><h3>Sửa phiếu hàng nhập ${rowText(row, 0)}</h3><button class="modal-close" data-import-close>&times;</button></div>
                 <div class="import-modal-body">
                     <div class="form-grid">
@@ -475,7 +579,7 @@ window.initImportPage = function initImportPage(container) {
                         <div class="field"><label>Nhà cung cấp</label><input data-edit-field="supplier" value="${row.dataset.supplier || ''}"></div>
                     </div>
                     <h3 class="import-section-title">Chi tiết sản phẩm</h3>
-                    <div class="import-card"><table class="import-table"><thead><tr><th>Sản phẩm</th><th>Danh mục</th><th>Size</th><th>Màu</th><th>Số lượng nhập</th></tr></thead><tbody>${editRows}</tbody></table></div>
+                    <div class="import-card import-edit-products-card"><table class="import-table import-edit-table"><thead><tr><th>Sản phẩm</th><th>Danh mục</th><th>Size</th><th>Màu</th><th>Số lượng nhập</th></tr></thead><tbody>${editRows}</tbody></table></div>
                     <div class="import-modal-actions"><button class="import-btn light" data-import-close>Hủy</button><button class="import-btn primary" data-save-import-edit>Lưu thay đổi</button></div>
                 </div>
             </div>
@@ -506,4 +610,6 @@ window.initImportPage = function initImportPage(container) {
     };
 
     renderPagination();
+    loadImportCatalogFromApi();
+    loadImportsFromApi();
 };

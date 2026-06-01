@@ -230,11 +230,33 @@
 }
 
 .customer-modal{
-    width:600px;
+    width:min(950px, calc(100vw - 48px));
+    max-height:92vh;
+    border-radius:12px;
+    box-shadow:0 24px 60px rgba(15,23,42,.18);
+}
+
+.customer-modal .modal-header{
+    padding:28px 34px 22px;
+}
+
+.customer-modal .modal-header h2{
+    font-size:30px;
+    line-height:1.2;
+    color:#111827;
+}
+
+.customer-modal .modal-body{
+    padding:30px 34px;
+}
+
+.customer-modal .modal-footer{
+    padding:22px 34px 30px;
 }
 
 .customer-detail-modal{
-    width:min(950px, 100%);
+    width:min(1280px, calc(100vw - 64px)) !important;
+    min-width:min(980px, calc(100vw - 64px));
     max-height:92vh;
     overflow-y:auto;
     border-radius:12px;
@@ -242,11 +264,11 @@
 }
 
 .customer-detail-modal .modal-body{
-    padding:0 34px 34px;
+    padding:0 40px 40px;
 }
 
 .customer-detail-header{
-    padding:30px 34px 26px;
+    padding:34px 40px 28px;
     border-bottom:0;
 }
 
@@ -257,6 +279,7 @@
 }
 
 .customer-detail-modal .customer-info{
+    grid-template-columns:repeat(3, minmax(180px, 1fr));
     margin-bottom:30px;
 }
 
@@ -555,3 +578,153 @@
     }
 
 }
+
+/* CUSTOMER DETAIL MODAL POLISH */
+.customer-detail-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:24px 40px 18px;
+    border-bottom:1px solid #edf2f7;
+}
+
+.customer-detail-header h2{
+    margin:0;
+    font-size:28px;
+    line-height:1.25;
+    color:#111827;
+    font-weight:800;
+}
+
+.customer-detail-header .close-modal{
+    width:36px;
+    height:36px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:10px;
+    color:#111827;
+    transition:background .18s ease, color .18s ease;
+}
+
+.customer-detail-header .close-modal:hover{
+    background:#f1f5f9;
+    color:#2563eb;
+}
+
+.customer-detail-modal .modal-body{
+    padding:22px 40px 32px;
+}
+
+.customer-detail-modal .customer-info{
+    display:grid;
+    grid-template-columns:repeat(3, minmax(0, 1fr));
+    gap:14px;
+    margin-bottom:22px;
+}
+
+.customer-detail-modal .detail-item{
+    min-height:78px;
+    padding:14px 16px;
+    border:1px solid #e5edf7;
+    border-radius:12px;
+    background:#f8fafc;
+}
+
+.customer-detail-modal .detail-item span{
+    display:block;
+    margin-bottom:6px;
+    color:#64748b;
+    font-size:14px;
+    font-weight:700;
+    line-height:1.3;
+}
+
+.customer-detail-modal .detail-item strong{
+    display:block;
+    color:#0f172a;
+    font-size:20px;
+    font-weight:800;
+    line-height:1.3;
+    word-break:break-word;
+}
+
+.customer-detail-modal .history-header{
+    margin:0 0 12px;
+}
+
+.customer-detail-modal .section-title{
+    margin:0;
+    color:#111827;
+    font-size:24px;
+    line-height:1.25;
+    font-weight:800;
+}
+
+.customer-detail-modal .table-container{
+    border:1px solid #e8eef6;
+    border-radius:12px;
+    overflow:hidden;
+    background:#fff;
+    box-shadow:none;
+}
+
+.customer-detail-modal .history-table{
+    min-width:0;
+    width:100%;
+    border-collapse:collapse;
+}
+
+.customer-detail-modal .history-table thead{
+    background:#f8fafc;
+}
+
+.customer-detail-modal .history-table th{
+    padding:13px 20px;
+    color:#64748b;
+    font-size:13px;
+    font-weight:800;
+}
+
+.customer-detail-modal .history-table td{
+    padding:14px 20px;
+    color:#334155;
+    font-size:15px;
+    border-top:1px solid #eef2f7;
+}
+
+.customer-detail-modal .customer-detail-close{
+    height:48px;
+    margin-top:20px;
+    border-radius:10px;
+    font-weight:800;
+}
+
+@media (max-width:900px){
+    .customer-detail-modal .customer-info{
+        grid-template-columns:repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width:640px){
+    .customer-detail-header{
+        padding:20px 20px 16px;
+    }
+
+    .customer-detail-modal .modal-body{
+        padding:18px 20px 24px;
+    }
+
+    .customer-detail-modal .customer-info{
+        grid-template-columns:1fr;
+    }
+
+    .customer-detail-modal .table-container{
+        overflow-x:auto;
+    }
+
+    .customer-detail-modal .history-table{
+        min-width:620px;
+    }
+}
+

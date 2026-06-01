@@ -99,6 +99,14 @@
 .combo-option small { color: #16a34a; font-weight: 700; white-space: nowrap; }
 .combo-option:hover { background: #eff6ff; color: #1d4ed8; }
 .combo-empty { padding: 12px; color: #94a3b8; font-size: 14px; }
+.invoice-combobox { position: relative; }
+.invoice-combobox input[data-invoice-code] { padding-right: 14px; }
+.invoice-combobox.open .invoice-options { display: block; }
+.invoice-options { display: none; position: absolute; left: 0; right: 0; top: calc(100% + 6px); max-height: 240px; overflow-y: auto; background: #fff; border: 1px solid #dbe4f0; border-radius: 10px; box-shadow: 0 16px 30px rgba(15, 23, 42, .16); z-index: 60; padding: 6px; }
+.invoice-option { width: 100%; border: 0; background: transparent; color: #334155; border-radius: 8px; padding: 11px 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; cursor: pointer; text-align: left; font-size: 14px; }
+.invoice-option strong { color: #1d4ed8; }
+.invoice-option span { color: #64748b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.invoice-option:hover { background: #eff6ff; }
 .draft-product-meta { margin-top: 4px; color: #64748b; font-size: 12px; }
 .invoice-summary { width: min(320px, 100%); margin: 14px 0 0 auto; border-top: 1px solid #eef2f7; padding-top: 12px; display: flex; flex-direction: column; gap: 10px; }
 .summary-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; color: #475569; font-size: 14px; }

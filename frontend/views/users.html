@@ -30,11 +30,6 @@
                     <i class='bx bx-grid-alt'></i> Tổng quan
                 </a>
             </li>
-            <li class="menu-item active">
-                <a href="users.html">
-                    <i class='bx bx-user'></i> Quản lý người dùng
-                </a>
-            </li>
             <li class="menu-item">
                 <a href="../index.html#imports">
                     <i class='bx bx-box'></i> Quản lý hàng nhập
@@ -186,16 +181,12 @@
                     </div>
                     <div class="modal-body">
                         <div class="form-group">
-                            <label>Mật khẩu cũ</label>
-                            <input type="password" class="form-control" id="old-password">
-                        </div>
-                        <div class="form-group">
                             <label>Mật khẩu mới</label>
-                            <input type="password" class="form-control" id="new-password">
+                            <input type="password" class="form-control" id="new-password" autocomplete="new-password" value="">
                         </div>
                         <div class="form-group">
                             <label>Xác nhận lại mật khẩu mới</label>
-                            <input type="password" class="form-control" id="confirm-new-password">
+                            <input type="password" class="form-control" id="confirm-new-password" autocomplete="new-password" value="">
                             <p class="password-error" id="password-match-error"></p>
                         </div>
                         <div class="modal-footer-btns">
@@ -531,7 +522,8 @@
         
     </div>
 
-    <script src="../js/auth.js"></script>
-    <script src="../js/users.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/auth.js?v=20260531-staff-role-normalize"></script>
+    <script src="../js/users.js?v=20260601-password"></script>
 </body>
 </html>

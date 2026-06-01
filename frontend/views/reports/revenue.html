@@ -6,7 +6,7 @@
     <title>Báo cáo doanh thu - Kid's City</title>
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
     <link rel="stylesheet" href="../../assets/css/index.css">
-    <link rel="stylesheet" href="../../assets/css/revenue.css">
+    <link rel="stylesheet" href="../../assets/css/revenue.css?v=20260531-export-excel">
 </head>
 <body>
     <aside class="sidebar">
@@ -18,7 +18,6 @@
         </div>
         <ul class="menu">
             <li class="menu-item"><a href="../../index.html"><i class="bx bx-grid-alt"></i> Tổng quan</a></li>
-            <li class="menu-item"><a href="../users.html"><i class="bx bx-user"></i> Quản lý người dùng</a></li>
             <li class="menu-item"><a href="../../index.html#imports"><i class="bx bx-box"></i> Quản lý hàng nhập</a></li>
             <li class="menu-item has-submenu">
                 <a href="#" class="menu-toggle"><i class="bx bx-cube"></i> <span>Quản lý sản phẩm</span><i class="bx bx-chevron-down arrow"></i></a>
@@ -85,7 +84,7 @@
                 <div class="modal-content profile-modal"><div class="modal-header"><h3>Thông tin cá nhân</h3></div><div class="modal-body"><div class="profile-main"><div class="avatar-large blue-bg">N</div><div class="profile-info-header"><h4>Nguyễn Văn An</h4><p>admin@kidscity.vn</p><span class="badge-role">Chủ shop</span></div></div><div class="profile-details"><div class="detail-row"><span class="label">Tên đăng nhập</span><span class="value">admin</span></div><div class="detail-row"><span class="label">Điện thoại</span><span class="value">0901234567</span></div><div class="detail-row"><span class="label">Ngày tạo</span><span class="value">2024-01-01</span></div></div><button class="btn-primary-block close-modal">Đóng</button></div></div>
             </div>
             <div class="modal-overlay" id="modal-password">
-                <div class="modal-content password-modal"><div class="modal-header"><h3>Đổi mật khẩu</h3></div><div class="modal-body"><div class="form-group"><label>Mật khẩu cũ</label><input type="password" class="form-control"></div><div class="form-group"><label>Mật khẩu mới</label><input type="password" class="form-control"></div><div class="modal-footer-btns"><button class="btn-outline close-modal">Hủy</button><button class="btn-primary">Lưu thay đổi</button></div></div></div>
+                <div class="modal-content password-modal"><div class="modal-header"><h3>Đổi mật khẩu</h3></div><div class="modal-body"><div class="form-group"><label>Mật khẩu mới</label><input type="password" class="form-control" id="new-password" autocomplete="new-password" value=""></div><div class="form-group"><label>Xác nhận lại mật khẩu mới</label><input type="password" class="form-control" id="confirm-new-password" autocomplete="new-password" value=""><p class="password-error" id="password-match-error"></p></div><div class="modal-footer-btns"><button class="btn-outline close-modal">Hủy</button><button class="btn-primary" id="save-password-change">Lưu thay đổi</button></div></div></div>
             </div>
         </header>
         <main id="main-content" class="content-body reports-page" data-report-page="revenue">
@@ -108,7 +107,8 @@
             <section class="dash-card"><div class="dash-card-header"><div><h3>Chi tiết doanh thu</h3><p>Doanh thu theo kỳ gần nhất</p></div></div><div class="table-responsive"><table class="dash-table reports-table"><thead><tr><th>Kỳ</th><th>Doanh thu</th><th>Hóa đơn</th><th>Lợi nhuận</th><th>Tăng trưởng</th><th>Ghi chú</th></tr></thead><tbody data-report-table><tr data-period="today last7 this-month"><td class="fw-bold">Hôm nay</td><td class="fw-bold">2.205.000đ</td><td>6</td><td class="text-green fw-bold">735.000đ</td><td class="text-green">+18%</td><td>Doanh thu tốt</td></tr><tr data-period="yesterday last7 this-month"><td class="fw-bold">Hôm qua</td><td class="fw-bold">1.960.000đ</td><td>6</td><td class="text-green fw-bold">653.000đ</td><td class="text-green">+9%</td><td>Ổn định</td></tr><tr data-period="last-month"><td class="fw-bold">Tháng trước</td><td class="fw-bold">720.000đ</td><td>2</td><td class="text-green fw-bold">240.000đ</td><td class="text-orange">-4%</td><td>Cần thúc đẩy</td></tr></tbody></table></div></section>
         </main>
     </div>
-    <script src="../../js/auth.js"></script>
-    <script src="../../js/revenue.js"></script>
+    <script src="../../js/api.js"></script>
+    <script src="../../js/auth.js?v=20260531-staff-role-normalize"></script>
+    <script src="../../js/revenue.js?v=20260601-password"></script>
 </body>
 </html>

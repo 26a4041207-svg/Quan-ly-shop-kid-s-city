@@ -1,23 +1,7 @@
 (function () {
-    const accounts = {
-        '0901234567': { role: 'admin', roleLabel: 'Chủ shop', name: 'Nguyễn Văn An', email: 'admin@kidscity.vn' },
-        '0912345678': { role: 'staff', roleLabel: 'Nhân viên', name: 'Trần Thị Bình', email: 'binh@kidscity.vn' },
-        '0934567890': { role: 'staff', roleLabel: 'Nhân viên', name: 'Phạm Thị Dung', email: 'dung@kidscity.vn' },
-        '0945678901': { role: 'staff', roleLabel: 'Nhân viên', name: 'Hoàng Văn Em', email: 'em@kidscity.vn' }
-    };
-    const userAccountsKey = 'kidCityAccounts';
-
-    const getStoredAccounts = () => {
-        try {
-            return JSON.parse(localStorage.getItem(userAccountsKey) || '{}');
-        } catch {
-            return {};
-        }
-    };
-
     const parseCurrentUser = () => {
         const raw = localStorage.getItem('currentUser');
-        if (!raw) return { username: '0901234567' };
+        if (!raw) return {};
 
         try {
             const parsed = JSON.parse(raw);
@@ -30,35 +14,91 @@
     };
 
     const normalizeRole = (value) => {
-        const role = String(value || '').toLowerCase();
-        if (['staff', 'nhanvien', 'nhân viên', 'employee'].includes(role)) return 'staff';
-        if (['admin', 'owner', 'chushop', 'chủ shop', 'shop-owner'].includes(role)) return 'admin';
+        const rawRole = String(value || '').trim().toLowerCase();
+        const role = rawRole.normalize('NFD').replace(/[\u0300-\u036f]/g, '').split('\u0111').join('d');
+
+        if (['staff', 'nhanvien', 'nhan vien', 'employee'].includes(role)) return 'staff';
+        if (['admin', 'owner', 'chushop', 'chu shop', 'shop-owner'].includes(role)) return 'admin';
         return '';
     };
 
     const getCurrentAccount = () => {
         const user = parseCurrentUser();
-        const username = user.username || user.userName || user.account || user.phone || user.soDienThoai || '0901234567';
+        const username = user.username || user.userName || user.account || user.phone || user.soDienThoai || '';
         const savedRole = normalizeRole(localStorage.getItem('currentRole'));
         const objectRole = normalizeRole(user.role || user.vaiTro || user.permission || user.type);
-        const fallbackRole = String(username) === '0901234567' ? 'admin' : 'staff';
-        const account = getStoredAccounts()[username] || accounts[username] || {};
-        const role = savedRole || objectRole || account.role || fallbackRole;
+        const labelRole = normalizeRole(user.roleLabel || user.role_label || user.tenVaiTro || user.roleName || user.role_name);
+        const role = objectRole || labelRole || savedRole || 'staff';
 
         return {
             username,
             role,
-            roleLabel: user.roleLabel || user.tenVaiTro || account.roleLabel || (role === 'staff' ? 'Nhân viên' : 'Chủ shop'),
-            name: user.fullname || user.fullName || user.name || account.name || username,
-            email: user.email || account.email || `${username}@kidscity.vn`
+            roleLabel: user.roleLabel || user.tenVaiTro || (role === 'staff' ? 'Nh?n vi?n' : 'Ch? shop'),
+            name: user.fullname || user.fullName || user.name || username,
+            email: user.email || ''
         };
     };
 
+    const frontendBasePath = () => {
+        const path = window.location.pathname.replace(/\\/g, '/');
+        const frontendIndex = path.indexOf('/frontend/');
+        return frontendIndex >= 0 ? `${path.slice(0, frontendIndex)}/frontend/` : './';
+    };
+
+    const loginPathForCurrentPage = () => `${frontendBasePath()}login.html`;
+    const indexPathForCurrentPage = () => `${frontendBasePath()}index.html`;
+
+    const ensureAuthenticated = () => {
+        if (localStorage.getItem('authToken')) return true;
+        localStorage.removeItem('isLoggedIn');
+        localStorage.removeItem('currentUser');
+        localStorage.removeItem('currentRole');
+        window.location.replace(loginPathForCurrentPage());
+        return false;
+    };
+
     const removeUserManagementMenu = () => {
-        document.querySelectorAll('a[href$="users.html"]').forEach((link) => {
-            const item = link.closest('.menu-item') || link.closest('li');
-            if (item) item.remove();
+        document.querySelectorAll('.menu a[href], .sidebar a[href]').forEach((link) => {
+            const href = (link.getAttribute('href') || '').replace(/\\/g, '/').toLowerCase();
+            const label = (link.textContent || '').trim().toLowerCase();
+            const asciiLabel = label.normalize('NFD').replace(/[\u0300-\u036f]/g, '').split('\u0111').join('d');
+            const isUsersLink = href.endsWith('users.html') || asciiLabel.includes('quan ly nguoi dung');
+            if (!isUsersLink) return;
+
+            const item = link.closest('.menu-item') || link.closest('li') || link;
+            item.remove();
         });
+    };
+
+
+    const usersHrefForCurrentPage = () => {
+        const path = window.location.pathname.replace(/\\/g, '/');
+        if (path.endsWith('/frontend/index.html') || path.endsWith('/frontend/')) return 'views/users.html';
+        if (path.includes('/frontend/views/products/') || path.includes('/frontend/views/reports/')) return '../users.html';
+        if (path.includes('/frontend/views/')) return 'users.html';
+        return 'views/users.html';
+    };
+
+    const ensureUserManagementMenu = () => {
+        const menu = document.querySelector('.sidebar .menu');
+        if (!menu) return;
+
+        const hasUsersMenu = Array.from(menu.querySelectorAll('a[href]')).some((link) => {
+            const href = (link.getAttribute('href') || '').replace(/\\/g, '/').toLowerCase();
+            return href.endsWith('users.html');
+        });
+        if (hasUsersMenu) return;
+
+        const item = document.createElement('li');
+        item.className = 'menu-item';
+        item.innerHTML = `<a href="${usersHrefForCurrentPage()}"><i class='bx bx-user'></i> Qu&#7843;n l&#253; ng&#432;&#7901;i d&#249;ng</a>`;
+
+        const firstItem = menu.querySelector('.menu-item');
+        if (firstItem?.nextSibling) {
+            menu.insertBefore(item, firstItem.nextSibling);
+        } else {
+            menu.appendChild(item);
+        }
     };
 
     const updateHeaderProfile = (account) => {
@@ -203,26 +243,154 @@
     const redirectStaffAwayFromUsersPage = (account) => {
         const path = window.location.pathname.replace(/\\/g, '/').toLowerCase();
         if (account.role === 'staff' && path.endsWith('/frontend/views/users.html')) {
-            window.location.replace('../index.html');
+            window.location.replace(indexPathForCurrentPage());
         }
     };
 
+    const clearAuthStorage = () => {
+        localStorage.removeItem('isLoggedIn');
+        localStorage.removeItem('currentUser');
+        localStorage.removeItem('currentRole');
+        localStorage.removeItem('authToken');
+    };
+
+    const accountMenuHtml = () => `
+        <div class="dropdown-menu account-menu">
+            <ul class="dropdown-list">
+                <li id="open-profile">
+                    <i class='bx bx-user'></i> <span>Th&#244;ng tin c&#225; nh&#226;n</span>
+                </li>
+                <li id="open-password">
+                    <i class='bx bx-lock-alt'></i> <span>&#272;&#7893;i m&#7853;t kh&#7849;u</span>
+                </li>
+                <li class="divider"></li>
+                <li class="logout-item">
+                    <i class='bx bx-log-out-circle'></i> <span>&#272;&#259;ng xu&#7845;t</span>
+                </li>
+            </ul>
+        </div>
+    `;
+
+    const ensureAccountDropdowns = () => {
+        document.querySelectorAll('.header-user').forEach((headerUser) => {
+            let dropdown = headerUser.closest('.dropdown');
+            if (!dropdown) {
+                dropdown = document.createElement('div');
+                dropdown.className = 'dropdown';
+                headerUser.parentNode.insertBefore(dropdown, headerUser);
+                dropdown.appendChild(headerUser);
+            }
+
+            if (!dropdown.querySelector('.account-menu')) {
+                dropdown.insertAdjacentHTML('beforeend', accountMenuHtml());
+            }
+        });
+    };
+
+    const bindAccountDropdowns = () => {
+        ensureAccountDropdowns();
+
+        const closeAllDropdowns = () => {
+            document.querySelectorAll('.dropdown-menu').forEach((menu) => menu.classList.remove('show'));
+        };
+
+        document.querySelectorAll('.dropdown').forEach((dropdown) => {
+            if (dropdown.dataset.kidCityDropdownBound === 'true') return;
+            dropdown.dataset.kidCityDropdownBound = 'true';
+            dropdown.addEventListener('click', (event) => {
+                const menu = dropdown.querySelector('.dropdown-menu');
+                if (!menu) return;
+                event.stopPropagation();
+                const isShowing = menu.classList.contains('show');
+                closeAllDropdowns();
+                if (!isShowing) menu.classList.add('show');
+            });
+        });
+
+        if (document.body.dataset.kidCityDropdownCloseBound !== 'true') {
+            document.body.dataset.kidCityDropdownCloseBound = 'true';
+            window.addEventListener('click', closeAllDropdowns);
+        }
+    };
+
+    const bindLogout = () => {
+        document.querySelectorAll('.logout-item').forEach((button) => {
+            if (button.dataset.kidCityLogoutBound === 'true') return;
+            button.dataset.kidCityLogoutBound = 'true';
+            button.addEventListener('click', async () => {
+                if (!confirm('Bạn có chắc chắn muốn đăng xuất?')) return;
+                try {
+                    if (window.kidCityApi && localStorage.getItem('authToken')) {
+                        await window.kidCityApi.post('auth/logout.php', {});
+                    }
+                } catch {
+                    // Local logout still has to proceed when the token is already expired.
+                }
+                clearAuthStorage();
+                window.location.href = loginPathForCurrentPage();
+            });
+        });
+    };
+
+    const bindProfileModals = () => {
+        const closeMenus = () => {
+            document.querySelectorAll('.dropdown-menu').forEach((menu) => menu.classList.remove('show'));
+        };
+        const profileModal = document.getElementById('modal-profile');
+        const passwordModal = document.getElementById('modal-password');
+
+        document.querySelectorAll('#open-profile').forEach((button) => {
+            if (button.dataset.kidCityProfileBound === 'true') return;
+            button.dataset.kidCityProfileBound = 'true';
+            button.addEventListener('click', (event) => {
+                event.stopPropagation();
+                closeMenus();
+                profileModal?.classList.add('active');
+            });
+        });
+
+        document.querySelectorAll('#open-password').forEach((button) => {
+            if (button.dataset.kidCityPasswordBound === 'true') return;
+            button.dataset.kidCityPasswordBound = 'true';
+            button.addEventListener('click', (event) => {
+                event.stopPropagation();
+                closeMenus();
+                passwordModal?.classList.add('active');
+            });
+        });
+    };
+
     window.applyKidCityAuth = function applyKidCityAuth() {
+        if (!ensureAuthenticated()) return;
         const account = getCurrentAccount();
         updateHeaderProfile(account);
         window.resetKidCitySearchInputs();
-        if (account.role === 'staff') {
+        const visibleRoleLabel = document.querySelector('.header-user .user-info p')?.textContent || '';
+        const isStaffAccount = account.role === 'staff' || normalizeRole(account.roleLabel) === 'staff' || normalizeRole(visibleRoleLabel) === 'staff';
+        if (isStaffAccount) {
             removeUserManagementMenu();
+        } else {
+            ensureUserManagementMenu();
         }
         syncActiveMenu();
         bindMenuToggle();
         bindMenuStatePersistence();
-        redirectStaffAwayFromUsersPage(account);
+        bindAccountDropdowns();
+        bindProfileModals();
+        bindLogout();
+        if (isStaffAccount) {
+            redirectStaffAwayFromUsersPage({ ...account, role: 'staff' });
+        } else {
+            redirectStaffAwayFromUsersPage(account);
+        }
     };
 
+    window.getKidCityLoginPath = loginPathForCurrentPage;
     document.addEventListener('DOMContentLoaded', window.applyKidCityAuth);
     window.addEventListener('pageshow', () => {
+        window.applyKidCityAuth();
         window.resetKidCitySearchInputs();
         setTimeout(() => window.resetKidCitySearchInputs(), 50);
     });
 })();
+

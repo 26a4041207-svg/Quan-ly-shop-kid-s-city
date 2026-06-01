@@ -391,6 +391,33 @@ function enableInputs() {
 
 }
 
+async function loadCategoriesFromApi() {
+
+    if (!window.kidCityApi) return;
+
+    try {
+
+        const rows = await window.kidCityApi.get("products/categories.php");
+
+        if (!Array.isArray(rows)) return;
+
+        categories = rows.map((item, index) => ({
+            dbId: item.id,
+            id: item.code || `DM${String(index + 1).padStart(3, "0")}`,
+            name: item.name || "",
+            description: item.description || "",
+            createdAt: (item.created_at || "").slice(0, 10)
+        }));
+
+        renderTable();
+
+    } catch (error) {
+
+        console.warn("Khong the tai danh muc tu API:", error.message);
+    }
+}
+
 // INIT
 
 renderTable();
+loadCategoriesFromApi();

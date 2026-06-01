@@ -16,10 +16,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const loadPage = async (page) => {
         const content = document.getElementById('main-content');
         try {
-            const res = await fetch(`views/${page}.html`);
+            const res = await fetch(`views/${page}.html?v=${Date.now()}`, { cache: 'no-store' });
             if (!res.ok) throw new Error();
             content.innerHTML = await res.text();
             window.resetKidCitySearchInputs?.(content);
+            if (window.initDashboardPage) window.initDashboardPage(content);
             if (window.initSalePage) window.initSalePage(content);
             if (window.initImportPage) window.initImportPage(content);
         } catch {
@@ -110,6 +111,8 @@ document.addEventListener("DOMContentLoaded", () => {
         document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('show'));
     };
 
+    if (userDrop && userDrop.dataset.kidCityDropdownBound !== 'true') {
+        userDrop.dataset.kidCityDropdownBound = 'true';
     userDrop.addEventListener('click', (e) => {
         e.stopPropagation();
         const menu = userDrop.querySelector('.dropdown-menu');
@@ -117,7 +120,10 @@ document.addEventListener("DOMContentLoaded", () => {
         closeAllDropdowns();
         if (!isShowing) menu.classList.add('show');
     });
+    }
 
+    if (notiDrop && notiDrop.dataset.kidCityDropdownBound !== 'true') {
+        notiDrop.dataset.kidCityDropdownBound = 'true';
     notiDrop.addEventListener('click', (e) => {
         e.stopPropagation();
         const menu = notiDrop.querySelector('.dropdown-menu');
@@ -129,13 +135,18 @@ document.addEventListener("DOMContentLoaded", () => {
         const dot = notiDrop.querySelector('.badge-dot');
         if (dot) dot.style.display = 'none';
     });
+    }
 
     // 4. MODALS
     const profileModal = document.getElementById('modal-profile');
     const passwordModal = document.getElementById('modal-password');
 
     document.getElementById('open-profile').addEventListener('click', () => profileModal.classList.add('active'));
-    document.getElementById('open-password').addEventListener('click', () => passwordModal.classList.add('active'));
+    document.getElementById('open-password').addEventListener('click', () => {
+        clearPasswordForm();
+        passwordModal.classList.add('active');
+        setTimeout(clearPasswordForm, 0);
+    });
 
     const clearPasswordForm = () => {
         passwordModal.querySelectorAll('input[type="password"]').forEach(input => {
@@ -186,12 +197,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const savePasswordBtn = document.getElementById('save-password-change');
     if (savePasswordBtn) {
-        savePasswordBtn.addEventListener('click', () => {
-            const oldPassword = document.getElementById('old-password')?.value.trim();
+        savePasswordBtn.addEventListener('click', async () => {
             const newPassword = document.getElementById('new-password')?.value.trim();
             const confirmNewPassword = document.getElementById('confirm-new-password')?.value.trim();
 
-            if (!oldPassword || !newPassword || !confirmNewPassword) {
+            if (!newPassword || !confirmNewPassword) {
                 showPasswordError('Vui lòng nhập đầy đủ mật khẩu mới và xác nhận lại mật khẩu mới.');
                 return;
             }
@@ -203,21 +213,31 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             clearPasswordError();
-            alert('Đổi mật khẩu thành công!');
-            passwordModal.classList.remove('active');
-            clearPasswordForm();
+            try {
+                await window.kidCityApi.post('auth/change_password.php', {
+                    newPassword,
+                    confirmNewPassword
+                });
+                alert('Đổi mật khẩu thành công!');
+                passwordModal.classList.remove('active');
+                clearPasswordForm();
+            } catch (error) {
+                showPasswordError(error.message || 'Không thể đổi mật khẩu.');
+            }
         });
     }
 
     // 5. ĐĂNG XUẤT (LOGOUT LỖI TỪ LOCALSTORAGE VÀ CHUYỂN TRANG)
     const logoutBtn = document.querySelector('.logout-item');
-    if (logoutBtn) {
+    if (logoutBtn && logoutBtn.dataset.kidCityLogoutBound !== 'true') {
+        logoutBtn.dataset.kidCityLogoutBound = 'true';
         logoutBtn.addEventListener('click', () => {
             if(confirm("Bạn có chắc chắn muốn đăng xuất?")) {
                 localStorage.removeItem('isLoggedIn');
                 localStorage.removeItem('currentUser');
                 localStorage.removeItem('currentRole');
-                window.location.href = 'login.html';
+                localStorage.removeItem('authToken');
+                window.location.href = window.getKidCityLoginPath ? window.getKidCityLoginPath() : './login.html';
             }
         });
     }

@@ -100,3 +100,45 @@
     .report-summary-cards { grid-template-columns: 1fr; }
     .donut-wrap { flex-direction: column; }
 }
+
+/* REPORT EXPORT TOAST */
+.report-toast{
+    position:fixed;
+    top:24px;
+    right:24px;
+    z-index:5000;
+    min-width:300px;
+    max-width:min(420px, calc(100vw - 32px));
+    padding:14px 18px;
+    border-radius:12px;
+    background:#16a34a;
+    color:#fff;
+    box-shadow:0 18px 40px rgba(22, 163, 74, .26);
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-weight:700;
+    transform:translateY(-16px);
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .2s ease, transform .2s ease;
+}
+
+.report-toast i{
+    font-size:22px;
+}
+
+.report-toast.show{
+    opacity:1;
+    transform:translateY(0);
+}
+
+@media (max-width:640px){
+    .report-toast{
+        top:16px;
+        right:16px;
+        left:16px;
+        min-width:0;
+    }
+}
+

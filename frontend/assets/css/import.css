@@ -45,6 +45,7 @@
 .import-modal.active { display: flex; }
 .import-dialog { background: #fff; width: min(980px, 100%); max-height: 92vh; overflow: auto; border-radius: 12px; box-shadow: 0 24px 60px rgba(15, 23, 42, .18); }
 .import-dialog.detail { width: min(760px, 100%); }
+.import-dialog.import-edit-dialog { width: min(920px, 100%); }
 .import-modal-header { display: flex; align-items: center; justify-content: space-between; padding: 22px 28px; border-bottom: 1px solid #eef2f7; }
 .import-modal-header h3 { font-size: 18px; }
 .import-modal-body { padding: 24px 28px 28px; }
@@ -65,6 +66,30 @@
 .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 26px 80px; margin-bottom: 24px; }
 .detail-item span { display: block; color: #64748b; font-weight: 600; margin-bottom: 6px; }
 .detail-item strong { font-size: 16px; }
+
+/* =========================================================
+   IMPORT EDIT - Bảng sửa sản phẩm trong phiếu nhập
+   ========================================================= */
+.import-edit-products-card { border-radius: 14px; overflow-x: auto; }
+.import-edit-table { min-width: 780px; table-layout: fixed; }
+.import-edit-table th { padding: 16px 18px; font-size: 14px; text-transform: none; }
+.import-edit-table td { padding: 14px 16px; }
+.import-edit-table input {
+    width: 100%;
+    height: 44px;
+    border: 1px solid #dbe5f1;
+    border-radius: 10px;
+    padding: 0 14px;
+    background: #f8fafc;
+    color: #334155;
+    font-size: 14px;
+    outline: none;
+}
+.import-edit-table input:focus {
+    background: #fff;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, .12);
+}
 
 /* =========================================================
    RESPONSIVE - Co layout trên màn hình nhỏ
