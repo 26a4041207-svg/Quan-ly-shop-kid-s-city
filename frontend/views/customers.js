@@ -534,7 +534,7 @@ function editCustomer(id){
         );
 
     document.getElementById("modalTitle").innerText =
-        "Chỉnh sửa khách hàng";
+        "Cập nhật khách hàng";
 
     document.getElementById("customerId").value =
         customer.maKhachHang;
