@@ -6,75 +6,17 @@ window.initSalePage = function initSalePage(container) {
     /* =====================================================
        COMMON DATA - Dữ liệu mẫu dùng để tính tiền frontend
        ===================================================== */
-    const prices = {
-        'Áo thun Mickey Mouse': 120000,
-        'Áo thun Elsa Frozen': 135000,
-        'Váy hoa nhí công chúa': 220000,
-        'Quần short bé trai': 200000,
-        'Bộ đồ bé trai': 280000,
-        'Đầm công chúa': 360000,
-        'Giày trẻ em': 290000,
-        'Mũ trẻ em': 90000,
-        'Balo trẻ em': 260000,
-        'Áo khoác trẻ em': 300000,
-        'Đồ chơi trẻ em': 310000,
-        'Quần jean trẻ em': 245000,
-        'Phụ kiện tóc': 85000
-    };
+    const prices = {};
 
-    // Mã sản phẩm hiển thị dạng link trong form tạo hóa đơn. href đang để # để sau này nối sang trang chi tiết sản phẩm.
-    const productCodes = {
-        'Áo thun Mickey Mouse': 'SP001',
-        'Áo thun Elsa Frozen': 'SP002',
-        'Váy hoa nhí công chúa': 'SP003',
-        'Quần short bé trai': 'SP004',
-        'Bộ đồ bé trai': 'SP005',
-        'Đầm công chúa': 'SP006',
-        'Giày trẻ em': 'SP007',
-        'Mũ trẻ em': 'SP008',
-        'Balo trẻ em': 'SP009',
-        'Áo khoác trẻ em': 'SP010',
-        'Đồ chơi trẻ em': 'SP011',
-        'Quần jean trẻ em': 'SP012',
-        'Phụ kiện tóc': 'SP013'
-    };
+    const productCodes = {};
 
-    const productDetails = {
-        'Áo thun Mickey Mouse': { category: 'Áo thun', size: 'M', color: 'Đỏ', stock: 24 },
-        'Áo thun Elsa Frozen': { category: 'Áo thun', size: 'S', color: 'Hồng', stock: 18 },
-        'Váy hoa nhí công chúa': { category: 'Váy bé gái', size: 'M', color: 'Vàng', stock: 3 },
-        'Quần short bé trai': { category: 'Quần short', size: 'L', color: 'Đen', stock: 5 },
-        'Bộ đồ bé trai': { category: 'Bộ đồ', size: 'M', color: 'Xanh dương', stock: 12 },
-        'Đầm công chúa': { category: 'Đầm bé gái', size: 'L', color: 'Trắng', stock: 7 },
-        'Giày trẻ em': { category: 'Giày dép', size: '28', color: 'Trắng', stock: 10 },
-        'Mũ trẻ em': { category: 'Phụ kiện', size: 'Free Size', color: 'Xanh nhạt', stock: 22 },
-        'Balo trẻ em': { category: 'Phụ kiện', size: 'Free Size', color: 'Xanh dương', stock: 8 },
-        'Áo khoác trẻ em': { category: 'Áo khoác', size: 'L', color: 'Đỏ đô', stock: 4 },
-        'Đồ chơi trẻ em': { category: 'Đồ chơi', size: 'Free Size', color: 'Nhiều màu', stock: 16 },
-        'Quần jean trẻ em': { category: 'Quần dài', size: 'M', color: 'Xanh nhạt', stock: 9 },
-        'Phụ kiện tóc': { category: 'Phụ kiện', size: 'Free Size', color: 'Hồng', stock: 30 }
-    };
+    const productDetails = {};
 
     // Dữ liệu mẫu của trang còn lại để chặn một hóa đơn bị đổi/trả nhiều lần khi từng trang được load riêng.
     const initialExchangeInvoiceCodes = [];
     const initialReturnInvoiceCodes = [];
     // Dữ liệu chi tiết hóa đơn dùng khi bấm mã hóa đơn ở trang đổi/trả hàng.
-    const invoiceDetails = {
-        HD001: { customer: 'Lê Thị Cẩm Ly', staff: 'Trần Thị Bình', date: '2026-04-15', payment: 'Tiền mặt', note: 'Khách hàng quen', total: '375.000đ', items: [['Áo thun Mickey Mouse', '120.000đ', '2', '0đ', '240.000đ'], ['Áo thun Elsa Frozen', '135.000đ', '1', '0đ', '135.000đ']] },
-        HD002: { customer: 'Phạm Văn Dũng', staff: 'Trần Thị Bình', date: '2026-04-16', payment: 'Chuyển khoản', note: 'Đơn online', total: '220.000đ', items: [['Váy hoa nhí công chúa', '220.000đ', '1', '0đ', '220.000đ']] },
-        HD003: { customer: 'Hoàng Thị Mai', staff: 'Lê Minh Châu', date: '2026-04-18', payment: 'Tiền mặt', note: 'Mua tại cửa hàng', total: '545.000đ', items: [['Áo thun Mickey Mouse', '120.000đ', '2', '0đ', '240.000đ'], ['Váy hoa nhí công chúa', '220.000đ', '1', '0đ', '220.000đ'], ['Phụ kiện tóc', '85.000đ', '1', '0đ', '85.000đ']] },
-        HD004: { customer: 'Nguyễn Minh Nhật', staff: 'Trần Thị Bình', date: '2026-04-20', payment: 'Chuyển khoản', note: 'Khách đổi size nếu không vừa', total: '320.000đ', items: [['Áo thun Mickey Mouse', '120.000đ', '1', '0đ', '120.000đ'], ['Quần short bé trai', '200.000đ', '1', '0đ', '200.000đ']] },
-        HD005: { customer: 'Trần Thu Hà', staff: 'Lê Minh Châu', date: '2026-04-22', payment: 'Tiền mặt', note: 'Khách thân thiết', total: '490.000đ', items: [['Áo thun Elsa Frozen', '135.000đ', '2', '0đ', '270.000đ'], ['Váy hoa nhí công chúa', '220.000đ', '1', '0đ', '220.000đ']] },
-        HD006: { customer: 'Võ Thanh Tùng', staff: 'Trần Thị Bình', date: '2026-04-25', payment: 'Tiền mặt', note: 'Không có', total: '280.000đ', items: [['Bộ đồ bé trai', '280.000đ', '1', '0đ', '280.000đ']] },
-        HD007: { customer: 'Đỗ Bảo Ngọc', staff: 'Lê Minh Châu', date: '2026-04-27', payment: 'Chuyển khoản', note: 'Không có', total: '360.000đ', items: [['Đầm công chúa', '360.000đ', '1', '0đ', '360.000đ']] },
-        HD008: { customer: 'Bùi Gia Hân', staff: 'Trần Thị Bình', date: '2026-04-29', payment: 'Tiền mặt', note: 'Không có', total: '410.000đ', items: [['Áo thun Mickey Mouse', '120.000đ', '1', '0đ', '120.000đ'], ['Giày trẻ em', '290.000đ', '1', '0đ', '290.000đ']] },
-        HD009: { customer: 'Phạm Ngọc Anh', staff: 'Lê Minh Châu', date: '2026-05-01', payment: 'Chuyển khoản', note: 'Không có', total: '315.000đ', items: [['Áo thun Elsa Frozen', '135.000đ', '1', '0đ', '135.000đ'], ['Mũ trẻ em', '90.000đ', '2', '0đ', '180.000đ']] },
-        HD010: { customer: 'Ngô Minh Quân', staff: 'Trần Thị Bình', date: '2026-05-02', payment: 'Tiền mặt', note: 'Không có', total: '260.000đ', items: [['Balo trẻ em', '260.000đ', '1', '0đ', '260.000đ']] },
-        HD011: { customer: 'Huỳnh Khánh Linh', staff: 'Lê Minh Châu', date: '2026-05-04', payment: 'Chuyển khoản', note: 'Không có', total: '520.000đ', items: [['Váy hoa nhí công chúa', '220.000đ', '1', '0đ', '220.000đ'], ['Giày trẻ em', '300.000đ', '1', '0đ', '300.000đ']] },
-        HD012: { customer: 'Cao Tuấn Kiệt', staff: 'Trần Thị Bình', date: '2026-05-05', payment: 'Tiền mặt', note: 'Không có', total: '300.000đ', items: [['Áo khoác trẻ em', '300.000đ', '1', '0đ', '300.000đ']] },
-        HD013: { customer: 'Lý Thanh Thảo', staff: 'Lê Minh Châu', date: '2026-05-06', payment: 'Tiền mặt', note: 'Không có', total: '445.000đ', items: [['Áo thun Elsa Frozen', '135.000đ', '1', '0đ', '135.000đ'], ['Đồ chơi trẻ em', '310.000đ', '1', '0đ', '310.000đ']] },
-        HD014: { customer: 'Vũ Hải Nam', staff: 'Trần Thị Bình', date: '2026-05-08', payment: 'Chuyển khoản', note: 'Không có', total: '365.000đ', items: [['Áo thun Mickey Mouse', '120.000đ', '1', '0đ', '120.000đ'], ['Quần jean trẻ em', '245.000đ', '1', '0đ', '245.000đ']] }
-    };
+    const invoiceDetails = {};
 
     /* =====================================================
        COMMON HELPERS - Hàm tiện ích dùng chung nhiều trang
@@ -89,8 +31,6 @@ window.initSalePage = function initSalePage(container) {
         price: prices[name] || 100000,
         ...(productDetails[name] || {})
     }));
-    Object.keys(invoiceDetails).forEach((code) => delete invoiceDetails[code]);
-
     const invoiceCodes = () => Object.keys(invoiceDetails).sort((a, b) => Number(a.replace(/\D/g, '')) - Number(b.replace(/\D/g, '')));
     const normalizeInvoiceCode = (invoiceCode) => String(invoiceCode || '').trim().toUpperCase();
     const invoiceCodeKey = (invoiceCode) => invoiceCodes().find((code) => code.toUpperCase() === normalizeInvoiceCode(invoiceCode)) || normalizeInvoiceCode(invoiceCode);
@@ -99,6 +39,12 @@ window.initSalePage = function initSalePage(container) {
         const names = invoiceItemsByCode(invoiceCode).map((item) => item[0]).filter(Boolean);
         return Array.from(new Set(names));
     };
+    const invoiceProductId = (invoiceCode, productName) => {
+        const item = invoiceItemsByCode(invoiceCode).find((row) => row[0] === productName);
+        return Number(item?.[5] || productDetails[productName]?.productId || 0);
+    };
+    const invoiceIdByCode = (invoiceCode) => Number(invoiceDetails[invoiceCodeKey(invoiceCode)]?.id || 0);
+
     const invoiceProductQuantity = (invoiceCode, productName) => {
         const item = invoiceItemsByCode(invoiceCode).find((row) => row[0] === productName);
         return Math.max(1, Number(item?.[2] || 1));
@@ -173,7 +119,7 @@ window.initSalePage = function initSalePage(container) {
             field.innerHTML = `
                 <label>Mã hóa đơn gốc <span class="required">*</span></label>
                 <div class="invoice-combobox" data-invoice-combobox id="${comboId}">
-                    <input type="text" data-invoice-code placeholder="Nhập mã hóa đơn, ví dụ HD002" autocomplete="off" value="${value}">
+                    <input type="text" data-invoice-code placeholder="Nhập mã hóa đơn" autocomplete="off" value="${value}">
                     <div class="invoice-options" data-invoice-options></div>
                 </div>
             `;
@@ -210,21 +156,7 @@ window.initSalePage = function initSalePage(container) {
             const invoices = await window.kidCityApi.get('sales/invoices.php');
             invoices.forEach((invoice) => {
                 if (!invoice.code) return;
-                invoiceDetails[invoice.code] = {
-                    customer: invoice.customer_name || '',
-                    staff: invoice.staff_name || '',
-                    date: invoice.invoice_date || invoice.created_at || '',
-                    payment: invoice.payment_method || '',
-                    note: invoice.note || 'Không có',
-                    total: formatMoney(invoice.total),
-                    items: (invoice.items || []).map((item) => [
-                        item.product_name || item.product_code || 'Sản phẩm',
-                        formatMoney(item.price),
-                        String(item.quantity || 1),
-                        formatMoney(item.discount),
-                        formatMoney(item.line_total)
-                    ])
-                };
+                invoiceDetails[invoice.code] = mapInvoiceFromApi(invoice);
             });
             return true;
         } catch (error) {
@@ -401,6 +333,7 @@ window.initSalePage = function initSalePage(container) {
     };
 
     const mapInvoiceFromApi = (invoice) => ({
+        id: Number(invoice.id || 0),
         customer: invoice.customer_name || '',
         staff: invoice.staff_name || '',
         date: invoice.invoice_date || invoice.created_at || '',
@@ -412,7 +345,9 @@ window.initSalePage = function initSalePage(container) {
             formatMoney(item.price),
             String(item.quantity || 1),
             formatMoney(item.discount),
-            formatMoney(item.line_total)
+            formatMoney(item.line_total),
+            Number(item.product_id || 0),
+            Number(item.price || 0)
         ])
     });
 
@@ -1288,7 +1223,7 @@ window.initSalePage = function initSalePage(container) {
         });
     };
 
-    const createExchange = () => {
+    const createExchange = async () => {
         const modal = root.querySelector('#exchange-create');
         const invoiceSelect = getInvoiceControl(modal);
         const typeSelect = getTypeSelect(modal);
@@ -1321,6 +1256,25 @@ window.initSalePage = function initSalePage(container) {
         const invoiceCode = invoiceSelect.value;
         const date = dateInput.value || today();
         const reason = noteInput?.value.trim() || (isReturn ? 'Trả hàng' : 'Đổi sang mẫu khác');
+        if (window.kidCityApi) {
+            try {
+                await window.kidCityApi.post('sales/exchanges.php', {
+                    invoice_id: invoiceIdByCode(invoiceCode),
+                    old_product_id: invoiceProductId(invoiceCode, oldSelect.value),
+                    new_product_id: isReturn ? null : (productDetails[newSelect.value]?.productId || 0),
+                    exchange_date: date,
+                    quantity: Math.max(1, Number(oldPanel.querySelector('input').value || 1)),
+                    reason,
+                    type: isReturn ? 'Trả hàng' : 'Đổi hàng'
+                });
+                closeModal(modal);
+                await loadExchangeTableFromApi();
+                return;
+            } catch (error) {
+                alert(error.message || 'Không thể tạo phiếu đổi hàng.');
+                return;
+            }
+        }
         const body = root.querySelector('#exchange-table');
         const row = document.createElement('tr');
         row.dataset.key = normalize(`${code} ${invoiceCode} Nguyễn Văn An ${reason}`);
@@ -1373,7 +1327,7 @@ window.initSalePage = function initSalePage(container) {
         if (newSelectedLine) newSelectedLine.style.display = isExchange ? '' : 'none';
     };
 
-    const createReturn = () => {
+    const createReturn = async () => {
         const modal = root.querySelector('#return-create');
         const invoiceSelect = getInvoiceControl(modal);
         const typeSelect = getTypeSelect(modal);
@@ -1411,6 +1365,39 @@ window.initSalePage = function initSalePage(container) {
         const newProduct = newProductSelect?.value || '-';
         const quantity = Math.max(1, Number(qtyInput.value || 1));
         const refund = (prices[product] || 100000) * quantity;
+
+        if (window.kidCityApi) {
+            try {
+                if (isExchange) {
+                    await window.kidCityApi.post('sales/exchanges.php', {
+                        invoice_id: invoiceIdByCode(invoiceCode),
+                        old_product_id: invoiceProductId(invoiceCode, product),
+                        new_product_id: productDetails[newProduct]?.productId || 0,
+                        exchange_date: date,
+                        quantity,
+                        reason,
+                        type: 'Đổi hàng'
+                    });
+                    closeModal(modal);
+                    await loadExchangeTableFromApi();
+                } else {
+                    await window.kidCityApi.post('sales/returns.php', {
+                        invoice_id: invoiceIdByCode(invoiceCode),
+                        product_id: invoiceProductId(invoiceCode, product),
+                        return_date: date,
+                        quantity,
+                        refund_amount: refund,
+                        reason
+                    });
+                    closeModal(modal);
+                    await loadReturnTableFromApi();
+                }
+                return;
+            } catch (error) {
+                alert(error.message || 'Không thể tạo phiếu trả/đổi hàng.');
+                return;
+            }
+        }
         const body = root.querySelector('#return-table');
         const row = document.createElement('tr');
         row.dataset.key = normalize(`${code} ${invoiceCode} ${reason} Nguyễn Văn An`);

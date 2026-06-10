@@ -36,6 +36,16 @@
                 const error = new Error(payload.message || 'Có lỗi xảy ra.');
                 error.payload = payload;
                 error.status = response.status;
+                if (response.status === 401) {
+                    localStorage.removeItem('isLoggedIn');
+                    localStorage.removeItem('currentUser');
+                    localStorage.removeItem('currentRole');
+                    localStorage.removeItem('authToken');
+                    const loginPath = window.getKidCityLoginPath ? window.getKidCityLoginPath() : './login.html';
+                    if (!window.location.pathname.endsWith('/login.html')) {
+                        window.location.replace(loginPath);
+                    }
+                }
                 throw error;
             }
 

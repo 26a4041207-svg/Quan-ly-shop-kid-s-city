@@ -24,189 +24,11 @@ menuToggles.forEach(toggle => {
 // CATEGORY DATA
 // =========================
 
-let categories = [
+let categoryLookup = new Map();
 
-    "Áo thun",
-    "Quần short",
-    "Áo khoác"
+let categories = [];
 
-];
-
-// =========================
-// PRODUCT DATA
-// =========================
-
-let products = [
-
-    {
-        id: "AT001",
-        name: "Áo thun bé trai",
-        category: "Áo thun",
-        size: "M",
-        color: "Đỏ",
-        price: 250000,
-        quantity: 20,
-        createdAt: "2025-08-10",
-        updatedAt: "2025-08-12",
-        status: "selling"
-    },
-
-    {
-        id: "QS001",
-        name: "Quần short kaki",
-        category: "Quần short",
-        size: "L",
-        color: "Đen",
-        price: 320000,
-        quantity: 5,
-        createdAt: "2025-08-11",
-        updatedAt: "2025-08-11",
-        status: "selling"
-    },
-
-    {
-        id: "AK001",
-        name: "Áo hoodie",
-        category: "Áo khoác",
-        size: "XL",
-        color: "Trắng",
-        price: 450000,
-        quantity: 0,
-        createdAt: "2025-08-01",
-        updatedAt: "2025-08-05",
-        status: "stopped"
-    },
-    {
-        id: "AT002",
-        name: "Áo thun bé gái in hình",
-        category: "Áo thun trẻ em",
-        size: "S",
-        color: "Hồng",
-        price: 220000,
-        quantity: 18,
-        createdAt: "2026-05-16",
-        updatedAt: "2026-05-16",
-        status: "selling"
-    },
-
-    {
-        id: "AT003",
-        name: "Áo thun cotton tay dài",
-        category: "Áo thun trẻ em",
-        size: "L",
-        color: "Xanh dương",
-        price: 280000,
-        quantity: 12,
-        createdAt: "2026-05-17",
-        updatedAt: "2026-05-17",
-        status: "selling"
-    },
-
-    {
-        id: "QS002",
-        name: "Quần short kaki bé trai",
-        category: "Quần short",
-        size: "M",
-        color: "Kem",
-        price: 300000,
-        quantity: 10,
-        createdAt: "2026-05-18",
-        updatedAt: "2026-05-18",
-        status: "selling"
-    },
-
-    {
-        id: "QS003",
-        name: "Quần short jean bé gái",
-        category: "Quần short",
-        size: "S",
-        color: "Xanh nhạt",
-        price: 340000,
-        quantity: 7,
-        createdAt: "2026-05-18",
-        updatedAt: "2026-05-19",
-        status: "selling"
-    },
-
-    {
-        id: "VG001",
-        name: "Váy hoa công chúa",
-        category: "Váy bé gái",
-        size: "M",
-        color: "Vàng",
-        price: 420000,
-        quantity: 9,
-        createdAt: "2026-05-20",
-        updatedAt: "2026-05-20",
-        status: "selling"
-    },
-
-    {
-        id: "VG002",
-        name: "Váy ren dự tiệc",
-        category: "Váy bé gái",
-        size: "L",
-        color: "Trắng",
-        price: 520000,
-        quantity: 4,
-        createdAt: "2026-05-21",
-        updatedAt: "2026-05-22",
-        status: "selling"
-    },
-
-    {
-        id: "QD001",
-        name: "Quần dài thể thao bé trai",
-        category: "Quần dài bé trai",
-        size: "XL",
-        color: "Đen",
-        price: 390000,
-        quantity: 14,
-        createdAt: "2026-05-22",
-        updatedAt: "2026-05-22",
-        status: "selling"
-    },
-
-    {
-        id: "QD002",
-        name: "Quần jogger cotton",
-        category: "Quần dài bé trai",
-        size: "M",
-        color: "Xám",
-        price: 410000,
-        quantity: 6,
-        createdAt: "2026-05-23",
-        updatedAt: "2026-05-23",
-        status: "selling"
-    },
-
-    {
-        id: "AK002",
-        name: "Áo khoác phao trẻ em",
-        category: "Áo khoác mùa đông",
-        size: "L",
-        color: "Đỏ đô",
-        price: 650000,
-        quantity: 3,
-        createdAt: "2026-05-24",
-        updatedAt: "2026-05-24",
-        status: "selling"
-    },
-
-    {
-        id: "TC001",
-        name: "Tất chân hoạt hình",
-        category: "Tất chân trẻ em",
-        size: "Free Size",
-        color: "Nhiều màu",
-        price: 80000,
-        quantity: 25,
-        createdAt: "2026-05-25",
-        updatedAt: "2026-05-25",
-        status: "selling"
-    }
-
-];
+let products = [];
 
 let currentEditId = null;
 function getTodayDate() {
@@ -442,6 +264,13 @@ function updateProductImagePreview(product = {}) {
     if (!productImagePreview) return;
     const image = product.image || productImage?.value.trim() || svgProductImage({ name: productName?.value.trim() || product.name || "Sản phẩm", color: productColor?.value.trim() || product.color || "Xanh dương" });
     productImagePreview.innerHTML = `<img src="${image}" alt="Ảnh sản phẩm">`;
+}
+function showProductsLoading() {
+
+    if (table) {
+        table.innerHTML = `<tr><td colspan="10" class="empty-data">Đang tải dữ liệu từ database...</td></tr>`;
+    }
+
 }
 function renderProducts(data = getVisibleProducts()) {
 
@@ -912,7 +741,7 @@ stopSuccessModal.addEventListener("click", (e) => {
 // SAVE PRODUCT
 // =========================
 
-saveProductBtn.addEventListener("click", () => {
+saveProductBtn.addEventListener("click", async () => {
 
     const productData = {
 
@@ -973,32 +802,47 @@ saveProductBtn.addEventListener("click", () => {
         return;
 
     }
+    if (window.kidCityApi) {
+        const existingProduct = currentEditId === null
+            ? null
+            : products.find(product => product.id === currentEditId);
+        const payload = {
+            id: existingProduct?.dbId,
+            code: productData.id,
+            category_id: categoryLookup.get(productData.category) || existingProduct?.categoryId || null,
+            name: productData.name,
+            size: productData.size,
+            color: productData.color,
+            price: productData.price,
+            stock: productData.quantity,
+            image: productData.image,
+            status: productData.status === "stopped" ? "Ng\u1eebng b\u00e1n" : "\u0110ang b\u00e1n"
+        };
 
-    // ADD
+        try {
+            if (currentEditId === null) {
+                await window.kidCityApi.post("products/items.php", payload);
+            } else {
+                await window.kidCityApi.put("products/items.php", payload);
+            }
+            await loadProductsFromApi();
+            closeModal();
+            clearForm();
+            return;
+        } catch (error) {
+            alert(error.message || "Kh\u00f4ng th\u1ec3 l\u01b0u s\u1ea3n ph\u1ea9m v\u00e0o database.");
+            return;
+        }
+    }
 
     if (currentEditId === null) {
 
         products.push(productData);
 
-    }
+    } else {
 
-    // UPDATE
-
-    else {
-
-        const index = products.findIndex(product =>
-
-            product.id === currentEditId
-
-        );
-
-        products[index] = {
-
-            ...products[index],
-
-            ...productData
-
-        };
+        const index = products.findIndex(product => product.id === currentEditId);
+        if (index >= 0) products[index] = { ...products[index], ...productData };
 
     }
 
@@ -1009,7 +853,6 @@ saveProductBtn.addEventListener("click", () => {
     closeModal();
 
     clearForm();
-
 });
 
 // =========================
@@ -1264,6 +1107,9 @@ async function loadProductsFromApi() {
         ]);
 
         if (Array.isArray(apiCategories)) {
+            categoryLookup = new Map(apiCategories
+                .filter(category => category.name)
+                .map(category => [category.name, category.id]));
             categories = apiCategories
                 .map(category => category.name)
                 .filter(Boolean);
@@ -1304,6 +1150,5 @@ async function loadProductsFromApi() {
 // INIT
 // =========================
 
-setupPriceRange();
-renderProducts();
+showProductsLoading();
 loadProductsFromApi();

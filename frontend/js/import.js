@@ -6,23 +6,9 @@ window.initImportPage = function initImportPage(container) {
     /* =====================================================
        IMPORT DATA - Dữ liệu mẫu để tính tiền hàng nhập
        ===================================================== */
-    const prices = {
-        'Áo thun Mickey Mouse': 80000,
-        'Áo thun Elsa Frozen': 90000,
-        'Áo thun Spider-Man': 95000,
-        'Váy hoa nhí công chúa': 150000
-    };
-    const productCatalog = {
-        'Áo thun Mickey Mouse': { category: 'Áo bé trai', size: 'M', color: 'Đỏ', quantity: 100, image: '' },
-        'Áo thun Elsa Frozen': { category: 'Áo bé gái', size: 'S', color: 'Xanh', quantity: 80, image: '' },
-        'Áo thun Spider-Man': { category: 'Áo bé trai', size: 'L', color: 'Đen', quantity: 120, image: '' },
-        'Váy hoa nhí công chúa': { category: 'Đầm váy', size: 'S', color: 'Hồng', quantity: 60, image: '' }
-    };
-    const defaultProducts = [
-        { product: 'Áo thun Mickey Mouse', category: 'Áo bé trai', size: 'M', color: 'Đỏ', quantity: 100, image: '' },
-        { product: 'Áo thun Elsa Frozen', category: 'Áo bé gái', size: 'S', color: 'Xanh', quantity: 80, image: '' },
-        { product: 'Áo thun Spider-Man', category: 'Áo bé trai', size: 'L', color: 'Đen', quantity: 120, image: '' }
-    ];
+    const prices = {};
+    const productCatalog = {};
+    const defaultProducts = [];
 
     /* =====================================================
        IMPORT HELPERS - Hàm tiện ích dùng chung
@@ -131,29 +117,9 @@ window.initImportPage = function initImportPage(container) {
         `;
     };
 
-    const restoreImports = () => {
-        const saved = localStorage.getItem(storageKey);
-        if (!saved) return;
+    const restoreImports = () => {};
 
-        let records = [];
-        try { records = JSON.parse(saved); }
-        catch { records = []; }
-        if (!records.length) return;
-
-        const body = root.querySelector('#import-table');
-        body.innerHTML = '';
-        records.forEach((item) => {
-            const row = document.createElement('tr');
-            row.dataset.key = normalize(`${item.code} ${item.date} ${item.staff} ${item.supplier || ''}`);
-            row.dataset.supplier = item.supplier || '';
-            setProducts(row, item.products || []);
-            row.innerHTML = `<td><strong>${item.code}</strong></td><td>${item.date}</td><td>${item.staff}</td><td></td>`;
-            body.appendChild(row);
-        });
-        root.querySelector('.import-stat strong').textContent = String(records.length);
-    };
-
-    restoreImports();
+    
     root.querySelectorAll('#import-table tr').forEach((row) => {
         if (!row.dataset.products) setProducts(row, defaultProducts);
         attachActions(row);

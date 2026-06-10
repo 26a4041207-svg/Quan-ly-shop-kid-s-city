@@ -20,48 +20,7 @@ menuToggles.forEach(toggle => {
 
 // DATA
 
-let categories = [
-
-    {
-        id: "DM001",
-        name: "Áo thun trẻ em",
-        description: "Các loại áo cotton cho bé từ 1-10 tuổi",
-        createdAt: "2026-05-01"
-    },
-
-    {
-        id: "DM002",
-        name: "Quần short",
-        description: "Quần short jean mùa hè",
-        createdAt: "2026-05-08"
-    },
-
-    {
-        id: "DM003",
-        name: "Váy bé gái",
-        description: "Váy hoa cho bé gái",
-        createdAt: "2026-05-10"
-    },
-    {
-        id: "DM004",
-        name: "Quần dài bé trai",
-        description: "Quần dài cotton cho bé trai",
-        createdAt: "2026-05-14"
-    },
-    {
-        id: "DM005",
-        name: "Áo khoác mùa đông",
-        description: "Áo khoác chống lạnh cho bé",
-        createdAt: "2026-05-15 "
-    },
-    {
-        id: "DM006",
-        name: "Tất chân trẻ em",
-        description: "Tất chân cotton cho bé ",
-        createdAt: "2026-05-10"
-    }
-
-];
+let categories = [];
 
 let currentEditId = null;
 

@@ -161,7 +161,7 @@
                 const text = row.textContent.toLowerCase();
                 const period = row.dataset.period || '';
                 const matchKeyword = !keyword || text.includes(keyword);
-                const matchFilter = !selected || period.split(/\s+/).includes(selected);
+                const matchFilter = selected === 'all' || !selected || period.split(/\s+/).includes(selected);
                 const show = matchKeyword && matchFilter;
                 row.style.display = show ? '' : 'none';
                 if (show) visible += 1;
@@ -183,7 +183,56 @@
         render();
     };
 
-    const formatMoney = (value) => `${Number(value || 0).toLocaleString('vi-VN')}đ`;
+    const formatMoney = (value) => `${Number(value || 0).toLocaleString('vi-VN')}\u0111`;
+
+    const formatReportDate = (value) => {
+        if (!value) return '-';
+        const date = new Date(`${value}T00:00:00`);
+        return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString('vi-VN');
+    };
+
+    const getCustomerGroup = (item) => {
+        const spent = Number(item.total_spent || 0);
+        const orders = Number(item.order_count || 0);
+        if (spent >= 500000 || orders >= 3) return 'VIP';
+        if (orders >= 2) return 'Th\u00e2n thi\u1ebft';
+        if (orders === 1) return '\u0110\u00e3 mua';
+        return 'Ch\u01b0a mua';
+    };
+
+    const compactMoney = (value) => {
+        const amount = Number(value || 0);
+        if (amount >= 1000000) return `${(amount / 1000000).toFixed(1).replace('.', ',')}tr`;
+        if (amount >= 1000) return `${Math.round(amount / 1000)}k`;
+        return formatMoney(amount);
+    };
+
+    const renderRevenuePanels = (page, rows, totalRevenue, totalOrders) => {
+        const chart = page.querySelector('[data-revenue-chart]');
+        if (chart) {
+            const maxRevenue = Math.max(...rows.map((item) => Number(item.revenue || 0)), 1);
+            chart.innerHTML = rows.length ? rows.slice(-8).map((item) => {
+                const height = Math.max(12, Math.round(Number(item.revenue || 0) / maxRevenue * 100));
+                return `<div style="--h:${height}%"><span>${compactMoney(item.revenue)}</span><b>${formatReportDate(item.invoice_date).slice(0, 5)}</b></div>`;
+            }).join('') : '<p class="report-empty-inline">Ch\u01b0a c\u00f3 d\u1eef li\u1ec7u doanh thu.</p>';
+        }
+        const summary = page.querySelector('[data-revenue-summary]');
+        if (summary) {
+            const averageOrder = totalOrders ? totalRevenue / totalOrders : 0;
+            summary.innerHTML = `<div><strong>T\u1ed5ng h\u00f3a \u0111\u01a1n</strong><span>${totalOrders}</span><i style="width:100%"></i></div><div><strong>Doanh thu</strong><span>${formatMoney(totalRevenue)}</span><i style="width:100%"></i></div><div><strong>Trung b\u00ecnh / h\u00f3a \u0111\u01a1n</strong><span>${formatMoney(averageOrder)}</span><i style="width:${averageOrder ? 70 : 0}%"></i></div>`;
+        }
+    };
+
+    const renderTopCustomers = (page, rows) => {
+        const list = page.querySelector('[data-customer-rank]');
+        if (!list) return;
+        const topRows = [...rows].sort((a, b) => Number(b.total_spent || 0) - Number(a.total_spent || 0)).slice(0, 5);
+        const maxSpent = Math.max(...topRows.map((item) => Number(item.total_spent || 0)), 1);
+        list.innerHTML = topRows.length ? topRows.map((item) => {
+            const width = Math.max(8, Math.round(Number(item.total_spent || 0) / maxSpent * 100));
+            return `<div><strong>${item.name || '-'}</strong><span>${formatMoney(item.total_spent)}</span><i style="width:${width}%"></i></div>`;
+        }).join('') : '<p class="report-empty-inline">Ch\u01b0a c\u00f3 d\u1eef li\u1ec7u kh\u00e1ch h\u00e0ng.</p>';
+    };
 
     const loadReportFromApi = async () => {
         const page = document.querySelector('.reports-page');
@@ -194,20 +243,23 @@
 
         try {
             if (type === 'revenue') {
-                const rows = await window.kidCityApi.get('reports/revenue.php');
+                const rows = await window.kidCityApi.get('reports/revenue.php?from=1900-01-01&to=2999-12-31');
                 if (!Array.isArray(rows)) return;
                 const totalRevenue = rows.reduce((sum, item) => sum + Number(item.revenue || 0), 0);
                 const totalOrders = rows.reduce((sum, item) => sum + Number(item.orders || 0), 0);
                 const cards = page.querySelectorAll('.stat-card h3');
                 if (cards[0]) cards[0].textContent = formatMoney(totalRevenue);
                 if (cards[1]) cards[1].textContent = formatMoney(totalRevenue * 0.33);
+                if (cards[2]) cards[2].textContent = totalOrders;
+                if (cards[3]) cards[3].textContent = formatMoney(totalOrders ? totalRevenue / totalOrders : 0);
+                renderRevenuePanels(page, rows, totalRevenue, totalOrders);
                 table.innerHTML = rows.map((item) => `
-                    <tr data-period="today last7 this-month">
-                        <td class="fw-bold">${item.invoice_date || ''}</td>
+                    <tr data-period="all today last7 this-month last-month">
+                        <td class="fw-bold">${formatReportDate(item.invoice_date)}</td>
                         <td class="fw-bold">${formatMoney(item.revenue)}</td>
                         <td>${item.orders || 0}</td>
                         <td class="text-green fw-bold">${formatMoney(Number(item.revenue || 0) * 0.33)}</td>
-                        <td class="text-green">DB</td>
+                        <td class="text-green">T\u1eeb database</td>
                         <td>${totalOrders} hóa đơn</td>
                     </tr>
                 `).join('');
@@ -222,7 +274,7 @@
                 if (cards[2]) cards[2].textContent = rows.filter((item) => Number(item.stock || 0) <= 5).length;
                 if (cards[3]) cards[3].textContent = formatMoney(rows.reduce((sum, item) => sum + Number(item.revenue || 0), 0));
                 table.innerHTML = rows.map((item) => `
-                    <tr data-period="today last7 this-month">
+                    <tr data-period="all today last7 this-month last-month">
                         <td class="fw-bold text-blue">${item.code || ''}</td>
                         <td>${item.name || ''}</td>
                         <td>${item.category_name || ''}</td>
@@ -240,16 +292,21 @@
                 if (!Array.isArray(rows)) return;
                 const cards = page.querySelectorAll('.stat-card h3');
                 if (cards[0]) cards[0].textContent = rows.length;
-                if (cards[1]) cards[1].textContent = rows.reduce((sum, item) => sum + Number(item.order_count || 0), 0);
-                if (cards[2]) cards[2].textContent = formatMoney(rows.reduce((sum, item) => sum + Number(item.total_spent || 0), 0));
+                const totalOrders = rows.reduce((sum, item) => sum + Number(item.order_count || 0), 0);
+                const totalSpent = rows.reduce((sum, item) => sum + Number(item.total_spent || 0), 0);
+                if (cards[1]) cards[1].textContent = rows.filter((item) => Number(item.order_count || 0) >= 2).length;
+                if (cards[2]) cards[2].textContent = formatMoney(totalSpent);
+                if (cards[3]) cards[3].textContent = formatMoney(totalOrders ? totalSpent / totalOrders : 0);
+                renderTopCustomers(page, rows);
                 table.innerHTML = rows.map((item) => `
-                    <tr data-period="today last7 this-month">
+                    <tr data-period="all today last7 this-month last-month">
                         <td class="fw-bold text-blue">${item.code || ''}</td>
                         <td>${item.name || ''}</td>
                         <td>${item.phone || ''}</td>
                         <td>${item.order_count || 0}</td>
                         <td class="fw-bold">${formatMoney(item.total_spent)}</td>
-                        <td><span class="report-badge good">Từ DB</span></td>
+                        <td>${formatReportDate(item.last_purchase)}</td>
+                        <td><span class="report-badge good">${getCustomerGroup(item)}</span></td>
                     </tr>
                 `).join('');
                 bindReportFilters();

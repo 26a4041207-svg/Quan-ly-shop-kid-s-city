@@ -6,7 +6,7 @@
     <title>Báo cáo doanh thu - Kid's City</title>
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
     <link rel="stylesheet" href="../../assets/css/index.css">
-    <link rel="stylesheet" href="../../assets/css/revenue.css?v=20260531-export-excel">
+    <link rel="stylesheet" href="../../assets/css/revenue.css?v=20260610-layout-fix">
 </head>
 <body>
     <aside class="sidebar">
@@ -91,24 +91,24 @@
             <div class="page-header"><h2>Báo cáo doanh thu</h2><p>Theo dõi doanh thu, lợi nhuận và phương thức thanh toán</p></div>
             <div class="report-toolbar">
                 <label class="report-search"><i class="bx bx-search"></i><input data-report-search type="text" placeholder="Tìm theo tháng, ghi chú..."></label>
-                <select data-report-filter><option value="today">Hôm nay</option><option value="yesterday">Hôm qua</option><option value="last7">7 ngày qua</option><option value="this-month">Tháng này</option><option value="last-month">Tháng trước</option></select>
+                <select data-report-filter><option value="all">T&#7845;t c&#7843;</option><option value="today">H&#244;m nay</option><option value="last7">7 ng&#224;y qua</option><option value="this-month">Th&#225;ng n&#224;y</option><option value="last-month">Th&#225;ng tr&#432;&#7899;c</option></select>
                 <button class="report-btn" data-export-report><i class="bx bx-export"></i> Xuất báo cáo</button>
             </div>
             <section class="report-summary-cards">
-                <div class="stat-card"><div class="stat-info"><p>Tổng doanh thu</p><h3>4.885.000đ</h3><span>14 hóa đơn</span></div><div class="stat-icon bg-blue-light"><i class="bx bx-dollar"></i></div></div>
-                <div class="stat-card"><div class="stat-info"><p>Lợi nhuận ước tính</p><h3>1.628.000đ</h3><span>Biên 33.3%</span></div><div class="stat-icon bg-green-light"><i class="bx bx-trending-up"></i></div></div>
-                <div class="stat-card"><div class="stat-info"><p>Tiền mặt</p><h3>8</h3><span>57% giao dịch</span></div><div class="stat-icon bg-orange-light"><i class="bx bx-money"></i></div></div>
-                <div class="stat-card"><div class="stat-info"><p>Chuyển khoản</p><h3>6</h3><span>43% giao dịch</span></div><div class="stat-icon bg-purple-light"><i class="bx bx-credit-card"></i></div></div>
+                <div class="stat-card"><div class="stat-info"><p>T&#7893;ng doanh thu</p><h3>0&#273;</h3><span>T&#7915; database</span></div><div class="stat-icon bg-blue-light"><i class="bx bx-dollar"></i></div></div>
+                <div class="stat-card"><div class="stat-info"><p>L&#7907;i nhu&#7853;n &#432;&#7899;c t&#237;nh</p><h3>0&#273;</h3><span>T&#7841;m t&#237;nh 33%</span></div><div class="stat-icon bg-green-light"><i class="bx bx-trending-up"></i></div></div>
+                <div class="stat-card"><div class="stat-info"><p>T&#7893;ng h&#243;a &#273;&#417;n</p><h3>0</h3><span>T&#7915; database</span></div><div class="stat-icon bg-orange-light"><i class="bx bx-receipt"></i></div></div>
+                <div class="stat-card"><div class="stat-info"><p>Trung b&#236;nh / h&#243;a &#273;&#417;n</p><h3>0&#273;</h3><span>T&#7921; &#273;&#7897;ng t&#237;nh</span></div><div class="stat-icon bg-purple-light"><i class="bx bx-credit-card"></i></div></div>
             </section>
             <section class="report-grid two-cols">
-                <div class="dash-card report-panel"><div class="chart-header"><h3>Doanh thu theo tháng</h3><p>Số liệu bán hàng 2026</p></div><div class="bar-chart"><div style="--h:42%"><span>1.1tr</span><b>T1</b></div><div style="--h:55%"><span>1.45tr</span><b>T2</b></div><div style="--h:72%"><span>1.9tr</span><b>T3</b></div><div style="--h:64%"><span>1.7tr</span><b>T4</b></div><div style="--h:86%"><span>2.3tr</span><b>T5</b></div><div style="--h:58%"><span>1.55tr</span><b>T6</b></div></div></div>
-                <div class="dash-card report-panel"><div class="chart-header"><h3>Cơ cấu thanh toán</h3><p>Tỷ trọng theo phương thức</p></div><div class="donut-wrap"><div class="donut-chart"></div><div class="legend"><span><i class="dot blue"></i>Tiền mặt: 8</span><span><i class="dot purple"></i>Chuyển khoản: 6</span></div></div></div>
+                <div class="dash-card report-panel"><div class="chart-header"><h3>Doanh thu theo ng&#224;y</h3><p>D&#7919; li&#7879;u l&#7845;y tr&#7921;c ti&#7871;p t&#7915; h&#243;a &#273;&#417;n</p></div><div class="bar-chart" data-revenue-chart></div></div>
+                <div class="dash-card report-panel"><div class="chart-header"><h3>T&#7893;ng quan giao d&#7883;ch</h3><p>T&#7893;ng h&#7907;p t&#7915; database</p></div><div class="rank-list" data-revenue-summary></div></div>
             </section>
-            <section class="dash-card"><div class="dash-card-header"><div><h3>Chi tiết doanh thu</h3><p>Doanh thu theo kỳ gần nhất</p></div></div><div class="table-responsive"><table class="dash-table reports-table"><thead><tr><th>Kỳ</th><th>Doanh thu</th><th>Hóa đơn</th><th>Lợi nhuận</th><th>Tăng trưởng</th><th>Ghi chú</th></tr></thead><tbody data-report-table><tr data-period="today last7 this-month"><td class="fw-bold">Hôm nay</td><td class="fw-bold">2.205.000đ</td><td>6</td><td class="text-green fw-bold">735.000đ</td><td class="text-green">+18%</td><td>Doanh thu tốt</td></tr><tr data-period="yesterday last7 this-month"><td class="fw-bold">Hôm qua</td><td class="fw-bold">1.960.000đ</td><td>6</td><td class="text-green fw-bold">653.000đ</td><td class="text-green">+9%</td><td>Ổn định</td></tr><tr data-period="last-month"><td class="fw-bold">Tháng trước</td><td class="fw-bold">720.000đ</td><td>2</td><td class="text-green fw-bold">240.000đ</td><td class="text-orange">-4%</td><td>Cần thúc đẩy</td></tr></tbody></table></div></section>
+            <section class="dash-card"><div class="dash-card-header"><div><h3>Chi tiết doanh thu</h3><p>Doanh thu theo kỳ gần nhất</p></div></div><div class="table-responsive"><table class="dash-table reports-table"><thead><tr><th>Kỳ</th><th>Doanh thu</th><th>Hóa đơn</th><th>Lợi nhuận</th><th>Tăng trưởng</th><th>Ghi chú</th></tr></thead><tbody data-report-table></tbody></table></div></section>
         </main>
     </div>
-    <script src="../../js/api.js"></script>
+    <script src="../../js/api.js?v=20260610-ui-report"></script>
     <script src="../../js/auth.js?v=20260531-staff-role-normalize"></script>
-    <script src="../../js/revenue.js?v=20260601-password"></script>
+    <script src="../../js/revenue.js?v=20260610-layout-fix"></script>
 </body>
 </html>
