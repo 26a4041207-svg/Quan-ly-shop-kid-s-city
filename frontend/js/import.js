@@ -6,18 +6,76 @@ window.initImportPage = function initImportPage(container) {
     /* =====================================================
        IMPORT DATA - Dữ liệu mẫu để tính tiền hàng nhập
        ===================================================== */
-    const prices = {};
     const productCatalog = {};
     const defaultProducts = [];
 
     /* =====================================================
        IMPORT HELPERS - Hàm tiện ích dùng chung
        ===================================================== */
-    const pageSize = 6;
+    const pageSize = 10;
     const storageKey = 'kidscity_import_receipts';
     let currentPage = 1;
+    let currentProductVariants = [];
+    let currentProductInfo = null;
     const formatMoney = (value) => `${Number(value || 0).toLocaleString('vi-VN')}đ`;
     const normalize = (text) => (text || '').trim().toLowerCase();
+    const escapeHtml = (value) => String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    const resolveProductImage = (item) => {
+        const src = String(item?.image || item?.product_image || '').trim();
+        const catalogImage = productCatalog[item?.product || '']?.image || '';
+        if (src.startsWith('data:image/') && src.length <= 255) {
+            return catalogImage || src;
+        }
+        if (src) return src;
+        return catalogImage;
+    };
+    const fillThumbCell = (cell, imageSrc, thumbClass = 'import-product-thumb') => {
+        if (!cell) return;
+        cell.innerHTML = '';
+        if (!imageSrc) {
+            const empty = document.createElement('span');
+            empty.className = 'import-no-image';
+            empty.textContent = '-';
+            cell.appendChild(empty);
+            return;
+        }
+        const img = document.createElement('img');
+        img.className = thumbClass;
+        img.alt = 'Ảnh SP';
+        img.src = imageSrc;
+        img.onerror = () => {
+            cell.innerHTML = '';
+            const empty = document.createElement('span');
+            empty.className = 'import-no-image';
+            empty.textContent = '-';
+            cell.appendChild(empty);
+        };
+        cell.appendChild(img);
+    };
+    const hydrateThumbCells = (container, products, selector = '[data-import-thumb-cell]') => {
+        container.querySelectorAll(selector).forEach((cell, index) => {
+            fillThumbCell(cell, resolveProductImage(products[index]));
+        });
+    };
+    const updateCreateImagePreview = (src = '') => {
+        const preview = root.querySelector('[data-import-product-image-preview]');
+        if (!preview) return;
+        if (src) {
+            preview.innerHTML = '';
+            const img = document.createElement('img');
+            img.src = src;
+            img.alt = 'Ảnh sản phẩm';
+            preview.appendChild(img);
+            preview.style.display = 'block';
+        } else {
+            preview.innerHTML = '';
+            preview.style.display = 'none';
+        }
+    };
     const validSelect = (select) => select && select.value && !select.value.includes('--');
     const rowText = (row, index) => row.children[index]?.textContent.trim() || '';
     const getProducts = (row) => {
@@ -33,14 +91,10 @@ window.initImportPage = function initImportPage(container) {
     const setProducts = (row, products) => {
         row.dataset.products = JSON.stringify(products);
     };
-    const productRowsHtml = (products, includePrice = false) => {
-        if (!products.length) return '<tr><td colspan="5" class="empty-row">Chưa có sản phẩm.</td></tr>';
-        return products.map((item, index) => {
-            if (includePrice) {
-                const total = Number(item.price || 0) * Number(item.quantity || 0);
-                return `<tr><td>${index + 1}</td><td>${item.product}</td><td>${item.quantity}</td><td>${formatMoney(item.price)}</td><td><strong>${formatMoney(total)}</strong></td></tr>`;
-            }
-            return `<tr><td>${item.product || ''}</td><td>${item.category || '-'}</td><td>${item.size || '-'}</td><td>${item.color || '-'}</td><td><strong>${item.quantity || 0}</strong></td></tr>`;
+    const productRowsHtml = (products, includePrice = true) => {
+        if (!products.length) return '<tr><td colspan="7" class="empty-row">Chưa có sản phẩm.</td></tr>';
+        return products.map((item) => {
+            return `<tr><td data-import-thumb-cell></td><td class="import-cell-wrap">${escapeHtml(item.product || '')}</td><td class="import-cell-wrap">${escapeHtml(item.category || '-')}</td><td>${escapeHtml(item.size || '-')}</td><td>${escapeHtml(item.color || '-')}</td><td><strong>${item.quantity || 0}</strong></td><td>${includePrice ? formatMoney(item.price) : '-'}</td></tr>`;
         }).join('');
     };
 
@@ -49,6 +103,7 @@ window.initImportPage = function initImportPage(container) {
         date: rowText(row, 1),
         staff: rowText(row, 2),
         supplier: row.dataset.supplier || '',
+        note: row.dataset.note || '',
         products: getProducts(row)
     }));
 
@@ -66,6 +121,18 @@ window.initImportPage = function initImportPage(container) {
         const openBtn = event.target.closest('[data-import-open]');
         if (openBtn && root.contains(openBtn)) {
             openModal(openBtn.dataset.importOpen);
+            currentProductVariants = [];
+            currentProductInfo = null;
+            renderVariantsTable();
+            // Clear creation form
+            const supplierInput = root.querySelector('[data-import-field="supplier"]');
+            const noteInput = root.querySelector('[data-import-field="note"]');
+            if (supplierInput) supplierInput.value = '';
+            if (noteInput) noteInput.value = '';
+            
+            const list = root.querySelector('[data-import-product-list]');
+            if (list) list.innerHTML = '<tr><td colspan="8" class="empty-row">Chưa có sản phẩm. Thêm ở trên.</td></tr>';
+            updateCreateImagePreview('');
             return;
         }
 
@@ -85,17 +152,6 @@ window.initImportPage = function initImportPage(container) {
         if (editBtn && root.contains(editBtn)) {
             openImportEdit(editBtn.closest('tr'));
             return;
-        }
-
-        const draftEditBtn = event.target.closest('[data-import-draft-edit]');
-        if (draftEditBtn && root.contains(draftEditBtn)) {
-            openDraftProductEdit(draftEditBtn.closest('tr'));
-            return;
-        }
-
-        const draftDeleteBtn = event.target.closest('[data-import-draft-delete]');
-        if (draftDeleteBtn && root.contains(draftDeleteBtn)) {
-            deleteDraftProduct(draftDeleteBtn.closest('tr'));
         }
     });
 
@@ -117,9 +173,31 @@ window.initImportPage = function initImportPage(container) {
         `;
     };
 
-    const restoreImports = () => {};
+    const restoreImports = () => {
+        const saved = localStorage.getItem(storageKey);
+        if (!saved) return;
 
-    
+        let records = [];
+        try { records = JSON.parse(saved); }
+        catch { records = []; }
+        if (!records.length) return;
+
+        const body = root.querySelector('#import-table');
+        body.innerHTML = '';
+        records.forEach((item) => {
+            const row = document.createElement('tr');
+            row.dataset.key = normalize(`${item.code} ${item.date} ${item.staff} ${item.supplier || ''}`);
+            row.dataset.supplier = item.supplier || '';
+            row.dataset.note = item.note || '';
+            row.dataset.created = item.date || '';
+            row.dataset.updated = item.date || '';
+            setProducts(row, item.products || []);
+            row.innerHTML = `<td><strong>${item.code}</strong></td><td>${item.date}</td><td>${item.staff}</td><td></td>`;
+            body.appendChild(row);
+        });
+    };
+
+    restoreImports();
     root.querySelectorAll('#import-table tr').forEach((row) => {
         if (!row.dataset.products) setProducts(row, defaultProducts);
         attachActions(row);
@@ -132,7 +210,7 @@ window.initImportPage = function initImportPage(container) {
         color: item.color || '-',
         quantity: Number(item.quantity || 0),
         price: Number(item.price || 0),
-        image: item.image || ''
+        image: item.product_image || item.image || ''
     }));
 
     const loadImportsFromApi = async () => {
@@ -145,14 +223,17 @@ window.initImportPage = function initImportPage(container) {
             receipts.forEach((receipt) => {
                 const row = document.createElement('tr');
                 const products = mapImportProductsFromApi(receipt.items || []);
-                row.dataset.key = normalize(`${receipt.code || ''} ${receipt.import_date || ''} ${receipt.staff_name || ''} ${receipt.supplier || ''}`);
+                row.dataset.id = receipt.id;
+                row.dataset.key = normalize(`${receipt.code || ''} ${receipt.created_at || ''} ${receipt.staff_name || ''} ${receipt.supplier || ''}`);
                 row.dataset.supplier = receipt.supplier || '';
+                row.dataset.note = receipt.note || '';
+                row.dataset.created = receipt.created_at || '';
+                row.dataset.updated = receipt.updated_at || receipt.created_at || '';
                 setProducts(row, products);
-                row.innerHTML = `<td><strong>${receipt.code || ''}</strong></td><td>${receipt.import_date || ''}</td><td>${receipt.staff_name || ''}</td><td></td>`;
+                row.innerHTML = `<td><strong>${receipt.code || ''}</strong></td><td>${(receipt.created_at || '').slice(0, 10)}</td><td>${receipt.staff_name || ''}</td><td></td>`;
                 attachActions(row);
                 body.appendChild(row);
             });
-            root.querySelector('.import-stat strong').textContent = String(receipts.length);
             currentPage = 1;
             renderPagination();
         } catch (error) {
@@ -168,7 +249,7 @@ window.initImportPage = function initImportPage(container) {
                 window.kidCityApi.get('products/items.php')
             ]);
 
-            const categorySelect = root.querySelector('[data-import-category]');
+            const categorySelect = root.querySelector('[data-import-product-category]');
             if (categorySelect && Array.isArray(categories)) {
                 categorySelect.innerHTML = '<option value="">Chọn danh mục</option>';
                 categories.forEach((category) => {
@@ -182,21 +263,23 @@ window.initImportPage = function initImportPage(container) {
             const datalist = root.querySelector('#import-product-options');
             if (datalist && Array.isArray(products)) {
                 datalist.innerHTML = '';
-                Object.keys(productCatalog).forEach((key) => delete productCatalog[key]);
+                const addedNames = new Set();
                 products.forEach((product) => {
                     if (!product.name) return;
                     productCatalog[product.name] = {
                         productId: product.id,
                         category: product.category_name || '',
-                        size: product.size || '',
-                        color: product.color || '',
-                        quantity: 1,
+                        price: Number(product.price || 0),
                         image: product.image || '',
-                        price: Number(product.import_price || product.price || 0)
+                        size: product.size || '',
+                        color: product.color || ''
                     };
-                    const option = document.createElement('option');
-                    option.value = product.name;
-                    datalist.appendChild(option);
+                    if (!addedNames.has(product.name)) {
+                        addedNames.add(product.name);
+                        const option = document.createElement('option');
+                        option.value = product.name;
+                        datalist.appendChild(option);
+                    }
                 });
             }
         } catch (error) {
@@ -258,195 +341,294 @@ window.initImportPage = function initImportPage(container) {
     });
 
     /* =====================================================
-       IMPORT CREATE - Thêm sản phẩm và tạo phiếu hàng nhập mới
+       IMPORT VARIANT SYSTEM - Hệ thống nhập chi tiết size/màu/số lượng
        ===================================================== */
-    const renderCreateProductRow = (row, index) => {
-        const product = row.dataset.product || '';
-        const category = row.dataset.category || '';
-        const size = row.dataset.size || '';
-        const color = row.dataset.color || '';
-        const quantity = Number(row.dataset.quantity || 1);
-        row.innerHTML = `
-            <td>${index}</td>
-            <td>${product}</td>
-            <td>${category || '-'}</td>
-            <td>${size || '-'}</td>
-            <td>${color || '-'}</td>
-            <td>${quantity}</td>
-            <td>
-                <div class="import-action-group">
-                    <button class="import-action-btn edit" data-import-draft-edit title="Sửa sản phẩm"><i class='bx bx-edit-alt'></i></button>
-                    <button class="import-action-btn delete" data-import-draft-delete title="Xóa sản phẩm"><i class='bx bx-trash'></i></button>
-                </div>
-            </td>
-        `;
-    };
-
-    const refreshCreateProductTable = () => {
-        const list = root.querySelector('[data-import-product-list]');
-        const rows = Array.from(list.querySelectorAll('tr')).filter((row) => !row.querySelector('.empty-row'));
-        if (!rows.length) {
-            list.innerHTML = '<tr><td colspan="7" class="empty-row">Chưa có sản phẩm. Thêm ở trên.</td></tr>';
-            return;
-        }
-        rows.forEach((row, index) => renderCreateProductRow(row, index + 1));
-    };
-
-    const addProductToCreateForm = () => {
-        const productSelect = root.querySelector('[data-import-product]');
-        const categorySelect = root.querySelector('[data-import-category]');
-        const sizeInput = root.querySelector('[data-import-size]');
-        const colorInput = root.querySelector('[data-import-color]');
-        const qtyInput = root.querySelector('[data-import-qty]');
-        const imageInput = root.querySelector('[data-import-image]');
-        const list = root.querySelector('[data-import-product-list]');
-        const product = productSelect.value.trim();
-        if (!product) {
-            alert('Vui lòng nhập tên sản phẩm.');
-            return;
-        }
-        if (!validSelect(categorySelect)) {
-            alert('Vui lòng chọn danh mục sản phẩm.');
+    const renderVariantsTable = () => {
+        const list = root.querySelector('[data-import-variants-list]');
+        if (!list) return;
+        
+        if (!currentProductVariants.length) {
+            list.innerHTML = '<tr><td colspan="4" class="empty-row" style="padding: 30px; text-align: center; color: #999;">Chưa có chi tiết. Thêm ở dưới.</td></tr>';
             return;
         }
 
-        const quantity = Math.max(1, Number(qtyInput.value || 1));
-        const empty = list.querySelector('.empty-row');
-        if (empty) empty.closest('tr').remove();
-
-        const row = document.createElement('tr');
-        const catalogItem = findCatalogProduct(product)?.[1] || {};
-        row.dataset.product = product;
-        row.dataset.productId = catalogItem.productId || '';
-        row.dataset.category = categorySelect.value;
-        row.dataset.size = sizeInput.value.trim();
-        row.dataset.color = colorInput.value.trim();
-        row.dataset.quantity = String(quantity);
-        row.dataset.image = imageInput.value.trim();
-        row.dataset.price = String(catalogItem.price || 0);
-        list.appendChild(row);
-        refreshCreateProductTable();
-        productSelect.value = '';
-        categorySelect.value = '';
-        sizeInput.value = '';
-        colorInput.value = '';
-        qtyInput.value = '1';
-        imageInput.value = '';
+        list.innerHTML = currentProductVariants.map((variant, index) => `
+            <tr>
+                <td>${variant.size || '-'}</td>
+                <td>${variant.color || '-'}</td>
+                <td>${variant.qty}</td>
+                <td>
+                    <div class="import-action-group">
+                        <button class="import-action-btn edit" data-import-variant-edit="${index}" title="Sửa"><i class='bx bx-edit-alt'></i></button>
+                        <button class="import-action-btn delete" data-import-variant-delete="${index}" title="Xóa"><i class='bx bx-trash'></i></button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
     };
 
-    const findCatalogProduct = (name) => {
-        const keyword = normalize(name);
-        return Object.entries(productCatalog).find(([productName]) => normalize(productName) === keyword);
+    const addVariantToList = () => {
+        const sizeInput = root.querySelector('[data-import-variant-size]');
+        const colorInput = root.querySelector('[data-import-variant-color]');
+        const qtyInput = root.querySelector('[data-import-variant-qty]');
+        
+        const size = sizeInput?.value.trim() || '';
+        const color = colorInput?.value.trim() || '';
+        const qty = Math.max(1, Number(qtyInput?.value || 1));
+
+        if (!qty) {
+            alert('Vui lòng nhập số lượng.');
+            return;
+        }
+
+        currentProductVariants.push({ size, color, qty });
+        
+        if (sizeInput) sizeInput.value = '';
+        if (colorInput) colorInput.value = '';
+        if (qtyInput) qtyInput.value = '1';
+        
+        renderVariantsTable();
+    };
+
+    const deleteVariant = (index) => {
+        currentProductVariants.splice(index, 1);
+        renderVariantsTable();
+    };
+
+    const editVariant = (index) => {
+        const variant = currentProductVariants[index];
+        const sizeInput = root.querySelector('[data-import-variant-size]');
+        const colorInput = root.querySelector('[data-import-variant-color]');
+        const qtyInput = root.querySelector('[data-import-variant-qty]');
+        
+        if (sizeInput) sizeInput.value = variant.size;
+        if (colorInput) colorInput.value = variant.color;
+        if (qtyInput) qtyInput.value = variant.qty;
+        
+        currentProductVariants.splice(index, 1);
+        renderVariantsTable();
     };
 
     const fillProductInfoFromCatalog = () => {
-        const productInput = root.querySelector('[data-import-product]');
-        const categorySelect = root.querySelector('[data-import-category]');
-        const sizeInput = root.querySelector('[data-import-size]');
-        const colorInput = root.querySelector('[data-import-color]');
-        const qtyInput = root.querySelector('[data-import-qty]');
-        const imageInput = root.querySelector('[data-import-image]');
-        const matched = findCatalogProduct(productInput.value.trim());
+        const productInput = root.querySelector('[data-import-product-name]');
+        const categorySelect = root.querySelector('[data-import-product-category]');
+        const priceInput = root.querySelector('[data-import-product-price]');
+        const imageInput = root.querySelector('[data-import-product-image]');
+        
+        const productName = productInput?.value.trim();
+        const catalogItem = productCatalog[productName];
 
-        if (!matched) {
+        if (catalogItem) {
+            categorySelect.value = catalogItem.category;
+            priceInput.value = catalogItem.price;
+            currentProductInfo = { image: catalogItem.image || '' };
+            updateCreateImagePreview(catalogItem.image || '');
+            if (imageInput) imageInput.value = '';
+        } else {
             categorySelect.value = '';
-            sizeInput.value = '';
-            colorInput.value = '';
-            qtyInput.value = '1';
-            imageInput.value = '';
+            priceInput.value = '';
+            currentProductInfo = null;
+            updateCreateImagePreview('');
+        }
+    };
+
+    const addFullProductToImport = () => {
+        const productInput = root.querySelector('[data-import-product-name]');
+        const imageInput = root.querySelector('[data-import-product-image]');
+        const categorySelect = root.querySelector('[data-import-product-category]');
+        const priceInput = root.querySelector('[data-import-product-price]');
+        
+        const productName = productInput?.value.trim();
+        if (!productName || !validSelect(categorySelect) || !priceInput?.value) {
+            alert('Vui lòng nhập tên sản phẩm, chọn danh mục và giá bán.');
             return;
         }
 
-        const [, info] = matched;
-        categorySelect.value = info.category || '';
-        sizeInput.value = info.size || '';
-        colorInput.value = info.color || '';
-        qtyInput.value = String(info.quantity || 1);
-        imageInput.value = info.image || '';
-    };
-
-    const openDraftProductEdit = (row) => {
-        let modal = root.querySelector('#import-draft-edit');
-        if (!modal) {
-            modal = document.createElement('div');
-            modal.className = 'import-modal';
-            modal.id = 'import-draft-edit';
-            modal.addEventListener('click', (event) => {
-                if (event.target === modal) closeModal(modal);
-            });
-            root.appendChild(modal);
+        if (!currentProductVariants.length) {
+            alert('Vui lòng thêm ít nhất một chi tiết sản phẩm (size/màu/số lượng).');
+            return;
         }
 
-        modal.innerHTML = `
-            <div class="import-dialog detail">
-                <div class="import-modal-header"><h3>Sửa sản phẩm nhập</h3><button class="modal-close" data-import-close>&times;</button></div>
-                <div class="import-modal-body">
-                    <div class="form-grid">
-                        <div class="field"><label>Tên sản phẩm</label><input data-draft-field="product" value="${row.dataset.product || ''}"></div>
-                        <div class="field"><label>Danh mục</label><select data-draft-field="category"><option value="">Chọn danh mục</option><option>Áo bé trai</option><option>Áo bé gái</option><option>Đầm váy</option><option>Quần bé trai</option><option>Đồ chơi</option></select></div>
-                        <div class="field"><label>Size</label><input data-draft-field="size" value="${row.dataset.size || ''}"></div>
-                        <div class="field"><label>Màu sắc</label><input data-draft-field="color" value="${row.dataset.color || ''}"></div>
-                        <div class="field"><label>Số lượng</label><input type="number" min="1" data-draft-field="quantity" value="${row.dataset.quantity || 1}"></div>
-                        <div class="field"><label>Ảnh sản phẩm</label><input data-draft-field="image" value="${row.dataset.image || ''}"></div>
-                    </div>
-                    <div class="import-modal-actions"><button class="import-btn light" data-import-close>Hủy</button><button class="import-btn primary" data-save-draft-product>Lưu thay đổi</button></div>
-                </div>
-            </div>
-        `;
-        modal.classList.add('active');
-        modal.querySelector('[data-draft-field="category"]').value = row.dataset.category || '';
+        const list = root.querySelector('[data-import-product-list]');
+        const empty = list.querySelector('.empty-row');
+        if (empty) empty.closest('tr').remove();
 
-        modal.querySelector('[data-save-draft-product]').onclick = () => {
-            const product = modal.querySelector('[data-draft-field="product"]').value.trim();
-            const category = modal.querySelector('[data-draft-field="category"]').value;
-            const quantity = Math.max(1, Number(modal.querySelector('[data-draft-field="quantity"]').value || 1));
-            if (!product) {
-                alert('Vui lòng nhập tên sản phẩm.');
-                return;
-            }
-            if (!category) {
-                alert('Vui lòng chọn danh mục sản phẩm.');
-                return;
-            }
-            row.dataset.product = product;
-            row.dataset.category = category;
-            row.dataset.size = modal.querySelector('[data-draft-field="size"]').value.trim();
-            row.dataset.color = modal.querySelector('[data-draft-field="color"]').value.trim();
-            row.dataset.quantity = String(quantity);
-            row.dataset.image = modal.querySelector('[data-draft-field="image"]').value.trim();
-            refreshCreateProductTable();
-            closeModal(modal);
+        const imageFile = imageInput?.files && imageInput.files[0];
+        
+        const appendRow = (imgDataUrl = '') => {
+            currentProductVariants.forEach((variant) => {
+                const row = document.createElement('tr');
+                row.dataset.product = productName;
+                row.dataset.category = categorySelect.value;
+                row.dataset.image = imgDataUrl;
+                row.dataset.price = priceInput.value;
+                row.dataset.size = variant.size;
+                row.dataset.color = variant.color;
+                row.dataset.quantity = variant.qty;
+                
+                const list = root.querySelector('[data-import-product-list]');
+                const rowNumber = list.querySelectorAll('tr:not(.empty-row)').length + 1;
+
+                row.innerHTML = `
+                    <td>${rowNumber}</td>
+                    <td data-import-thumb-cell></td>
+                    <td class="import-cell-wrap">${escapeHtml(productName)}</td>
+                    <td class="import-cell-wrap">${escapeHtml(categorySelect.value)}</td>
+                    <td>${escapeHtml(variant.size || '-')}/${escapeHtml(variant.color || '-')}</td>
+                    <td>${variant.qty}</td>
+                    <td>${formatMoney(priceInput.value)}</td>
+                    <td>
+                        <div class="import-action-group">
+                            <button class="import-action-btn edit" data-import-product-edit title="Sửa"><i class='bx bx-edit-alt'></i></button>
+                            <button class="import-action-btn delete" data-import-product-delete title="Xóa"><i class='bx bx-trash'></i></button>
+                        </div>
+                    </td>
+                `;
+                fillThumbCell(row.querySelector('[data-import-thumb-cell]'), imgDataUrl);
+                list.appendChild(row);
+            });
+
+            if (productInput) productInput.value = '';
+            if (imageInput) imageInput.value = '';
+            if (categorySelect) categorySelect.value = '';
+            if (priceInput) priceInput.value = '';
+            currentProductInfo = null;
+            updateCreateImagePreview('');
+            
+            currentProductVariants = [];
+            renderVariantsTable();
         };
+
+        if (imageFile) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                appendRow(event.target?.result || '');
+            };
+            reader.readAsDataURL(imageFile);
+        } else {
+            const catalogImage = productCatalog[productName]?.image || currentProductInfo?.image || '';
+            appendRow(catalogImage);
+        }
     };
 
-    const deleteDraftProduct = (row) => {
-        row.remove();
-        refreshCreateProductTable();
-    };
-    const nextImportCode = () => {
-        const max = Array.from(root.querySelectorAll('#import-table tr strong')).reduce((current, item) => {
-            const number = Number(item.textContent.replace('NH', ''));
-            return Number.isFinite(number) ? Math.max(current, number) : current;
-        }, 0);
-        return `NH${String(max + 1).padStart(3, '0')}`;
-    };
+    root.addEventListener('click', (event) => {
+        if (event.target.closest('[data-import-add-variant]')) {
+            addVariantToList();
+        }
 
+        const variantDelete = event.target.closest('[data-import-variant-delete]');
+        if (variantDelete) {
+            deleteVariant(Number(variantDelete.dataset.importVariantDelete));
+        }
+
+        const variantEdit = event.target.closest('[data-import-variant-edit]');
+        if (variantEdit) {
+            editVariant(Number(variantEdit.dataset.importVariantEdit));
+        }
+
+        const productDelete = event.target.closest('[data-import-product-delete]');
+        if (productDelete && root.contains(productDelete)) {
+            productDelete.closest('tr').remove();
+            const list = productDelete.closest('tbody');
+            if (!list.querySelector('tr:not(.empty-row)')) {
+                list.innerHTML = '<tr><td colspan="8" class="empty-row">Chưa có sản phẩm. Thêm ở trên.</td></tr>';
+            } else {
+                const rows = list.querySelectorAll('tr:not(.empty-row)');
+                rows.forEach((tr, idx) => {
+                    tr.children[0].textContent = idx + 1;
+                });
+            }
+        }
+
+        const productEdit = event.target.closest('[data-import-product-edit]');
+        if (productEdit && root.contains(productEdit)) {
+            const tr = productEdit.closest('tr');
+            const productInput = root.querySelector('[data-import-product-name]');
+            const categorySelect = root.querySelector('[data-import-product-category]');
+            const priceInput = root.querySelector('[data-import-product-price]');
+            const imageInput = root.querySelector('[data-import-product-image]');
+            
+            if (productInput) productInput.value = tr.dataset.product || '';
+            if (categorySelect) categorySelect.value = tr.dataset.category || '';
+            if (priceInput) priceInput.value = tr.dataset.price || '';
+            if (imageInput) imageInput.value = '';
+            currentProductInfo = { image: tr.dataset.image || '' };
+            updateCreateImagePreview(tr.dataset.image || '');
+            
+            currentProductVariants = [{
+                size: tr.dataset.size || '',
+                color: tr.dataset.color || '',
+                qty: Number(tr.dataset.quantity || 1)
+            }];
+            renderVariantsTable();
+            tr.remove();
+        }
+
+        // ADD CATEGORY DIALOG OPEN
+        if (event.target.closest('[data-import-add-category]')) {
+            openModal('import-add-category');
+            const catNameInput = root.querySelector('[data-import-new-category-name]');
+            const catDescInput = root.querySelector('[data-import-new-category-desc]');
+            if (catNameInput) catNameInput.value = '';
+            if (catDescInput) catDescInput.value = '';
+        }
+
+        // SAVE NEW CATEGORY
+        if (event.target.closest('[data-import-save-new-category]')) {
+            const name = root.querySelector('[data-import-new-category-name]')?.value.trim();
+            const description = root.querySelector('[data-import-new-category-desc]')?.value.trim() || '';
+            if (!name) {
+                alert('Vui lòng nhập tên danh mục.');
+                return;
+            }
+            if (window.kidCityApi) {
+                window.kidCityApi.post('products/categories.php', { name, description })
+                    .then(async (res) => {
+                        await loadImportCatalogFromApi();
+                        const categorySelect = root.querySelector('[data-import-product-category]');
+                        if (categorySelect) categorySelect.value = name;
+                        closeModal(root.querySelector('#import-add-category'));
+                    })
+                    .catch((err) => alert(err.message || 'Không thể thêm danh mục.'));
+            } else {
+                alert('Chế độ Offline: không thể thêm danh mục mới.');
+            }
+        }
+    });
+
+    root.querySelector('[data-import-product-name]')?.addEventListener('input', fillProductInfoFromCatalog);
+    root.querySelector('[data-import-product-name]')?.addEventListener('change', fillProductInfoFromCatalog);
+    root.querySelector('[data-import-product-image]')?.addEventListener('change', (event) => {
+        const file = event.target.files && event.target.files[0];
+        if (!file) {
+            fillProductInfoFromCatalog();
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const imageData = e.target?.result || '';
+            currentProductInfo = { image: imageData };
+            updateCreateImagePreview(imageData);
+        };
+        reader.readAsDataURL(file);
+    });
+    root.querySelector('[data-import-add-full-product]')?.addEventListener('click', addFullProductToImport);
+    
     const collectCreateProducts = () => {
         return Array.from(root.querySelectorAll('[data-import-product-list] tr')).filter((row) => !row.querySelector('.empty-row')).map((row) => ({
             product: row.dataset.product,
             category: row.dataset.category,
             size: row.dataset.size,
             color: row.dataset.color,
-            quantity: Number(row.dataset.quantity || 0),
+            quantity: Number(row.dataset.quantity || 1),
             image: row.dataset.image || '',
-            product_id: row.dataset.productId || '',
             price: Number(row.dataset.price || 0)
         }));
     };
 
     const createImport = async () => {
         const supplier = root.querySelector('[data-import-field="supplier"]').value.trim();
-        const date = root.querySelector('[data-import-field="date"]').value;
+        const note = root.querySelector('[data-import-field="note"]').value.trim();
         const products = collectCreateProducts();
         if (!supplier) {
             alert('Vui lòng nhập nhà cung cấp.');
@@ -461,40 +643,31 @@ window.initImportPage = function initImportPage(container) {
             try {
                 await window.kidCityApi.post('imports/index.php', {
                     supplier,
-                    import_date: date,
+                    note,
                     items: products.map((item) => ({
-                        product_id: Number(item.product_id || 0),
-                        quantity: Number(item.quantity || 1),
-                        price: Number(item.price || 0)
+                        name: item.product,
+                        category_name: item.category,
+                        size: item.size,
+                        color: item.color,
+                        quantity: item.quantity,
+                        price: item.price, // Selling price
+                        image: item.image
                     }))
                 });
                 closeModal(root.querySelector('#import-create'));
                 await loadImportsFromApi();
+                window.showToast?.('Tạo phiếu nhập hàng thành công!');
                 return;
             } catch (error) {
-                alert(error.message || 'Không thể tạo phiếu nhập hàng.');
-                return;
-            }
+    console.error('CREATE IMPORT ERROR:', error);
+    alert(error.message || 'Không thể tạo phiếu nhập hàng.');
+}
+        } else {
+            alert('Không thể tạo phiếu nhập ở chế độ offline.');
         }
-
-        const code = nextImportCode();
-        const row = document.createElement('tr');
-        row.dataset.key = normalize(`${code} ${date} Nguyễn Văn An ${supplier}`);
-        row.dataset.supplier = supplier;
-        setProducts(row, products);
-        row.innerHTML = `<td><strong>${code}</strong></td><td>${date}</td><td>Nguyễn Văn An</td><td></td>`;
-        attachActions(row);
-        root.querySelector('#import-table').prepend(row);
-        root.querySelector('.import-stat strong').textContent = String(root.querySelectorAll('#import-table tr').length);
-        currentPage = 1;
-        renderPagination();
-        closeModal(root.querySelector('#import-create'));
     };
 
-    root.querySelector('[data-import-product]').addEventListener('input', fillProductInfoFromCatalog);
-    root.querySelector('[data-import-product]').addEventListener('change', fillProductInfoFromCatalog);
-    root.querySelector('[data-import-add-product]').addEventListener('click', addProductToCreateForm);
-    root.querySelector('[data-import-save-create]').addEventListener('click', createImport);
+    root.querySelector('[data-import-save-create]')?.addEventListener('click', createImport);
 
     /* =====================================================
        IMPORT DETAIL - Cập nhật modal chi tiết theo dòng được bấm
@@ -502,9 +675,16 @@ window.initImportPage = function initImportPage(container) {
     const showImportDetail = (row) => {
         const modal = root.querySelector('#import-detail');
         const products = getProducts(row);
-        modal.querySelector('.detail-title').textContent = `Chi tiết phiếu hàng nhập ${rowText(row, 0)}`;
-        modal.querySelector('.detail-grid').innerHTML = `<div class="detail-item"><span>Người tạo phiếu</span><strong>${rowText(row, 2)}</strong></div><div class="detail-item"><span>Ngày nhập</span><strong>${rowText(row, 1)}</strong></div>`;
-        modal.querySelector('tbody').innerHTML = productRowsHtml(products, false);
+        
+        modal.querySelector('[data-detail-code]').textContent = rowText(row, 0);
+        modal.querySelector('[data-detail-created]').textContent = row.dataset.created || '-';
+        modal.querySelector('[data-detail-updated]').textContent = row.dataset.updated || '-';
+        modal.querySelector('[data-detail-staff]').textContent = rowText(row, 2);
+        modal.querySelector('[data-detail-supplier]').textContent = row.dataset.supplier || '-';
+        modal.querySelector('[data-detail-note]').textContent = row.dataset.note || 'Không có';
+        
+        modal.querySelector('[data-detail-product-list]').innerHTML = productRowsHtml(products, true);
+        hydrateThumbCells(modal.querySelector('[data-detail-product-list]'), products);
         openModal('import-detail');
     };
 
@@ -512,70 +692,173 @@ window.initImportPage = function initImportPage(container) {
        IMPORT EDIT - Sửa thông tin phiếu hàng nhập và số lượng đã lưu
        ===================================================== */
     const openImportEdit = (row) => {
-        let modal = root.querySelector('#import-edit');
-        if (!modal) {
-            modal = document.createElement('div');
-            modal.className = 'import-modal';
-            modal.id = 'import-edit';
-            modal.addEventListener('click', (event) => {
-                if (event.target === modal) closeModal(modal);
+        const modal = root.querySelector('#import-edit');
+        const products = getProducts(row);
+        const importId = row.dataset.id;
+
+        modal.querySelector('[data-import-edit-code]').value = rowText(row, 0);
+        modal.querySelector('[data-import-edit-staff]').value = rowText(row, 2);
+        modal.querySelector('[data-import-edit-created]').value = row.dataset.created || '';
+        modal.querySelector('[data-import-edit-updated]').value = row.dataset.updated || '';
+        modal.querySelector('[data-import-edit-supplier]').value = row.dataset.supplier || '';
+        modal.querySelector('[data-import-edit-note]').value = row.dataset.note || '';
+
+        const renderEditTable = () => {
+            modal.querySelector('[data-import-edit-product-list]').innerHTML = products.map((item, index) => `
+                <tr data-index="${index}">
+                    <td class="col-image">
+                        <div class="import-edit-image-cell">
+                            <div class="edit-item-image-preview-wrap" data-edit-image-preview></div>
+                            <input type="file" class="edit-item-image" accept="image/*">
+                            <input type="hidden" class="edit-item-image-data">
+                        </div>
+                    </td>
+                    <td class="col-product"><textarea class="edit-item-product" rows="2">${escapeHtml(item.product)}</textarea></td>
+                    <td class="col-category"><textarea class="edit-item-category" rows="2">${escapeHtml(item.category || '')}</textarea></td>
+                    <td class="col-size"><input type="text" class="edit-item-size" value="${escapeHtml(item.size || '')}"></td>
+                    <td class="col-color"><input type="text" class="edit-item-color" value="${escapeHtml(item.color || '')}"></td>
+                    <td class="col-qty"><input type="number" class="edit-item-qty" min="1" value="${item.quantity}"></td>
+                    <td class="col-price"><input type="number" class="edit-item-price" min="0" value="${item.price}"></td>
+                    <td class="col-action">
+                        <button type="button" class="import-action-btn delete" data-edit-delete-row="${index}"><i class='bx bx-trash'></i></button>
+                    </td>
+                </tr>
+            `).join('');
+
+            const editBody = modal.querySelector('[data-import-edit-product-list]');
+            editBody.querySelectorAll('tr').forEach((tr, index) => {
+                const imageSrc = resolveProductImage(products[index]);
+                const hidden = tr.querySelector('.edit-item-image-data');
+                if (hidden) hidden.value = imageSrc;
+                fillThumbCell(tr.querySelector('[data-edit-image-preview]'), imageSrc, 'edit-item-image-preview');
             });
-            root.appendChild(modal);
+        };
+
+        renderEditTable();
+
+        const tbody = modal.querySelector('[data-import-edit-product-list]');
+
+        const readEditProductsFromTable = () => {
+            const rows = tbody.querySelectorAll('tr');
+            const currentProducts = [];
+            rows.forEach((tr) => {
+                currentProducts.push({
+                    product: tr.querySelector('.edit-item-product').value,
+                    category: tr.querySelector('.edit-item-category').value,
+                    size: tr.querySelector('.edit-item-size').value,
+                    color: tr.querySelector('.edit-item-color').value,
+                    quantity: Number(tr.querySelector('.edit-item-qty').value || 1),
+                    price: Number(tr.querySelector('.edit-item-price').value || 0),
+                    image: tr.querySelector('.edit-item-image-data')?.value || ''
+                });
+            });
+            return currentProducts;
+        };
+
+        // Bind delete row inside edit table
+        tbody.onclick = (e) => {
+            const deleteBtn = e.target.closest('[data-edit-delete-row]');
+            if (deleteBtn) {
+                const currentProducts = readEditProductsFromTable();
+
+                const idx = Number(deleteBtn.dataset.editDeleteRow);
+                currentProducts.splice(idx, 1);
+                
+                products.length = 0;
+                products.push(...currentProducts);
+                renderEditTable();
+            }
+        };
+
+        // Bind add row inside edit table
+        const addRowBtn = modal.querySelector('[data-import-edit-add-row]');
+        tbody.onchange = (e) => {
+            const fileInput = e.target.closest('.edit-item-image');
+            if (!fileInput || !fileInput.files?.[0]) return;
+            const tr = fileInput.closest('tr');
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const imageData = event.target?.result || '';
+                const hiddenInput = tr.querySelector('.edit-item-image-data');
+                if (hiddenInput) hiddenInput.value = imageData;
+                const previewWrap = tr.querySelector('[data-edit-image-preview]');
+                if (previewWrap) fillThumbCell(previewWrap, imageData, 'edit-item-image-preview');
+            };
+            reader.readAsDataURL(fileInput.files[0]);
+        };
+
+        if (addRowBtn) {
+            addRowBtn.onclick = () => {
+                const currentProducts = readEditProductsFromTable();
+
+                currentProducts.push({
+                    product: '',
+                    category: '',
+                    size: '',
+                    color: '',
+                    quantity: 1,
+                    price: 0,
+                    image: ''
+                });
+
+                products.length = 0;
+                products.push(...currentProducts);
+                renderEditTable();
+            };
         }
 
-        const products = getProducts(row);
-        const editRows = products.map((item, index) => `
-            <tr>
-                <td><input data-edit-product="${index}" value="${item.product}"></td>
-                <td><input data-edit-category="${index}" value="${item.category || ''}"></td>
-                <td><input data-edit-size="${index}" value="${item.size || ''}"></td>
-                <td><input data-edit-color="${index}" value="${item.color || ''}"></td>
-                <td><input type="number" min="1" data-edit-quantity="${index}" value="${item.quantity}"></td>
-            </tr>
-        `).join('');
+        modal.querySelector('[data-import-save-edit]').onclick = async () => {
+            const supplier = modal.querySelector('[data-import-edit-supplier]').value.trim();
+            const note = modal.querySelector('[data-import-edit-note]').value.trim();
+            
+            if (!supplier) {
+                alert('Vui lòng nhập nhà cung cấp.');
+                return;
+            }
 
-        modal.innerHTML = `
-            <div class="import-dialog detail import-edit-dialog">
-                <div class="import-modal-header"><h3>Sửa phiếu hàng nhập ${rowText(row, 0)}</h3><button class="modal-close" data-import-close>&times;</button></div>
-                <div class="import-modal-body">
-                    <div class="form-grid">
-                        <div class="field"><label>Mã phiếu hàng nhập</label><input data-edit-field="code" value="${rowText(row, 0)}" disabled></div>
-                        <div class="field"><label>Ngày nhập</label><input type="date" data-edit-field="date" value="${rowText(row, 1)}"></div>
-                        <div class="field"><label>Người tạo phiếu</label><input data-edit-field="staff" value="${rowText(row, 2)}"></div>
-                        <div class="field"><label>Nhà cung cấp</label><input data-edit-field="supplier" value="${row.dataset.supplier || ''}"></div>
-                    </div>
-                    <h3 class="import-section-title">Chi tiết sản phẩm</h3>
-                    <div class="import-card import-edit-products-card"><table class="import-table import-edit-table"><thead><tr><th>Sản phẩm</th><th>Danh mục</th><th>Size</th><th>Màu</th><th>Số lượng nhập</th></tr></thead><tbody>${editRows}</tbody></table></div>
-                    <div class="import-modal-actions"><button class="import-btn light" data-import-close>Hủy</button><button class="import-btn primary" data-save-import-edit>Lưu thay đổi</button></div>
-                </div>
-            </div>
-        `;
-        modal.classList.add('active');
+            // Read items from inputs
+            const updatedItems = [];
+            const rows = tbody.querySelectorAll('tr');
+            rows.forEach((tr) => {
+                updatedItems.push({
+                    name: tr.querySelector('.edit-item-product').value.trim(),
+                    category_name: tr.querySelector('.edit-item-category').value.trim(),
+                    size: tr.querySelector('.edit-item-size').value.trim(),
+                    color: tr.querySelector('.edit-item-color').value.trim(),
+                    quantity: Number(tr.querySelector('.edit-item-qty').value || 1),
+                    price: Number(tr.querySelector('.edit-item-price').value || 0),
+                    image: tr.querySelector('.edit-item-image-data')?.value || ''
+                });
+            });
 
-        modal.querySelector('[data-save-import-edit]').onclick = () => {
-            const date = modal.querySelector('[data-edit-field="date"]').value;
-            const staff = modal.querySelector('[data-edit-field="staff"]').value.trim();
-            const supplier = modal.querySelector('[data-edit-field="supplier"]').value.trim();
-            const updatedProducts = products.map((_, index) => ({
-                product: modal.querySelector(`[data-edit-product="${index}"]`).value.trim(),
-                category: modal.querySelector(`[data-edit-category="${index}"]`).value.trim(),
-                size: modal.querySelector(`[data-edit-size="${index}"]`).value.trim(),
-                color: modal.querySelector(`[data-edit-color="${index}"]`).value.trim(),
-                quantity: Math.max(1, Number(modal.querySelector(`[data-edit-quantity="${index}"]`).value || 1)),
-                image: products[index].image || ''
-            }));
+            if (!updatedItems.length) {
+                alert('Vui lòng thêm ít nhất một sản phẩm.');
+                return;
+            }
 
-            row.children[1].textContent = date;
-            row.children[2].textContent = staff;
-            row.dataset.supplier = supplier;
-            row.dataset.key = normalize(`${rowText(row, 0)} ${date} ${staff} ${supplier}`);
-            setProducts(row, updatedProducts);
-            renderPagination();
-            closeModal(modal);
+            if (window.kidCityApi) {
+                try {
+                    await window.kidCityApi.put('imports/index.php', {
+                        id: importId,
+                        supplier,
+                        note,
+                        items: updatedItems
+                    });
+                    closeModal(modal);
+                    await loadImportsFromApi();
+                    window.showToast?.('Cập nhật phiếu nhập hàng thành công!');
+                } catch (error) {
+                    alert(error.message || 'Không thể cập nhật phiếu nhập hàng.');
+                }
+            } else {
+                alert('Không thể cập nhật phiếu ở chế độ offline.');
+            }
         };
+
+        openModal('import-edit');
     };
 
     renderPagination();
-    loadImportCatalogFromApi();
-    loadImportsFromApi();
+    loadImportCatalogFromApi().then(() => loadImportsFromApi());
 };
+

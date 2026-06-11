@@ -55,7 +55,13 @@ function require_fields(array $data, array $fields): void
 {
     $missing = [];
     foreach ($fields as $field) {
-        if (!isset($data[$field]) || trim((string) $data[$field]) === '') {
+        if (!isset($data[$field])) {
+            $missing[] = $field;
+        } elseif (is_array($data[$field])) {
+            if (empty($data[$field])) {
+                $missing[] = $field;
+            }
+        } elseif (trim((string) $data[$field]) === '') {
             $missing[] = $field;
         }
     }

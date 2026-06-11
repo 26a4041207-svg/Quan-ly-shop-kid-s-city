@@ -305,6 +305,11 @@
     color:#dc2626;
 }
 
+.restore-btn{
+    background:#ecfdf5;
+    color:#059669;
+}
+
 /* =========================
    PRODUCT
 ========================= */
@@ -831,5 +836,51 @@
     .product-image-actions{
         grid-template-columns:1fr;
     }
+}
+
+/* =========================================================
+   PAGINATION
+   ========================================================= */
+.pagination {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 8px;
+    margin-top: 14px;
+}
+
+.page-btn {
+    min-width: 36px;
+    height: 36px;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    color: #475569;
+    border-radius: 9px;
+    cursor: pointer;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.18s ease;
+}
+
+.page-btn:hover {
+    border-color: #2563eb;
+    color: #2563eb;
+    background: #f8fafc;
+}
+
+.page-btn.active {
+    background: #2563eb;
+    border-color: #2563eb;
+    color: #fff;
+}
+
+.page-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    background: #fff;
+    border-color: #e5e7eb;
+    color: #94a3b8;
 }
 
