@@ -115,7 +115,6 @@ CREATE TABLE invoices (
     customer_id INT NULL,
     staff_id INT NULL,
     invoice_date DATE NOT NULL,
-    payment_method VARCHAR(80) NOT NULL DEFAULT 'Tiền mặt',
     note TEXT,
     discount DECIMAL(12,2) NOT NULL DEFAULT 0,
     total DECIMAL(12,2) NOT NULL DEFAULT 0,
@@ -225,12 +224,12 @@ INSERT INTO import_details (import_id, product_id, quantity, price, line_total) 
 (2, 5, 5, 180000, 900000),
 (2, 13, 5, 60000, 300000);
 
-INSERT INTO invoices (code, customer_id, staff_id, invoice_date, payment_method, note, discount, total) VALUES
-('HD001', 1, 2, '2026-04-15', 'Tiền mặt', 'Khách hàng quen', 0, 375000),
-('HD002', 2, 2, '2026-04-16', 'Chuyển khoản', 'Đơn online', 0, 220000),
-('HD003', 3, 3, '2026-04-18', 'Tiền mặt', 'Mua tại cửa hàng', 0, 545000),
-('HD004', 4, 2, '2026-04-20', 'Chuyển khoản', 'Khách đổi size nếu không vừa', 0, 320000),
-('HD005', 5, 3, '2026-04-22', 'Tiền mặt', 'Khách thân thiết', 0, 490000);
+INSERT INTO invoices (code, customer_id, staff_id, invoice_date, note, discount, total) VALUES
+('HD001', 1, 2, '2026-04-15', 'Khách hàng quen', 0, 375000),
+('HD002', 2, 2, '2026-04-16', 'Đơn online', 0, 220000),
+('HD003', 3, 3, '2026-04-18', 'Mua tại cửa hàng', 0, 545000),
+('HD004', 4, 2, '2026-04-20', 'Khách đổi size nếu không vừa', 0, 320000),
+('HD005', 5, 3, '2026-04-22', 'Khách thân thiết', 0, 490000);
 
 INSERT INTO invoice_details (invoice_id, product_id, quantity, price, discount, line_total) VALUES
 (1, 1, 2, 120000, 0, 240000),

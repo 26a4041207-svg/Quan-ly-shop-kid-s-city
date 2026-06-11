@@ -275,11 +275,6 @@ function openInvoiceDetailModal(invoiceCode){
                     </div>
 
                     <div class="detail-item">
-                        <span>Phương thức thanh toán</span>
-                        <strong>${invoice.payment}</strong>
-                    </div>
-
-                    <div class="detail-item">
                         <span>Ghi chú</span>
                         <strong>${invoice.note}</strong>
                     </div>
@@ -625,7 +620,6 @@ async function loadCustomersFromApi(){
                     customer: invoice.customer_name || "",
                     staff: invoice.staff_name || "",
                     date: invoice.invoice_date || "",
-                    payment: invoice.payment_method || "",
                     note: invoice.note || "Không có",
                     total: `${Number(invoice.total || 0).toLocaleString("vi-VN")}đ`,
                     items: (invoice.items || []).map(item => [

@@ -187,3 +187,84 @@
 .delete-message i { color: #ef4444; font-size: 48px; margin-bottom: 12px; }
 .delete-message p { font-size: 18px; font-weight: 600; color: #111827; margin-bottom: 8px; }
 .delete-message span { color: #64748b; font-size: 14px; }
+
+/* Invoice pagination total */
+.sales-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.pagination-total {
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 600;
+    margin-right: 6px;
+    white-space: nowrap;
+}
+
+/* Invoice list is intentionally 5 columns: code, date, customer, staff, actions. */
+.invoice-list-table .action-group {
+    justify-content: flex-start;
+}
+
+/* Invoice edit/detail frontend controls */
+.invoice-update-switch {
+    margin: 0 0 18px;
+    display: grid;
+    grid-template-columns: 140px minmax(220px, 360px);
+    gap: 12px;
+    align-items: center;
+}
+.invoice-update-switch label {
+    color: #64748b;
+    font-weight: 700;
+}
+.invoice-update-switch select,
+.invoice-edit-table select,
+.invoice-edit-table input {
+    width: 100%;
+    border: 1px solid #dbe4f0;
+    border-radius: 8px;
+    padding: 9px 10px;
+    color: #334155;
+    background: #fff;
+    outline: none;
+}
+.edit-product-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 18px;
+    margin-bottom: 12px;
+}
+.invoice-edit-table th:last-child,
+.invoice-edit-table td:last-child {
+    width: 58px;
+    text-align: center;
+}
+.invoice-edit-table td:nth-child(3) {
+    width: 110px;
+}
+.form-grid input:disabled {
+    background: #f8fafc;
+    color: #64748b;
+    cursor: not-allowed;
+}
+@media (max-width: 760px) {
+    .invoice-update-switch,
+    .edit-product-heading {
+        grid-template-columns: 1fr;
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
+
+.invoice-edit-product-name {
+    display: block;
+    font-weight: 700;
+    color: #334155;
+}
