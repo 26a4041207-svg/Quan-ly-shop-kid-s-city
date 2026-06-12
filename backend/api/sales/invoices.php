@@ -70,15 +70,14 @@ if ($method === 'POST') {
 
         $grandTotal = max(0, $total - $discount);
         $stmt = db()->prepare(
-            'INSERT INTO invoices (code, customer_id, staff_id, invoice_date, payment_method, note, discount, total)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+            'INSERT INTO invoices (code, customer_id, staff_id, invoice_date, note, discount, total)
+             VALUES (?, ?, ?, ?, ?, ?, ?)'
         );
         $stmt->execute([
             $code,
             $data['customer_id'],
             $user['id'],
             $data['invoice_date'] ?? date('Y-m-d'),
-            $data['payment_method'] ?? 'Tiền mặt',
             $data['note'] ?? '',
             $discount,
             $grandTotal,
@@ -107,11 +106,10 @@ if ($method === 'PUT') {
     require_admin();
     $data = input();
     require_fields($data, ['id']);
-    $stmt = db()->prepare('UPDATE invoices SET payment_method = ?, note = ?, status = ?, updated_at = NOW() WHERE id = ?');
+    $stmt = db()->prepare('UPDATE invoices SET note = ?, status = ?, updated_at = NOW() WHERE id = ?');
     $stmt->execute([
-        $data['payment_method'] ?? 'Tiền mặt',
         $data['note'] ?? '',
-        $data['status'] ?? 'Hoàn thành',
+        $data['status'] ?? 'Hòan thành',
         $data['id'],
     ]);
     ok(null, 'Cập nhật hóa đơn thành công');

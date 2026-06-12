@@ -22,8 +22,63 @@ window.initSalePage = function initSalePage(container) {
        COMMON HELPERS - Hàm tiện ích dùng chung nhiều trang
        ===================================================== */
     const formatMoney = (value) => `${Number(value || 0).toLocaleString('vi-VN')}đ`;
+    
+    const formatDateTime = (str) => {
+        if (!str) return '';
+        const cleanStr = str.replace(/-/g, '/');
+        const d = new Date(cleanStr);
+        if (isNaN(d.getTime())) return str;
+        const date = String(d.getDate()).padStart(2, '0');
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const year = d.getFullYear();
+        const hours = String(d.getHours()).padStart(2, '0');
+        const minutes = String(d.getMinutes()).padStart(2, '0');
+        const seconds = String(d.getSeconds()).padStart(2, '0');
+        return `${date}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+    };
+
+    const showSelectedProductInfo = (modal, productName) => {
+        const infoCard = modal.querySelector('.selected-product-info');
+        if (!infoCard) return;
+        const product = invoiceProductOptions.find(item => item.name === productName);
+        if (!product) {
+            infoCard.style.display = 'none';
+            return;
+        }
+        infoCard.style.display = 'flex';
+        infoCard.innerHTML = `
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+                <span style="font-size: 14px; color: #1e293b;">
+                    <strong style="color: #0f172a;">${product.code || 'SP000'}</strong> 
+                    <span>${product.name}</span>
+                </span>
+                <div style="display: flex; gap: 8px; font-size: 12px; color: #64748b;">
+                    <span style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px;">${product.category || 'Chưa phân loại'}</span>
+                    <span style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px;">Size: ${product.size || '-'}</span>
+                    <span style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px;">Màu: ${product.color || '-'}</span>
+                    <span style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px;">SL: ${product.stock ?? '-'}</span>
+                </div>
+            </div>
+            <strong style="color: #16a34a; font-size: 16px;">${formatMoney(product.price)}</strong>
+        `;
+    };
+    
+    const hideSelectedProductInfo = (modal) => {
+        const infoCard = modal.querySelector('.selected-product-info');
+        if (infoCard) {
+            infoCard.style.display = 'none';
+        }
+    };
+
     const today = () => new Date().toISOString().slice(0, 10);
-    const normalize = (text) => (text || '').trim().toLowerCase();
+    const removeAccents = (str) => {
+        return (str || '')
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/đ/g, 'd')
+            .replace(/Đ/g, 'D');
+    };
+    const normalize = (text) => removeAccents((text || '').trim().toLowerCase());
     const validSelect = (select) => select && select.value && !select.value.includes('--');
     const invoiceProductOptions = Object.keys(prices).map((name) => ({
         name,
@@ -225,6 +280,7 @@ window.initSalePage = function initSalePage(container) {
         input.value = productName;
         value.value = productName;
         combo.classList.remove('open');
+        showSelectedProductInfo(modal, productName);
     };
 
     const initInvoiceProductCombobox = () => {
@@ -248,6 +304,7 @@ window.initSalePage = function initSalePage(container) {
             value.value = '';
             renderProductOptions(modal, input.value);
             combo.classList.add('open');
+            hideSelectedProductInfo(modal);
         });
         toggle.addEventListener('click', () => {
             renderProductOptions(modal, input.value);
@@ -332,24 +389,63 @@ window.initSalePage = function initSalePage(container) {
         });
     };
 
-    const mapInvoiceFromApi = (invoice) => ({
-        id: Number(invoice.id || 0),
-        customer: invoice.customer_name || '',
-        staff: invoice.staff_name || '',
-        date: invoice.invoice_date || invoice.created_at || '',
-        payment: invoice.payment_method || '',
-        note: invoice.note || 'Không có',
-        total: formatMoney(invoice.total),
-        items: (invoice.items || []).map((item) => [
-            item.product_name || item.product_code || 'Sản phẩm',
-            formatMoney(item.price),
-            String(item.quantity || 1),
-            formatMoney(item.discount),
-            formatMoney(item.line_total),
-            Number(item.product_id || 0),
-            Number(item.price || 0)
-        ])
-    });
+    const mapInvoiceFromApi = (invoice) => {
+        const createdAt = invoice.created_at || '';
+        const updatedAt = invoice.updated_at || '';
+        const formattedCreated = formatDateTime(createdAt) || 'Thời gian ban đầu';
+        const formattedUpdated = formatDateTime(updatedAt);
+        const updateHistory = [];
+        if (updatedAt && createdAt && updatedAt !== createdAt) {
+            updateHistory.push(formattedUpdated);
+        }
+
+        const initialSnapshot = {
+            customer: invoice.customer_name || '',
+            staff: invoice.staff_name || '',
+            date: invoice.invoice_date || invoice.created_at || '',
+            note: invoice.note || 'Không có',
+            total: formatMoney(invoice.total),
+            items: (invoice.items || []).map((item) => [
+                item.product_name || item.product_code || 'Sản phẩm',
+                formatMoney(item.price),
+                String(item.quantity || 1),
+                formatMoney(item.discount),
+                formatMoney(item.line_total),
+                Number(item.product_id || 0),
+                Number(item.price || 0)
+            ]),
+            timestamp: formattedCreated
+        };
+
+        const snapshots = [initialSnapshot];
+
+        if (updatedAt && createdAt && updatedAt !== createdAt) {
+            const updatedSnapshot = {
+                customer: invoice.customer_name || '',
+                staff: invoice.staff_name || '',
+                date: invoice.invoice_date || invoice.created_at || '',
+                note: invoice.note || 'Không có',
+                total: formatMoney(invoice.total),
+                items: initialSnapshot.items,
+                timestamp: formattedUpdated
+            };
+            snapshots.push(updatedSnapshot);
+        }
+
+        return {
+            id: Number(invoice.id || 0),
+            customer: invoice.customer_name || '',
+            staff: invoice.staff_name || '',
+            date: invoice.invoice_date || invoice.created_at || '',
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            updateHistory: updateHistory,
+            historySnapshots: snapshots,
+            note: invoice.note || 'Không có',
+            total: formatMoney(invoice.total),
+            items: initialSnapshot.items
+        };
+    };
 
     const showTableLoading = (selector, colspan) => {
         const body = root.querySelector(selector);
@@ -432,8 +528,8 @@ window.initSalePage = function initSalePage(container) {
                 if (normalize(payment).includes('chuyển khoản')) transferCount += 1;
                 totalRevenue += Number(invoice.total || 0);
                 const row = document.createElement('tr');
-                row.dataset.key = normalize(`${invoice.code || ''} ${invoice.customer_name || ''} ${invoice.staff_name || ''} ${payment}`);
-                row.innerHTML = `<td><strong>${invoice.code || ''}</strong></td><td>${invoice.invoice_date || ''}</td><td>${invoice.customer_name || ''}</td><td>${invoice.staff_name || ''}</td><td class="green font-weight-600">${formatMoney(invoice.total)}</td><td>${payment}</td><td></td>`;
+                row.dataset.key = normalize(`${invoice.code || ''} ${invoice.customer_name || ''} ${invoice.staff_name || ''}`);
+                row.innerHTML = `<td><strong>${invoice.code || ''}</strong></td><td>${invoice.invoice_date || ''}</td><td>${invoice.customer_name || ''}</td><td>${invoice.staff_name || ''}</td><td></td>`;
                 attachActions(row.lastElementChild, 'invoice', 'invoice-detail');
                 body.appendChild(row);
             });
@@ -446,7 +542,7 @@ window.initSalePage = function initSalePage(container) {
             renderInvoicePagination();
         } catch (error) {
             console.warn('Khong the tai hoa don tu API:', error.message);
-            showTableError('#invoice-table', 7);
+            showTableError('#invoice-table', 5);
         }
     };
 
@@ -515,7 +611,20 @@ window.initSalePage = function initSalePage(container) {
        ===================================================== */
     const openModal = (id) => {
         const modal = root.querySelector('#' + id);
-        if (modal) modal.classList.add('active');
+        if (modal) {
+            modal.classList.add('active');
+            if (id === 'invoice-create') {
+                const dateInput = modal.querySelector('#invoice-date-input');
+                if (dateInput) {
+                    const now = new Date();
+                    const year = now.getFullYear();
+                    const month = String(now.getMonth() + 1).padStart(2, '0');
+                    const date = String(now.getDate()).padStart(2, '0');
+                    dateInput.value = `${date}/${month}/${year}`;
+                }
+                hideSelectedProductInfo(modal);
+            }
+        }
     };
 
     const closeModal = (modal) => {
@@ -596,27 +705,77 @@ window.initSalePage = function initSalePage(container) {
             </tr>
         `).join('');
 
+        let historyHtml = '';
+        const snapshots = invoice.historySnapshots || [];
+        if (snapshots.length > 1) {
+            const historyOptions = snapshots.slice().reverse().map((snap, idx) => {
+                const originalIndex = snapshots.length - 1 - idx;
+                const isInitial = originalIndex === 0;
+                const label = isInitial ? `${snap.timestamp} (Ban đầu)` : snap.timestamp;
+                return `<option value="${originalIndex}">${label}</option>`;
+            }).join('');
+
+            historyHtml = `
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 13px; font-weight: 600; color: #64748b;">Thời gian cập nhật</span>
+                    <select class="update-history-dropdown" style="border: 1px solid #dbe4f0; border-radius: 6px; padding: 6px 12px; color: #334155; font-size: 13px; outline: none; background: #fff; min-width: 180px;">
+                        ${historyOptions}
+                    </select>
+                </div>
+            `;
+        }
+
         modal.innerHTML = `
             <div class="sales-dialog detail">
                 <div class="sales-modal-body">
-                    <h2 class="detail-title">Chi tiết hóa đơn ${code}</h2>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+                        <h2 class="detail-title" style="margin: 0;">Chi tiết hóa đơn ${code}</h2>
+                        ${historyHtml}
+                    </div>
                     <div class="detail-grid">
-                        <div class="detail-item"><span>Khách hàng</span><strong>${invoice.customer}</strong></div>
-                        <div class="detail-item"><span>Nhân viên</span><strong>${invoice.staff}</strong></div>
-                        <div class="detail-item"><span>Ngày lập</span><strong>${invoice.date}</strong></div>
-                        <div class="detail-item"><span>Phương thức thanh toán</span><strong>${invoice.payment}</strong></div>
-                        <div class="detail-item"><span>Ghi chú</span><strong>${invoice.note}</strong></div>
+                        <div class="detail-item"><span>Khách hàng</span><strong class="detail-customer">${invoice.customer}</strong></div>
+                        <div class="detail-item"><span>Nhân viên</span><strong class="detail-staff">${invoice.staff}</strong></div>
+                        <div class="detail-item"><span>Ngày lập</span><strong class="detail-date">${invoice.date}</strong></div>
+                        <div class="detail-item"><span>Ghi chú</span><strong class="detail-note">${invoice.note}</strong></div>
                     </div>
                     <h3 class="section-title">Chi tiết sản phẩm</h3>
                     <table class="sales-table">
                         <thead><tr><th>Sản phẩm</th><th>Đơn giá</th><th>SL</th><th>Giảm giá</th><th>Thành tiền</th></tr></thead>
-                        <tbody>${rows}</tbody>
+                        <tbody class="detail-items-body">${rows}</tbody>
                     </table>
-                    <div class="total-line">Tổng tiền: <span class="green">${invoice.total}</span></div>
+                    <div class="total-line">Tổng tiền: <span class="green detail-total">${invoice.total}</span></div>
                     <button class="sales-btn primary block" data-close>Đóng</button>
                 </div>
             </div>
         `;
+
+        const dropdown = modal.querySelector('.update-history-dropdown');
+        if (dropdown) {
+            dropdown.addEventListener('change', (e) => {
+                const selectedIndex = e.target.value;
+                if (selectedIndex === 'current') return;
+                const snapshots = invoice.historySnapshots || [];
+                const snap = snapshots[selectedIndex];
+                if (snap) {
+                    modal.querySelector('.detail-customer').textContent = snap.customer;
+                    modal.querySelector('.detail-staff').textContent = snap.staff;
+                    modal.querySelector('.detail-date').textContent = snap.date;
+                    modal.querySelector('.detail-note').textContent = snap.note;
+                    modal.querySelector('.detail-total').textContent = snap.total;
+                    
+                    const newRows = snap.items.map((item) => `
+                        <tr>
+                            <td>${item[0]}</td>
+                            <td>${item[1]}</td>
+                            <td>${item[2]}</td>
+                            <td>${item[3]}</td>
+                            <td><strong>${item[4]}</strong></td>
+                        </tr>
+                    `).join('');
+                    modal.querySelector('.detail-items-body').innerHTML = newRows;
+                }
+            });
+        }
         modal.classList.add('active');
     };
 
@@ -631,6 +790,11 @@ window.initSalePage = function initSalePage(container) {
         const openBtn = event.target.closest('[data-open]');
         if (openBtn && root.contains(openBtn)) {
             const row = openBtn.closest('tr');
+            if (openBtn.dataset.open === 'invoice-detail') {
+                const code = rowText(row, 0);
+                openInvoiceDetailByCode(code);
+                return;
+            }
             if (openBtn.dataset.open === 'exchange-detail') syncExchangeDetailFromRow(row);
             if (openBtn.dataset.open === 'return-detail') syncReturnDetailFromRow(row);
             openModal(openBtn.dataset.open);
@@ -780,33 +944,231 @@ window.initSalePage = function initSalePage(container) {
         const code = rowText(row, 0);
         const invoice = invoiceDetails[code] || {};
         const detailRows = (invoice.items || []).length
-            ? invoice.items.map((item) => `
-                <tr>
-                    <td>${item[0] || ''}</td>
-                    <td>${item[1] || '0đ'}</td>
-                    <td>${item[2] || '1'}</td>
-                    <td><strong>${item[4] || item[3] || '0đ'}</strong></td>
-                </tr>
-            `).join('')
-            : '<tr><td colspan="4" class="empty-row">Chưa có chi tiết sản phẩm.</td></tr>';
+            ? invoice.items.map((item) => {
+                const name = item[0] || '';
+                const priceFormatted = item[1] || '0đ';
+                const qty = item[2] || '1';
+                const totalFormatted = item[4] || item[3] || '0đ';
+                const priceNum = item[6] || moneyNumber(priceFormatted);
+                const productId = item[5] || 0;
+                
+                return `
+                    <tr data-product-name="${name}" data-price="${priceNum}" data-product-id="${productId}">
+                        <td><span class="invoice-edit-product-name">${name}</span></td>
+                        <td>${priceFormatted}</td>
+                        <td><input type="number" class="edit-item-qty" min="1" value="${qty}" style="width: 70px; border: 1px solid #dbe4f0; border-radius: 6px; padding: 4px 6px; text-align: center; color: #334155; outline: none;"></td>
+                        <td class="edit-item-total" style="font-weight: 600; color: #0f172a;">${totalFormatted}</td>
+                        <td style="text-align: center;"><button type="button" class="action-btn delete edit-delete-item-btn" title="Xóa sản phẩm" style="padding: 4px 8px;"><i class='bx bx-trash'></i></button></td>
+                    </tr>
+                `;
+            }).join('')
+            : '<tr><td colspan="5" class="empty-row">Chưa có chi tiết sản phẩm.</td></tr>';
+        
+        const totalVal = invoice.total || '0đ';
+        const productSelectOptions = invoiceProductOptions.map(p => 
+            `<option value="${p.name}">${p.code} - ${p.name} (${formatMoney(p.price)})</option>`
+        ).join('');
+
         const modal = showWorkModal('invoice-edit-modal', `Sửa hóa đơn ${code}`, `
             <div class="edit-summary">Cập nhật thông tin chính của hóa đơn. Phần chi tiết sản phẩm đang sửa ở mức dữ liệu giao diện.</div>
             <div class="form-grid edit-grid">
                 <div class="field"><label>Mã hóa đơn</label><input data-field="code" value="${code}" disabled></div>
-                <div class="field"><label>Ngày lập</label><input type="date" data-field="date" value="${rowText(row, 1)}"></div>
+                <div class="field"><label>Ngày lập</label><input type="text" data-field="date" value="${rowText(row, 1)}" disabled></div>
                 <div class="field"><label>Khách hàng</label><input data-field="customer" value="${rowText(row, 2)}"></div>
-                <div class="field"><label>Nhân viên</label><input data-field="staff" value="${rowText(row, 3)}"></div>
-                <div class="field"><label>Tổng tiền</label><input data-field="total" value="${rowText(row, 4)}"></div>
-                <div class="field"><label>PTTT</label><select data-field="payment"><option ${rowText(row, 5) === 'Tiền mặt' ? 'selected' : ''}>Tiền mặt</option><option ${rowText(row, 5) === 'Chuyển khoản' ? 'selected' : ''}>Chuyển khoản</option></select></div>
+                <div class="field"><label>Nhân viên</label><input data-field="staff" value="${rowText(row, 3)}" disabled></div>
             </div>
-            <h3 class="section-title edit-section-title">Chi tiết hóa đơn</h3>
-            <table class="sales-table"><thead><tr><th>Sản phẩm</th><th>Đơn giá</th><th>SL</th><th>Thành tiền</th></tr></thead><tbody>${detailRows}</tbody></table>
+            
+            <div class="edit-product-heading">
+                <h3 class="section-title edit-section-title" style="margin: 0;">Chi tiết hóa đơn</h3>
+            </div>
+            <div style="display: flex; gap: 10px; margin-bottom: 12px; align-items: flex-end; background: #f8fafc; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px;">
+                <div style="flex: 1; display: flex; flex-direction: column; gap: 4px;">
+                    <label style="font-size: 13px; font-weight: 600; color: #64748b;">Chọn sản phẩm</label>
+                    <select id="edit-add-product-select" style="width: 100%; border: 1px solid #dbe4f0; border-radius: 8px; padding: 8px 10px; color: #334155; background: #fff; outline: none;">
+                        <option value="">-- Chọn sản phẩm để thêm --</option>
+                        ${productSelectOptions}
+                    </select>
+                </div>
+                <div style="width: 100px; display: flex; flex-direction: column; gap: 4px;">
+                    <label style="font-size: 13px; font-weight: 600; color: #64748b;">Số lượng</label>
+                    <input type="number" id="edit-add-product-qty" min="1" value="1" style="width: 100%; border: 1px solid #dbe4f0; border-radius: 8px; padding: 8px 10px; color: #334155; outline: none;">
+                </div>
+                <button type="button" id="edit-add-product-btn" class="sales-btn primary" style="padding: 10px 16px; display: flex; align-items: center; gap: 6px; height: 38px;">
+                    <i class='bx bx-plus'></i> Thêm SP
+                </button>
+            </div>
+            
+            <table class="sales-table">
+                <thead><tr><th>Sản phẩm</th><th>Đơn giá</th><th>SL</th><th>Thành tiền</th><th style="width: 58px; text-align: center;">Thao tác</th></tr></thead>
+                <tbody>${detailRows}</tbody>
+            </table>
         `, `<button class="sales-btn light" data-close>Hủy</button><button class="sales-btn primary" data-save-edit="invoice">Lưu thay đổi</button>`);
 
+        const recalculateTotals = () => {
+            let sum = 0;
+            const rows = modal.querySelectorAll('.sales-table tbody tr');
+            rows.forEach((row) => {
+                if (row.querySelector('.empty-row')) return;
+                const priceVal = Number(row.dataset.price || 0);
+                const qtyVal = Math.max(1, Number(row.querySelector('.edit-item-qty').value || 1));
+                const lineTotal = priceVal * qtyVal;
+                sum += lineTotal;
+                row.querySelector('.edit-item-total').textContent = formatMoney(lineTotal);
+            });
+            const totalInput = modal.querySelector('[data-field="total"]');
+            if (totalInput) totalInput.value = formatMoney(sum);
+        };
+
+        // Quantity inputs change
+        modal.querySelector('.sales-table tbody').addEventListener('input', (e) => {
+            if (e.target.classList.contains('edit-item-qty')) {
+                recalculateTotals();
+            }
+        });
+
+        // Deleting products
+        modal.querySelector('.sales-table tbody').addEventListener('click', (e) => {
+            const deleteBtn = e.target.closest('.edit-delete-item-btn');
+            if (deleteBtn) {
+                const row = deleteBtn.closest('tr');
+                row.remove();
+                
+                const tbody = modal.querySelector('.sales-table tbody');
+                if (tbody.children.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="empty-row">Chưa có chi tiết sản phẩm.</td></tr>';
+                }
+                recalculateTotals();
+            }
+        });
+
+        // Adding products
+        modal.querySelector('#edit-add-product-btn').onclick = () => {
+            const select = modal.querySelector('#edit-add-product-select');
+            const qtyInput = modal.querySelector('#edit-add-product-qty');
+            const productName = select.value;
+            const quantity = Math.max(1, Number(qtyInput.value || 1));
+            
+            if (!productName) {
+                alert('Vui lòng chọn sản phẩm cần thêm.');
+                return;
+            }
+            
+            const productInfo = invoiceProductOptions.find(p => p.name === productName) || {};
+            const priceNum = productInfo.price || 0;
+            const productId = productInfo.id || 0;
+            const priceFormatted = formatMoney(priceNum);
+            const lineTotalFormatted = formatMoney(priceNum * quantity);
+            
+            const tbody = modal.querySelector('.sales-table tbody');
+            const empty = tbody.querySelector('.empty-row');
+            if (empty) empty.closest('tr').remove();
+            
+            const existingRow = tbody.querySelector(`tr[data-product-name="${productName}"]`);
+            if (existingRow) {
+                const existingQtyInput = existingRow.querySelector('.edit-item-qty');
+                existingQtyInput.value = String(Number(existingQtyInput.value || 0) + quantity);
+            } else {
+                const newRow = document.createElement('tr');
+                newRow.dataset.productName = productName;
+                newRow.dataset.price = String(priceNum);
+                newRow.dataset.productId = String(productId);
+                newRow.innerHTML = `
+                    <td><span class="invoice-edit-product-name">${productName}</span></td>
+                    <td>${priceFormatted}</td>
+                    <td><input type="number" class="edit-item-qty" min="1" value="${quantity}" style="width: 70px; border: 1px solid #dbe4f0; border-radius: 6px; padding: 4px 6px; text-align: center; color: #334155; outline: none;"></td>
+                    <td class="edit-item-total" style="font-weight: 600; color: #0f172a;">${lineTotalFormatted}</td>
+                    <td style="text-align: center;"><button type="button" class="action-btn delete edit-delete-item-btn" title="Xóa sản phẩm" style="padding: 4px 8px;"><i class='bx bx-trash'></i></button></td>
+                `;
+                tbody.appendChild(newRow);
+            }
+            
+            select.value = '';
+            qtyInput.value = '1';
+            recalculateTotals();
+        };
+
+        // Saving edits
         modal.querySelector('[data-save-edit="invoice"]').onclick = () => {
-            const totalText = fieldValue(modal, 'total') || '0đ';
-            row.innerHTML = `<td><strong>${code}</strong></td><td>${fieldValue(modal, 'date')}</td><td>${fieldValue(modal, 'customer')}</td><td>${fieldValue(modal, 'staff')}</td><td class="green font-weight-600">${totalText}</td><td>${fieldValue(modal, 'payment')}</td><td></td>`;
+            const customerText = fieldValue(modal, 'customer');
+            if (!customerText) {
+                alert('Vui lòng nhập tên khách hàng.');
+                return;
+            }
+
+            const dateText = fieldValue(modal, 'date');
+            const staffText = fieldValue(modal, 'staff');
+            
+            let sum = 0;
+            const rows = modal.querySelectorAll('.sales-table tbody tr');
+            const items = [];
+            rows.forEach((row) => {
+                if (row.querySelector('.empty-row')) return;
+                const name = row.dataset.productName;
+                const priceNum = Number(row.dataset.price || 0);
+                const productId = Number(row.dataset.productId || 0);
+                const qty = Math.max(1, Number(row.querySelector('.edit-item-qty').value || 1));
+                
+                sum += priceNum * qty;
+                items.push([
+                    name,
+                    formatMoney(priceNum),
+                    String(qty),
+                    '0đ',
+                    formatMoney(priceNum * qty),
+                    productId,
+                    priceNum
+                ]);
+            });
+
+            const totalText = formatMoney(sum);
+
+            row.innerHTML = `<td><strong>${code}</strong></td><td>${dateText}</td><td>${customerText}</td><td>${staffText}</td><td></td>`;
             attachActions(row.lastElementChild, 'invoice', 'invoice-detail');
+            
+            if (!invoiceDetails[code]) invoiceDetails[code] = {};
+
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const date = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const formattedTime = `${date}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+
+            if (!invoiceDetails[code].historySnapshots) {
+                invoiceDetails[code].historySnapshots = [{
+                    customer: invoiceDetails[code].customer || customerText,
+                    staff: invoiceDetails[code].staff || staffText,
+                    date: invoiceDetails[code].date || dateText,
+                    note: invoiceDetails[code].note || 'Không có',
+                    total: invoiceDetails[code].total || totalText,
+                    items: invoiceDetails[code].items || items,
+                    timestamp: formatDateTime(invoiceDetails[code].createdAt) || 'Thời gian ban đầu'
+                }];
+            }
+
+            invoiceDetails[code].historySnapshots.push({
+                customer: customerText,
+                staff: staffText,
+                date: dateText,
+                note: invoiceDetails[code].note || 'Không có',
+                total: totalText,
+                items: items,
+                timestamp: formattedTime
+            });
+
+            invoiceDetails[code].date = dateText;
+            invoiceDetails[code].customer = customerText;
+            invoiceDetails[code].staff = staffText;
+            invoiceDetails[code].total = totalText;
+            invoiceDetails[code].items = items;
+            invoiceDetails[code].updatedAt = `${year}-${month}-${date} ${hours}:${minutes}:${seconds}`;
+            if (!invoiceDetails[code].updateHistory) {
+                invoiceDetails[code].updateHistory = [];
+            }
+            invoiceDetails[code].updateHistory.push(formattedTime);
+
             updateRowKey(row);
             renderInvoicePagination();
             closeModal(modal);
@@ -881,7 +1243,6 @@ window.initSalePage = function initSalePage(container) {
         const quantity = row.dataset.quantity || '1';
         const refund = row.dataset.refund || '220.000đ';
         const modal = showWorkModal('return-edit-modal', `Sửa phiếu trả ${code}`, `
-            <div class="edit-summary">Cập nhật thông tin phiếu trả và chi tiết sản phẩm trả.</div>
             <div class="form-grid edit-grid">
                 <div class="field"><label>Mã trả hàng</label><input data-field="code" value="${code}" disabled style="background-color: #eef2f5; color: #666;"></div>
                 <div class="field"><label>Mã hóa đơn</label><input data-field="invoiceCode" value="${rowText(row, 1)}" disabled style="background-color: #eef2f5; color: #666;"></div>
@@ -1087,6 +1448,7 @@ window.initSalePage = function initSalePage(container) {
         modal.querySelector('[data-product-value]').value = '';
         renderProductOptions(modal);
         qtyInput.value = '1';
+        hideSelectedProductInfo(modal);
         modal.querySelector('[data-product-search]').focus();
     };
     const openDraftEditModal = (row) => {
@@ -1142,7 +1504,7 @@ window.initSalePage = function initSalePage(container) {
     const createInvoice = async () => {
         const modal = root.querySelector('#invoice-create');
         const customerSelect = modal.querySelector('.form-grid select');
-        const dateInput = modal.querySelector('input[type="date"]');
+        const dateInput = modal.querySelector('#invoice-date-input');
         const productRows = Array.from(modal.querySelectorAll('.sales-card tbody tr')).filter((row) => !row.querySelector('.empty-row'));
         if (!validSelect(customerSelect)) {
             alert('Vui lòng chọn khách hàng.');
@@ -1155,13 +1517,21 @@ window.initSalePage = function initSalePage(container) {
 
         updateInvoiceSummary(modal);
         const total = moneyNumber(modal.querySelector('[data-invoice-total]')?.textContent);
+        
+        let invoiceDate = today();
+        if (dateInput && dateInput.value) {
+            const parts = dateInput.value.split('/');
+            if (parts.length === 3) {
+                invoiceDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
+            }
+        }
+
         if (window.kidCityApi) {
             try {
                 const selectedCustomer = customerSelect.selectedOptions[0];
                 await window.kidCityApi.post('sales/invoices.php', {
                     customer_id: Number(selectedCustomer?.dataset.customerId || 0),
-                    invoice_date: dateInput.value || today(),
-                    payment_method: 'Tiền mặt',
+                    invoice_date: invoiceDate,
                     discount: moneyNumber(modal.querySelector('[data-invoice-discount]')?.value),
                     items: productRows.map((row) => ({
                         product_id: Number(row.dataset.productId || 0),
@@ -1181,14 +1551,55 @@ window.initSalePage = function initSalePage(container) {
         }
 
         const code = nextCode('#invoice-table', 'HD');
-        const date = dateInput.value || today();
         const customer = customerSelect.value;
         const body = root.querySelector('#invoice-table');
         const row = document.createElement('tr');
-        row.dataset.key = normalize(`${code} ${customer} Nguyễn Văn An Tiền mặt`);
-        row.innerHTML = `<td><strong>${code}</strong></td><td>${date}</td><td>${customer}</td><td>Nguyễn Văn An</td><td class="green font-weight-600">${formatMoney(total)}</td><td>Tiền mặt</td><td></td>`;
+        row.dataset.key = normalize(`${code} ${customer} Nguyễn Văn An`);
+        row.innerHTML = `<td><strong>${code}</strong></td><td>${invoiceDate}</td><td>${customer}</td><td>Nguyễn Văn An</td><td></td>`;
         attachActions(row.lastElementChild, 'invoice', 'invoice-detail');
         body.prepend(row);
+
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const date = String(now.getDate()).padStart(2, '0');
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const seconds = String(now.getSeconds()).padStart(2, '0');
+        const dbTime = `${year}-${month}-${date} ${hours}:${minutes}:${seconds}`;
+
+        const formattedCreated = `${date}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+        const initialSnapshot = {
+            customer: customer,
+            staff: 'Nguyễn Văn An',
+            date: invoiceDate,
+            note: modal.querySelector('.form-grid input[placeholder="Ghi chú hóa đơn (tùy chọn)..."]')?.value.trim() || 'Không có',
+            total: formatMoney(total),
+            items: productRows.map((row) => [
+                row.dataset.product,
+                formatMoney(row.dataset.price),
+                row.dataset.quantity,
+                '0đ',
+                formatMoney(Number(row.dataset.price) * Number(row.dataset.quantity)),
+                Number(row.dataset.productId || 0),
+                Number(row.dataset.price || 0)
+            ]),
+            timestamp: formattedCreated
+        };
+
+        invoiceDetails[code] = {
+            id: 0,
+            customer: customer,
+            staff: 'Nguyễn Văn An',
+            date: invoiceDate,
+            createdAt: dbTime,
+            updatedAt: dbTime,
+            updateHistory: [],
+            historySnapshots: [initialSnapshot],
+            note: initialSnapshot.note,
+            total: initialSnapshot.total,
+            items: initialSnapshot.items
+        };
 
         updateFirstStat(countRows('#invoice-table'));
         invoiceCurrentPage = 1;
@@ -1236,7 +1647,7 @@ window.initSalePage = function initSalePage(container) {
         };
     };
     const bindInvoicePage = () => {
-        showTableLoading('#invoice-table', 7);
+        showTableLoading('#invoice-table', 5);
         bindInvoicePagination();
         renderInvoicePagination();
         loadInvoiceFormDataFromApi();

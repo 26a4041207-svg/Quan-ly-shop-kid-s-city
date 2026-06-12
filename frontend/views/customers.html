@@ -9,8 +9,27 @@
 
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 
-    <link rel="stylesheet" href="../assets/css/index.css">
+    <link rel="stylesheet" href="../assets/css/index.css?v=20260612-no-toast">
     <link rel="stylesheet" href="customers.css">
+    <style>
+        #global-toast {
+            position: fixed !important;
+            top: 20px !important;
+            right: -300px !important;
+            background: #dcfce7 !important;
+            color: #166534 !important;
+            padding: 12px 20px !important;
+            border-radius: 8px !important;
+            font-size: 14px !important;
+            font-weight: 500 !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
+            z-index: 9999 !important;
+            transition: right 0.4s ease-in-out !important;
+        }
+    </style>
 
 </head>
 
@@ -452,7 +471,7 @@
     </div>
 
 </div>
-<script src="../js/api.js"></script>
+<script src="../js/api.js?v=20260612-no-toast"></script>
 <script src="../js/auth.js?v=20260531-staff-role-normalize"></script>
 <script src="customers.js"></script>
 </body>

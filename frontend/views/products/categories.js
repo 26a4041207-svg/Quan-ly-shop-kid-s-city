@@ -82,7 +82,7 @@ function renderCategories(data = getFilteredCategories()) {
     }
 
     paginatedData.forEach(category => {
-        const actionHtml = isStaffRole() ? "-" : `
+        const actionHtml = `
             <div class="table-actions">
                 <button class="action-btn edit-btn" onclick="editCategory(${category.id})">
                     <i class='bx bx-edit'></i>
@@ -239,9 +239,6 @@ saveCategoryBtn?.addEventListener("click", async () => {
             }
             await loadCategoriesFromApi();
             closeModal();
-            if (window.showToast) {
-                window.showToast(currentEditId === null ? "Thêm danh mục thành công!" : "Cập nhật danh mục thành công!");
-            }
         } catch (error) {
             alert(error.message || "Không thể lưu danh mục vào database.");
         }
@@ -254,7 +251,6 @@ saveCategoryBtn?.addEventListener("click", async () => {
 // EDIT / DELETE
 // =========================
 window.editCategory = function(id) {
-    if (isStaffRole()) return;
     currentEditId = id;
     const category = categories.find(c => c.id === id);
     if (!category) return;
@@ -291,9 +287,6 @@ window.deleteCategory = async function(id) {
         try {
             await window.kidCityApi.delete(`products/categories.php?id=${id}`);
             await loadCategoriesFromApi();
-            if (window.showToast) {
-                window.showToast("Xóa danh mục thành công!");
-            }
         } catch (error) {
             alert(error.message || "Không thể xóa danh mục.");
         }

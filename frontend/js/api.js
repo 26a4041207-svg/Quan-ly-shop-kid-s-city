@@ -1,4 +1,6 @@
 (function () {
+    document.getElementById('global-toast')?.remove();
+
     const apiUrl = (path) => {
         const normalized = String(path || '').replace(/^\/+/, '');
         if (window.KID_CITY_API_BASE) {
@@ -73,21 +75,5 @@
         delete(path) {
             return this.request(path, { method: 'DELETE' });
         }
-    };
-
-    if (!document.getElementById('global-toast')) {
-        const toastDiv = document.createElement('div');
-        toastDiv.id = 'global-toast';
-        toastDiv.innerHTML = `<i class='bx bx-check-circle'></i> <span id="toast-message">Thành công!</span>`;
-        document.body.appendChild(toastDiv);
-    }
-
-    window.showToast = function (message) {
-        const toast = document.getElementById('global-toast');
-        const toastMsg = document.getElementById('toast-message');
-        if (!toast || !toastMsg) return;
-        toastMsg.innerText = message;
-        toast.classList.add('show');
-        setTimeout(() => toast.classList.remove('show'), 3000);
     };
 })();

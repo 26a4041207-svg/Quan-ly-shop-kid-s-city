@@ -56,28 +56,6 @@ document.addEventListener('click', function(event) {
     }
 });
 
-// 2. Hệ thống Toast Notification
-// Tạo div chứa toast nếu chưa có
-if (!document.getElementById('global-toast')) {
-    const toastDiv = document.createElement('div');
-    toastDiv.id = 'global-toast';
-    toastDiv.innerHTML = `<i class='bx bx-check-circle'></i> <span id="toast-message">Thành công!</span>`;
-    document.body.appendChild(toastDiv);
-}
-
-window.showToast = function(message) {
-    const toast = document.getElementById('global-toast');
-    const toastMsg = document.getElementById('toast-message');
-    
-    toastMsg.innerText = message;
-    toast.classList.add('show');
-
-    // Tự động ẩn sau 3 giây
-    setTimeout(() => {
-        toast.classList.remove('show');
-    }, 3000);
-};
-
 const USER_ACCOUNTS_KEY = 'kidCityAccounts';
 
 const getStoredUserAccounts = () => {
@@ -300,7 +278,6 @@ window.createUserFromModal = async function createUserFromModal() {
 
     resetAddUserForm();
     closeModal('addUserModal');
-    showToast('Thêm người dùng thành công!');
 };
 
 window.openUserDetail = function(button) {
@@ -447,6 +424,7 @@ const statusClass = (status) => {
     if (status === 'Chưa kích hoạt') return 'inactive';
     return 'locked';
 };
+
 
 
 

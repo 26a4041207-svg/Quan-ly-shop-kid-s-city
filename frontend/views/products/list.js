@@ -1119,11 +1119,7 @@ async function restoreProduct(id) {
             product.status = "selling";
             setupPriceRange();
             filterProducts();
-            if (window.showToast) {
-                window.showToast("Khôi phục sản phẩm thành công!");
-            } else {
-                alert("Khôi phục sản phẩm thành công!");
-            }
+            showCenterToast("Khôi phục sản phẩm thành công!");
         } catch (error) {
             alert(error.message || "Không thể khôi phục sản phẩm.");
         }
@@ -1131,9 +1127,80 @@ async function restoreProduct(id) {
         product.status = "selling";
         setupPriceRange();
         filterProducts();
+        showCenterToast("Khôi phục sản phẩm thành công!");
     }
 
 }
+
+function showCenterToast(message) {
+    const existingToast = document.getElementById('center-toast');
+    if (existingToast) {
+        existingToast.remove();
+    }
+
+    const toast = document.createElement('div');
+    toast.id = 'center-toast';
+    
+    // Premium custom styling for centered toast
+    Object.assign(toast.style, {
+        position: 'fixed',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%) scale(0.9)',
+        backgroundColor: '#ffffff',
+        color: '#1e293b',
+        padding: '16px 28px',
+        borderRadius: '16px',
+        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.08)',
+        zIndex: '100000',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '12px',
+        fontFamily: "'Outfit', 'Inter', sans-serif",
+        fontSize: '15px',
+        fontWeight: '600',
+        opacity: '0',
+        transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+        pointerEvents: 'none',
+        border: '1px solid rgba(228, 231, 235, 0.6)'
+    });
+
+    const iconContainer = document.createElement('div');
+    Object.assign(iconContainer.style, {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '28px',
+        height: '28px',
+        borderRadius: '50%',
+        backgroundColor: '#dcfce7',
+        color: '#16a34a'
+    });
+    iconContainer.innerHTML = "<i class='bx bx-check' style='font-size: 20px;'></i>";
+
+    const textSpan = document.createElement('span');
+    textSpan.innerText = message;
+
+    toast.appendChild(iconContainer);
+    toast.appendChild(textSpan);
+    document.body.appendChild(toast);
+
+    // Trigger reflow & animate in
+    requestAnimationFrame(() => {
+        toast.style.opacity = '1';
+        toast.style.transform = 'translate(-50%, -50%) scale(1)';
+    });
+
+    // Auto-hide after 2.5 seconds
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translate(-50%, -50%) scale(0.95)';
+        setTimeout(() => {
+            toast.remove();
+        }, 300);
+    }, 2500);
+}
+
 
 // =========================
 // HELPERS
