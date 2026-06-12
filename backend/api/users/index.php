@@ -27,7 +27,7 @@ if ($method === 'GET') {
                 ngayCapNhat AS updated_at
              FROM NguoiDung
              WHERE tenNguoiDung LIKE ? OR tenDangNhap LIKE ? OR email LIKE ? OR soDienThoai LIKE ?
-             ORDER BY maNguoiDung DESC'
+             ORDER BY trangThai DESC, maNguoiDung DESC'
         );
         $stmt->execute([$like, $like, $like, $like]);
     } else {
@@ -45,7 +45,7 @@ if ($method === 'GET') {
                 matKhauBanDau AS initial_password,
                 ngayTao AS created_at,
                 ngayCapNhat AS updated_at
-             FROM NguoiDung ORDER BY maNguoiDung DESC');
+             FROM NguoiDung ORDER BY trangThai DESC, maNguoiDung DESC');
     }
     ok(array_map('public_user', $stmt->fetchAll()));
 }

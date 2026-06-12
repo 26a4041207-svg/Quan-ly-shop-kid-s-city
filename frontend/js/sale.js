@@ -2147,7 +2147,7 @@ const openReturnEditModal = (row) => {
             </div>
         `, `<button class="sales-btn light" data-close>Hủy</button><button class="sales-btn primary" data-save-invoice-customer>Lưu</button>`);
 
-        modal.querySelector('[data-save-invoice-customer]').onclick = () => {
+        modal.querySelector('[data-save-invoice-customer]').onclick = async () => {
             const name = fieldValue(modal, 'customerName').trim();
             const phone = fieldValue(modal, 'customerPhone').trim();
             if (!name || !phone) {
@@ -2161,8 +2161,21 @@ const openReturnEditModal = (row) => {
                 return;
             }
 
+            let newCustomerId = Date.now();
+            if (window.kidCityApi) {
+                try {
+                    const res = await window.kidCityApi.post('customers/index.php', { name, phone });
+                    if (res && res.id) {
+                        newCustomerId = res.id;
+                    }
+                } catch (e) {
+                    alert(e.message || 'Không thể tạo khách hàng mới trên hệ thống.');
+                    return;
+                }
+            }
+
             const newCustomer = {
-                id: Date.now(), // Fake ID for local additions before sync
+                id: newCustomerId,
                 name: name,
                 phone: phone
             };

@@ -100,7 +100,7 @@ if ($method === 'POST') {
             'INSERT INTO ChiTietHoaDon (maHoaDon, maSanPham, soLuong, donGia, giamGia, thanhTien)
              VALUES (?, ?, ?, ?, ?, ?)'
         );
-        $stock = db()->prepare('UPDATE SanPham SET soLuong = GREATEST(soLuong - ?, 0), ngayCapNhat = NOW() WHERE maSanPham = ?');
+        $stock = db()->prepare('UPDATE SanPham SET soLuong = GREATEST(soLuong - ?, 0) WHERE maSanPham = ?');
         foreach ($preparedItems as $item) {
             $detail->execute([$invoiceId, $item[0], $item[1], $item[2], $item[3], $item[4]]);
             $stock->execute([$item[1], $item[0]]);
