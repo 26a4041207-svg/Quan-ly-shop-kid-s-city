@@ -29,20 +29,35 @@ document.addEventListener('click', function(event) {
 if (!document.getElementById('global-toast')) {
     const toastDiv = document.createElement('div');
     toastDiv.id = 'global-toast';
-    toastDiv.innerHTML = `<i class='bx bx-check-circle'></i> <span id="toast-message">Thành công!</span>`;
+    toastDiv.style.position = 'fixed';
+    toastDiv.style.top = '20px';
+    toastDiv.style.right = '-300px';
+    toastDiv.style.background = '#dcfce7';
+    toastDiv.style.color = '#166534';
+    toastDiv.style.padding = '12px 20px';
+    toastDiv.style.borderRadius = '8px';
+    toastDiv.style.fontSize = '14px';
+    toastDiv.style.fontWeight = '500';
+    toastDiv.style.display = 'flex';
+    toastDiv.style.alignItems = 'center';
+    toastDiv.style.gap = '8px';
+    toastDiv.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.1)';
+    toastDiv.style.zIndex = '9999';
+    toastDiv.style.transition = 'right 0.4s ease-in-out';
+    toastDiv.innerHTML = `<i class='bx bx-check-circle' style='font-size: 20px; color: #16a34a;'></i> <span id="toast-message">Thành công!</span>`;
     document.body.appendChild(toastDiv);
 }
 
 window.showToast = function(message) {
     const toast = document.getElementById('global-toast');
     const toastMsg = document.getElementById('toast-message');
-    
+    if (!toast || !toastMsg) return;
     toastMsg.innerText = message;
-    toast.classList.add('show');
+    toast.style.right = '20px';
 
     // Tự động ẩn sau 3 giây
     setTimeout(() => {
-        toast.classList.remove('show');
+        toast.style.right = '-300px';
     }, 3000);
 };
 

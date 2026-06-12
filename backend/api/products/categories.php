@@ -26,7 +26,7 @@ if ($method === 'GET') {
 }
 
 if ($method === 'POST') {
-    require_admin();
+    current_user();
     $data = input();
     require_fields($data, ['name']);
 
@@ -47,7 +47,7 @@ if ($method === 'POST') {
 }
 
 if ($method === 'PUT') {
-    require_admin();
+    current_user();
     $data = input();
     require_fields($data, ['id', 'name']);
 

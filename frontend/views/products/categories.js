@@ -82,7 +82,7 @@ function renderCategories(data = getFilteredCategories()) {
     }
 
     paginatedData.forEach(category => {
-        const actionHtml = isStaffRole() ? "-" : `
+        const actionHtml = `
             <div class="table-actions">
                 <button class="action-btn edit-btn" onclick="editCategory(${category.id})">
                     <i class='bx bx-edit'></i>
@@ -254,7 +254,6 @@ saveCategoryBtn?.addEventListener("click", async () => {
 // EDIT / DELETE
 // =========================
 window.editCategory = function(id) {
-    if (isStaffRole()) return;
     currentEditId = id;
     const category = categories.find(c => c.id === id);
     if (!category) return;
