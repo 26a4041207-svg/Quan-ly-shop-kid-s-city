@@ -90,21 +90,20 @@
         <main id="main-content" class="content-body reports-page" data-report-page="revenue">
             <div class="page-header"><h2>Báo cáo doanh thu</h2><p>Theo dõi doanh thu, lợi nhuận và phương thức thanh toán</p></div>
             <div class="report-toolbar">
-                <label class="report-search"><i class="bx bx-search"></i><input data-report-search type="text" placeholder="Tìm theo tháng, ghi chú..."></label>
                 <select data-report-filter><option value="all">T&#7845;t c&#7843;</option><option value="today">H&#244;m nay</option><option value="last7">7 ng&#224;y qua</option><option value="this-month">Th&#225;ng n&#224;y</option><option value="last-month">Th&#225;ng tr&#432;&#7899;c</option></select>
                 <button class="report-btn" data-export-report><i class="bx bx-export"></i> Xuất báo cáo</button>
             </div>
             <section class="report-summary-cards">
-                <div class="stat-card"><div class="stat-info"><p>T&#7893;ng doanh thu</p><h3>0&#273;</h3><span>T&#7915; database</span></div><div class="stat-icon bg-blue-light"><i class="bx bx-dollar"></i></div></div>
-                <div class="stat-card"><div class="stat-info"><p>L&#7907;i nhu&#7853;n &#432;&#7899;c t&#237;nh</p><h3>0&#273;</h3><span>T&#7841;m t&#237;nh 33%</span></div><div class="stat-icon bg-green-light"><i class="bx bx-trending-up"></i></div></div>
-                <div class="stat-card"><div class="stat-info"><p>T&#7893;ng h&#243;a &#273;&#417;n</p><h3>0</h3><span>T&#7915; database</span></div><div class="stat-icon bg-orange-light"><i class="bx bx-receipt"></i></div></div>
-                <div class="stat-card"><div class="stat-info"><p>Trung b&#236;nh / h&#243;a &#273;&#417;n</p><h3>0&#273;</h3><span>T&#7921; &#273;&#7897;ng t&#237;nh</span></div><div class="stat-icon bg-purple-light"><i class="bx bx-credit-card"></i></div></div>
+                <div class="stat-card"><div class="stat-info"><p>Tổng tiền hóa đơn</p><h3>0đ</h3><span>Giao dịch bán</span></div><div class="stat-icon bg-blue-light"><i class="bx bx-receipt"></i></div></div>
+                <div class="stat-card"><div class="stat-info"><p>Tổng tiền đổi hàng</p><h3>0đ</h3><span>Chênh lệch đổi</span></div><div class="stat-icon bg-purple-light"><i class="bx bx-transfer"></i></div></div>
+                <div class="stat-card"><div class="stat-info"><p>Tổng tiền trả hàng</p><h3>0đ</h3><span>Đã hoàn lại</span></div><div class="stat-icon bg-orange-light"><i class="bx bx-revision"></i></div></div>
+                <div class="stat-card"><div class="stat-info"><p>Tổng tiền doanh thu</p><h3>0đ</h3><span>Thực tế thu về</span></div><div class="stat-icon bg-green-light"><i class="bx bx-dollar"></i></div></div>
             </section>
             <section class="report-grid two-cols">
                 <div class="dash-card report-panel"><div class="chart-header"><h3>Doanh thu theo ng&#224;y</h3><p>D&#7919; li&#7879;u l&#7845;y tr&#7921;c ti&#7871;p t&#7915; h&#243;a &#273;&#417;n</p></div><div class="bar-chart" data-revenue-chart></div></div>
                 <div class="dash-card report-panel"><div class="chart-header"><h3>T&#7893;ng quan giao d&#7883;ch</h3><p>T&#7893;ng h&#7907;p t&#7915; database</p></div><div class="rank-list" data-revenue-summary></div></div>
             </section>
-            <section class="dash-card"><div class="dash-card-header"><div><h3>Chi tiết doanh thu</h3><p>Doanh thu theo kỳ gần nhất</p></div></div><div class="table-responsive"><table class="dash-table reports-table"><thead><tr><th>Kỳ</th><th>Doanh thu</th><th>Hóa đơn</th><th>Lợi nhuận</th><th>Tăng trưởng</th><th>Ghi chú</th></tr></thead><tbody data-report-table></tbody></table></div></section>
+            <section class="dash-card"><div class="dash-card-header"><div><h3>Chi tiết doanh thu</h3><p>Doanh thu theo kỳ gần nhất</p></div></div><div class="table-responsive"><table class="dash-table reports-table"><thead><tr><th>Kỳ</th><th>Tiền hóa đơn</th><th>Tiền trả hàng</th><th>Tiền đổi hàng</th><th>Tổng doanh thu</th><th>Ghi chú</th></tr></thead><tbody data-report-table></tbody></table></div></section>
         </main>
     </div>
     <script src="../../js/api.js?v=20260610-ui-report"></script>

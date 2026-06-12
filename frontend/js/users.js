@@ -17,9 +17,41 @@ window.closeModal = function(modalId) {
     }
 };
 
+const fileToBase64 = (file) => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = error => reject(error);
+    reader.readAsDataURL(file);
+});
+
+const bindImagePreview = (inputId, previewId) => {
+    const input = document.getElementById(inputId);
+    const preview = document.getElementById(previewId);
+    if (!input || !preview) return;
+    input.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            if (file.size > 5 * 1024 * 1024) {
+                alert('Dung lượng ảnh vượt quá 5MB.');
+                input.value = '';
+                preview.style.display = 'none';
+                return;
+            }
+            fileToBase64(file).then(base64 => {
+                input.dataset.base64 = base64;
+                preview.style.display = 'block';
+                preview.querySelector('img').src = base64;
+            });
+        } else {
+            input.dataset.base64 = '';
+            preview.style.display = 'none';
+        }
+    });
+};
+
 // Đóng modal khi click ra vùng đen bên ngoài
 document.addEventListener('click', function(event) {
-    if (event.target.classList.contains('modal-overlay')) {
+    if (event.target.classList.contains('modal-overlay') || event.target.classList.contains('sales-modal')) {
         event.target.classList.remove('active');
     }
 });
@@ -77,12 +109,8 @@ const formatToday = () => {
     return `${today.getDate()}/${today.getMonth() + 1}/${today.getFullYear()}`;
 };
 
-const statusSelectHtml = (status) => `
-    <select class="status-select ${statusClass(status)}" data-user-status>
-        <option ${status === 'Đã kích hoạt' ? 'selected' : ''}>Đã kích hoạt</option>
-        <option ${status === 'Chưa kích hoạt' ? 'selected' : ''}>Chưa kích hoạt</option>
-        <option ${status === 'Khóa' ? 'selected' : ''}>Khóa</option>
-    </select>
+const statusBadgeHtml = (status) => `
+    <span class="role-badge ${statusClass(status)}">${escapeHtml(status)}</span>
 `;
 
 const userRowHtml = (account) => {
@@ -91,7 +119,7 @@ const userRowHtml = (account) => {
     const status = account.status || 'Chưa kích hoạt';
 
     return `
-        <tr data-id="${escapeHtml(account.id)}" data-name="${escapeHtml(account.name)}" data-username="${escapeHtml(account.username)}" data-email="${escapeHtml(account.email)}" data-phone="${escapeHtml(account.phone || account.username)}" data-cccd="${escapeHtml(account.cccd)}" data-address="${escapeHtml(account.address)}" data-role="${escapeHtml(role)}" data-status="${escapeHtml(status)}" data-created="${escapeHtml(account.created)}">
+        <tr class="${status === 'Khóa' ? 'locked-row' : ''}" data-id="${escapeHtml(account.id)}" data-name="${escapeHtml(account.name)}" data-username="${escapeHtml(account.username)}" data-email="${escapeHtml(account.email)}" data-phone="${escapeHtml(account.phone || account.username)}" data-cccd_image="${escapeHtml(account.cccd_image || '')}" data-role="${escapeHtml(role)}" data-status="${escapeHtml(status)}" data-created="${escapeHtml(account.created)}">
             <td>
                 <div class="user-info">
                     <div class="avatar bg-light">${escapeHtml(avatar)}</div>
@@ -100,11 +128,11 @@ const userRowHtml = (account) => {
             </td>
             <td>${escapeHtml(account.username)}</td>
             <td><span class="role-badge ${roleClass(role)}">${escapeHtml(role)}</span></td>
-            <td>${statusSelectHtml(status)}</td>
+            <td>${statusBadgeHtml(status)}</td>
             <td class="actions">
-                <button class="icon-btn" onclick="openUserDetail(this)" title="Xem chi tiết"><i class='bx bx-show'></i></button>
-                <button class="icon-btn" onclick="openUserEdit(this)" title="Chỉnh sửa"><i class='bx bx-pencil'></i></button>
-                <button class="icon-btn" onclick="openModal('resetPasswordModal')" title="Đổi mật khẩu"><i class='bx bx-key'></i></button>
+                <button class="action-btn view" onclick="openUserDetail(this)" title="Xem chi tiết"><i class='bx bx-show'></i></button>
+                <button class="action-btn edit" onclick="openUserEdit(this)" title="Chỉnh sửa"><i class='bx bx-pencil'></i></button>
+                ${role === 'Chủ shop' || role === 'admin' ? '' : `<button class="action-btn ${status === 'Khóa' ? 'view' : 'delete'}" onclick="toggleUserLock(this)" title="${status === 'Khóa' ? 'Mở khóa' : 'Khóa'}"><i class='bx ${status === 'Khóa' ? 'bx-lock-open-alt' : 'bx-lock-alt'}'></i></button>`}
             </td>
         </tr>
     `;
@@ -126,8 +154,7 @@ const updateStoredAccountFromRow = (row) => {
         name: row.dataset.name || username,
         email: row.dataset.email || '',
         phone: row.dataset.phone || username,
-        cccd: row.dataset.cccd || '',
-        address: row.dataset.address || '',
+        cccd_image: row.dataset.cccd_image || '',
         role: roleCode(row.dataset.role),
         roleLabel: row.dataset.role || 'Nhân viên',
         status: row.dataset.status || 'Chưa kích hoạt',
@@ -136,15 +163,30 @@ const updateStoredAccountFromRow = (row) => {
     saveStoredUserAccounts(accounts);
 };
 
+const roleWeight = (role) => (role === 'admin' || role === 'Chủ shop' ? 1 : 2);
+const statusWeight = (status) => {
+    if (status === 'Đã kích hoạt') return 1;
+    if (status === 'Chưa kích hoạt') return 2;
+    if (status === 'Khóa') return 3;
+    return 4;
+};
+
 const loadStoredUsersIntoTable = () => {
     const tbody = document.querySelector('.users-table tbody');
     if (!tbody) return;
 
     const existingUsernames = new Set(Array.from(tbody.querySelectorAll('tr')).map((row) => row.dataset.username));
-    const rows = Object.values(getStoredUserAccounts())
-        .filter((account) => account?.username && !existingUsernames.has(account.username))
-        .map(userRowHtml)
-        .join('');
+    const accountsArray = Object.values(getStoredUserAccounts()).filter((account) => account?.username && !existingUsernames.has(account.username));
+    accountsArray.sort((a, b) => {
+        const rA = roleWeight(a.role || a.roleLabel);
+        const rB = roleWeight(b.role || b.roleLabel);
+        if (rA !== rB) return rA - rB;
+        const sA = statusWeight(a.status);
+        const sB = statusWeight(b.status);
+        if (sA !== sB) return sA - sB;
+        return 0;
+    });
+    const rows = accountsArray.map(userRowHtml).join('');
 
     if (rows) {
         tbody.insertAdjacentHTML('beforeend', rows);
@@ -160,8 +202,16 @@ const loadUsersFromApi = async () => {
 
     try {
         const users = await window.kidCityApi.get('users/index.php');
+        users.sort((a, b) => {
+            const rA = roleWeight(a.role || a.roleLabel);
+            const rB = roleWeight(b.role || b.roleLabel);
+            if (rA !== rB) return rA - rB;
+            const sA = statusWeight(a.status || 'Chưa kích hoạt');
+            const sB = statusWeight(b.status || 'Chưa kích hoạt');
+            if (sA !== sB) return sA - sB;
+            return 0;
+        });
         tbody.innerHTML = users.map(userRowHtml).join('');
-        bindUserStatusSelects();
         updateUserCount();
         return true;
     } catch (error) {
@@ -170,12 +220,23 @@ const loadUsersFromApi = async () => {
     }
 };
 
+window.generateRandomPassword = function() {
+    const field = document.getElementById('addPassword');
+    if (field) {
+        field.value = Math.random().toString(36).slice(-8);
+    }
+};
+
 const resetAddUserForm = () => {
-    ['addName', 'addRole', 'addUsername', 'addPassword', 'addEmail', 'addPhone', 'addCccd', 'addAddress'].forEach((id) => {
+    ['addName', 'addRole', 'addUsername', 'addEmail', 'addPhone', 'addCccdImage'].forEach((id) => {
         const field = document.getElementById(id);
         if (!field) return;
         field.value = id === 'addRole' ? 'Nhân viên' : '';
+        if (id === 'addCccdImage') field.dataset.base64 = '';
     });
+    window.generateRandomPassword();
+    const preview = document.getElementById('addCccdPreview');
+    if (preview) preview.style.display = 'none';
 };
 
 const bindAddUserPhoneSync = () => {
@@ -197,15 +258,19 @@ window.createUserFromModal = async function createUserFromModal() {
         password: document.getElementById('addPassword')?.value || '',
         email: document.getElementById('addEmail')?.value.trim() || '',
         phone: document.getElementById('addPhone')?.value.trim() || '',
-        cccd: document.getElementById('addCccd')?.value.trim() || '',
-        address: document.getElementById('addAddress')?.value.trim() || '',
+        cccd_image: document.getElementById('addCccdImage')?.dataset.base64 || '',
         status: 'Chưa kích hoạt',
         created: formatToday()
     };
     account.role = roleCode(account.roleLabel);
 
-    if (!account.name || !account.username || !account.password) {
-        alert('Vui lòng nhập đầy đủ họ tên, số điện thoại và mật khẩu.');
+    if (!account.name || !account.username || !account.password || !account.email || !account.phone || !account.cccd_image) {
+        alert('Vui lòng nhập đầy đủ tất cả các thông tin (bao gồm cả ảnh CCCD).');
+        return;
+    }
+    
+    if (account.phone.length !== 10) {
+        alert('Số điện thoại phải bao gồm đúng 10 chữ số.');
         return;
     }
 
@@ -230,7 +295,6 @@ window.createUserFromModal = async function createUserFromModal() {
     const tbody = document.querySelector('.users-table tbody');
     if (tbody) {
         tbody.insertAdjacentHTML('beforeend', userRowHtml(account));
-        bindUserStatusSelects();
         updateUserCount();
     }
 
@@ -256,11 +320,22 @@ window.openUserDetail = function(button) {
     setText('detailUsername', data.username);
     setText('detailUserEmail', data.email);
     setText('detailPhone', data.phone);
-    setText('detailCccd', data.cccd);
-    setText('detailAddress', data.address);
     setText('detailRole', data.role);
     setText('detailStatus', data.status);
     setText('detailCreated', data.created);
+    
+    const imgEl = document.getElementById('detailCccdImage');
+    const txtEl = document.getElementById('detailCccdText');
+    if (imgEl && txtEl) {
+        if (data.cccd_image && data.cccd_image !== 'undefined') {
+            imgEl.src = window.kidCityApi ? `../../${data.cccd_image}` : data.cccd_image;
+            imgEl.style.display = 'block';
+            txtEl.style.display = 'none';
+        } else {
+            imgEl.style.display = 'none';
+            txtEl.style.display = 'block';
+        }
+    }
 
     openModal('viewUserModal');
 };
@@ -282,11 +357,89 @@ window.openUserEdit = function(button) {
     setValue('editUsername', data.username);
     setValue('editEmail', data.email);
     setValue('editPhone', data.phone);
-    setValue('editCccd', data.cccd);
-    setValue('editAddress', data.address);
     setValue('editCreated', data.created);
+    
+    const input = document.getElementById('editCccdImage');
+    const preview = document.getElementById('editCccdPreview');
+    if (input) {
+        input.value = '';
+        input.dataset.base64 = '';
+        if (data.cccd_image && data.cccd_image !== 'undefined') {
+            input.removeAttribute('required');
+        } else {
+            input.setAttribute('required', 'required');
+        }
+    }
+    if (preview) {
+        if (data.cccd_image && data.cccd_image !== 'undefined') {
+            preview.style.display = 'block';
+            preview.querySelector('img').src = window.kidCityApi ? `../../${data.cccd_image}` : data.cccd_image;
+        } else {
+            preview.style.display = 'none';
+        }
+    }
 
     openModal('editUserModal');
+};
+
+window.toggleUserLock = async function(button) {
+    const row = button.closest('tr');
+    if (!row) return;
+
+    const currentStatus = row.dataset.status;
+    const isLocked = currentStatus === 'Khóa';
+    const newStatus = isLocked ? 'Đã kích hoạt' : 'Khóa';
+    const name = row.dataset.name || 'người dùng này';
+
+    const modal = document.getElementById('toggleLockUserModal');
+    const icon = document.getElementById('toggleLockIcon');
+    const title = document.getElementById('toggleLockTitle');
+    const message = document.getElementById('toggleLockMessage');
+    const confirmBtn = document.getElementById('confirmToggleLockBtn');
+
+    if (!modal || !confirmBtn) return;
+
+    if (isLocked) {
+        icon.className = "bx bx-lock-open-alt";
+        icon.style.color = "#10b981";
+        title.textContent = "Xác nhận mở khóa";
+        message.innerHTML = `Bạn có chắc chắn muốn mở khóa tài khoản <strong>${name}</strong>?`;
+    } else {
+        icon.className = "bx bx-lock-alt";
+        icon.style.color = "#f59e0b";
+        title.textContent = "Xác nhận khóa";
+        message.innerHTML = `Bạn có chắc chắn muốn khóa tài khoản <strong>${name}</strong>?`;
+    }
+
+    confirmBtn.onclick = async function() {
+        closeModal('toggleLockUserModal');
+
+        if (window.kidCityApi && row.dataset.id) {
+            try {
+                await window.kidCityApi.put('users/index.php', {
+                    id: row.dataset.id,
+                    status: newStatus
+                });
+            } catch (error) {
+                alert(error.message || 'Không thể cập nhật trạng thái tài khoản.');
+                return;
+            }
+        }
+
+        row.dataset.status = newStatus;
+        updateStoredAccountFromRow(row);
+        showToast(`${isLocked ? 'Mở khóa' : 'Khóa'} tài khoản thành công!`);
+
+        if (window.kidCityApi) {
+            loadUsersFromApi();
+        } else {
+            const tbody = document.querySelector('.users-table tbody');
+            if (tbody) tbody.innerHTML = '';
+            loadStoredUsersIntoTable();
+        }
+    };
+
+    openModal('toggleLockUserModal');
 };
 
 const statusClass = (status) => {
@@ -295,50 +448,7 @@ const statusClass = (status) => {
     return 'locked';
 };
 
-const bindUserStatusSelects = () => {
-    document.querySelectorAll('[data-user-status]').forEach((select) => {
-        if (select.dataset.statusBound === 'true') return;
-        select.dataset.statusBound = 'true';
-        select.dataset.previousStatus = select.value;
-        select.classList.add(statusClass(select.value));
 
-        select.addEventListener('change', () => {
-            const row = select.closest('tr');
-            const oldStatus = select.dataset.previousStatus || row?.dataset.status || '';
-            const newStatus = select.value;
-            const name = row?.dataset.name || 'người dùng này';
-
-            if (!confirm(`Bạn có chắc chắn muốn đổi trạng thái tài khoản ${name} từ "${oldStatus}" sang "${newStatus}" không?`)) {
-                select.value = oldStatus;
-                select.className = `status-select ${statusClass(oldStatus)}`;
-                return;
-            }
-
-            if (row) {
-                row.dataset.status = newStatus;
-                updateStoredAccountFromRow(row);
-                if (window.kidCityApi && row.dataset.id) {
-                    window.kidCityApi.put('users/index.php', {
-                        id: row.dataset.id,
-                        name: row.dataset.name,
-                        username: row.dataset.username,
-                        email: row.dataset.email,
-                        phone: row.dataset.phone,
-                        cccd: row.dataset.cccd,
-                        address: row.dataset.address,
-                        role: roleCode(row.dataset.role),
-                        status: newStatus
-                    }).catch((error) => {
-                        alert(error.message || 'Không thể cập nhật trạng thái tài khoản.');
-                    });
-                }
-            }
-            select.dataset.previousStatus = newStatus;
-            select.className = `status-select ${statusClass(newStatus)}`;
-            showToast('Cập nhật trạng thái thành công!');
-        });
-    });
-};
 
 const normalizeSearchText = (text) => String(text || '').trim().toLowerCase();
 
@@ -365,8 +475,9 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!loaded) updateUserCount();
     });
     bindAddUserPhoneSync();
+    bindImagePreview('addCccdImage', 'addCccdPreview');
+    bindImagePreview('editCccdImage', 'editCccdPreview');
     bindUserSearch();
-    bindUserStatusSelects();
 
     document.querySelectorAll('.menu-toggle').forEach(function(btn) {
         if (btn.dataset.kidCityMenuBound === 'true') return;
@@ -536,7 +647,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     window.addEventListener('click', function(e) {
         closeAllDropdowns();
-        if (e.target.classList.contains('modal-overlay')) {
+        if (e.target.classList.contains('modal-overlay') || e.target.classList.contains('sales-modal')) {
             e.target.classList.remove('active');
             if (profileModal) profileModal.classList.remove('active');
             if (passwordModal) passwordModal.classList.remove('active');

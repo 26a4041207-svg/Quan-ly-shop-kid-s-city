@@ -36,6 +36,7 @@
             .login-left { margin-bottom: 20px; }
             .login-right { width: 100%; justify-content: center; }
         }
+        #global-toast { display: none !important; }
     </style>
 </head>
 <body>
@@ -59,16 +60,75 @@
                         <label>Tên đăng nhập</label>
                         <input type="text" id="username" class="form-control" placeholder="Nhập tên đăng nhập" required>
                     </div>
-                    <div class="form-group">
+                    <div class="form-group" style="margin-bottom: 10px;">
                         <label>Mật khẩu</label>
                         <div class="input-wrapper">
                             <input type="password" id="password" class="form-control" placeholder="Nhập mật khẩu" required>
                             <i class="bx bx-show toggle-password" id="togglePassword"></i>
                         </div>
                     </div>
+                    <div style="text-align: right; margin-bottom: 20px;">
+                        <a href="#" id="showForgotBtn" style="color: #2563eb; font-size: 13px; text-decoration: none; font-weight: 500;">Quên mật khẩu?</a>
+                    </div>
                     <button type="submit" class="btn-login"><i class="bx bx-log-in-circle"></i> Đăng nhập</button>
                 </form>
             </div>
+        </div>
+    </div>
+
+    <!-- Forgot Password Modal -->
+    <div class="modal-overlay" id="forgotModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); align-items: center; justify-content: center; z-index: 100;">
+        <div class="login-card" style="box-shadow: none;">
+            
+            <div id="step1">
+                <h2>Quên mật khẩu</h2>
+                <p>Nhập email của bạn để nhận mã xác thực (OTP).</p>
+                <form id="forgotForm">
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="forgotEmail" class="form-control" placeholder="Nhập email" required>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button type="button" class="btn-login" style="background: #e2e8f0; color: #334155;" onclick="closeForgotModal()">Hủy</button>
+                        <button type="submit" class="btn-login" id="btnSendOtp">Gửi OTP</button>
+                    </div>
+                </form>
+            </div>
+
+            <div id="step2" style="display: none;">
+                <h2>Nhập mã OTP</h2>
+                <p>Chúng tôi đã gửi mã 6 số về email của bạn. Vui lòng kiểm tra hộp thư.</p>
+                <form id="otpForm">
+                    <div class="form-group">
+                        <label>Mã OTP</label>
+                        <input type="text" id="forgotOtp" class="form-control" placeholder="Nhập 6 số OTP" required pattern="[0-9]{6}" maxlength="6">
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button type="button" class="btn-login" style="background: #e2e8f0; color: #334155;" onclick="closeForgotModal()">Hủy</button>
+                        <button type="submit" class="btn-login" id="btnVerifyOtp">Xác nhận</button>
+                    </div>
+                </form>
+            </div>
+
+            <div id="step3" style="display: none;">
+                <h2>Tạo mật khẩu mới</h2>
+                <p>Vui lòng nhập mật khẩu mới của bạn.</p>
+                <form id="resetForm">
+                    <div class="form-group">
+                        <label>Mật khẩu mới</label>
+                        <input type="password" id="newPassword" class="form-control" placeholder="Mật khẩu mới" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Xác nhận mật khẩu mới</label>
+                        <input type="password" id="confirmNewPassword" class="form-control" placeholder="Xác nhận mật khẩu mới" required>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button type="button" class="btn-login" style="background: #e2e8f0; color: #334155;" onclick="closeForgotModal()">Hủy</button>
+                        <button type="submit" class="btn-login" id="btnResetPassword">Đổi mật khẩu</button>
+                    </div>
+                </form>
+            </div>
+            
         </div>
     </div>
 
@@ -127,6 +187,89 @@
                 localStorage.removeItem("currentRole");
                 setLoginLoading(false);
             }
+        });
+
+        // Forgot password flow
+        const forgotModal = document.getElementById('forgotModal');
+        const step1 = document.getElementById('step1');
+        const step2 = document.getElementById('step2');
+        const step3 = document.getElementById('step3');
+        let currentResetEmail = '';
+        let currentResetOtp = '';
+
+        document.getElementById('showForgotBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            step1.style.display = 'block';
+            step2.style.display = 'none';
+            step3.style.display = 'none';
+            document.getElementById('forgotEmail').value = '';
+            forgotModal.style.display = 'flex';
+        });
+
+        window.closeForgotModal = () => {
+            forgotModal.style.display = 'none';
+        };
+
+        document.getElementById('forgotForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('forgotEmail').value.trim();
+            const btn = document.getElementById('btnSendOtp');
+            btn.disabled = true;
+            btn.innerHTML = "<i class='bx bx-loader-alt bx-spin'></i> Đang xử lý...";
+
+            try {
+                await window.kidCityApi.post('auth/forgot_password.php', { email });
+                currentResetEmail = email;
+                step1.style.display = 'none';
+                step2.style.display = 'block';
+                document.getElementById('forgotOtp').value = '';
+            } catch(error) {
+                alert(error.message || "Email không tồn tại, vui lòng nhập lại");
+            }
+            btn.disabled = false;
+            btn.innerHTML = "Gửi OTP";
+        });
+
+        document.getElementById('otpForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            currentResetOtp = document.getElementById('forgotOtp').value.trim();
+            step2.style.display = 'none';
+            step3.style.display = 'block';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmNewPassword').value = '';
+        });
+
+        document.getElementById('resetForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const password = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmNewPassword').value;
+            
+            if (password !== confirmPassword) {
+                alert('Mật khẩu xác nhận không khớp!');
+                return;
+            }
+
+            const btn = document.getElementById('btnResetPassword');
+            btn.disabled = true;
+            btn.innerHTML = "<i class='bx bx-loader-alt bx-spin'></i> Đang xử lý...";
+
+            try {
+                await window.kidCityApi.post('auth/reset_password.php', { 
+                    email: currentResetEmail, 
+                    otp: currentResetOtp, 
+                    password: password 
+                });
+                alert('Đổi mật khẩu thành công! Bạn có thể đăng nhập bằng mật khẩu mới.');
+                closeForgotModal();
+            } catch(error) {
+                alert(error.message || "Lỗi khi đổi mật khẩu.");
+                if(error.message && error.message.includes('OTP')) {
+                    step3.style.display = 'none';
+                    step2.style.display = 'block';
+                }
+            }
+            btn.disabled = false;
+            btn.innerHTML = "Đổi mật khẩu";
         });
     </script>
 </body>

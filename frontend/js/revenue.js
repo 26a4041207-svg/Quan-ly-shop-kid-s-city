@@ -157,15 +157,62 @@
             const keyword = (search?.value || '').trim().toLowerCase();
             const selected = filter?.value || 'all';
             let visible = 0;
+            let sumInvoice = 0, sumReturn = 0, sumExchange = 0, sumRevenue = 0;
+
             rows.forEach((row) => {
+                if (row.classList.contains('report-empty')) return;
                 const text = row.textContent.toLowerCase();
                 const period = row.dataset.period || '';
                 const matchKeyword = !keyword || text.includes(keyword);
                 const matchFilter = selected === 'all' || !selected || period.split(/\s+/).includes(selected);
                 const show = matchKeyword && matchFilter;
                 row.style.display = show ? '' : 'none';
-                if (show) visible += 1;
+                if (show) {
+                    visible += 1;
+                    if (row.dataset.invoice) {
+                        sumInvoice += Number(row.dataset.invoice || 0);
+                        sumReturn += Number(row.dataset.return || 0);
+                        sumExchange += Number(row.dataset.exchange || 0);
+                        sumRevenue += Number(row.dataset.revenue || 0);
+                    }
+                }
             });
+
+            // Nếu là trang revenue, update cards và summary
+            if (page.dataset.reportPage === 'revenue') {
+                const cards = page.querySelectorAll('.stat-card h3');
+                if (cards[0]) cards[0].textContent = formatMoney(sumInvoice);
+                if (cards[1]) cards[1].textContent = (sumExchange > 0 ? '+' : '') + formatMoney(sumExchange);
+                if (cards[2]) cards[2].textContent = '-' + formatMoney(sumReturn);
+                if (cards[3]) cards[3].textContent = formatMoney(sumRevenue);
+
+                const summary = page.querySelector('[data-revenue-summary]');
+                if (summary) {
+                    summary.innerHTML = `<div><strong>Tổng tiền hóa đơn</strong><span>${formatMoney(sumInvoice)}</span><i style="width:100%"></i></div><div><strong>Tổng tiền trả hàng</strong><span>-${formatMoney(sumReturn)}</span><i style="width:100%; background: #f97316;"></i></div><div><strong>Tổng doanh thu</strong><span>${formatMoney(sumRevenue)}</span><i style="width:100%; background: #22c55e;"></i></div>`;
+                }
+            }
+            
+            if (page.dataset.reportPage === 'customers') {
+                const cards = page.querySelectorAll('.stat-card h3');
+                let sumCustomers = 0;
+                let sumOrders = 0;
+                let sumSpent = 0;
+                rows.forEach((row) => {
+                    if (row.style.display !== 'none' && !row.classList.contains('report-empty')) {
+                        sumCustomers += 1;
+                        sumOrders += Number(row.dataset.orders || 0);
+                        sumSpent += Number(row.dataset.spent || 0);
+                    }
+                });
+                
+                if (cards[0]) cards[0].textContent = sumCustomers;
+                if (cards[1]) cards[1].textContent = formatMoney(sumOrders ? sumSpent / sumOrders : 0);
+
+                const summary = page.querySelector('[data-customer-summary]');
+                if (summary) {
+                    summary.innerHTML = `<div><strong>Khách hàng mua sắm</strong><span>${sumCustomers} người</span><i style="width:100%"></i></div><div><strong>Tổng số hóa đơn</strong><span>${sumOrders} đơn</span><i style="width:100%; background: #f97316;"></i></div><div><strong>Tổng tiền chi tiêu</strong><span>${formatMoney(sumSpent)}</span><i style="width:100%; background: #22c55e;"></i></div>`;
+                }
+            }
 
             let empty = page.querySelector('.report-empty');
             const table = page.querySelector('[data-report-table]');
@@ -218,8 +265,9 @@
         }
         const summary = page.querySelector('[data-revenue-summary]');
         if (summary) {
-            const averageOrder = totalOrders ? totalRevenue / totalOrders : 0;
-            summary.innerHTML = `<div><strong>T\u1ed5ng h\u00f3a \u0111\u01a1n</strong><span>${totalOrders}</span><i style="width:100%"></i></div><div><strong>Doanh thu</strong><span>${formatMoney(totalRevenue)}</span><i style="width:100%"></i></div><div><strong>Trung b\u00ecnh / h\u00f3a \u0111\u01a1n</strong><span>${formatMoney(averageOrder)}</span><i style="width:${averageOrder ? 70 : 0}%"></i></div>`;
+            const totalInvoice = rows.reduce((sum, item) => sum + Number(item.invoice_total || 0), 0);
+            const totalReturn = rows.reduce((sum, item) => sum + Number(item.return_total || 0), 0);
+            summary.innerHTML = `<div><strong>Tổng tiền hóa đơn</strong><span>${formatMoney(totalInvoice)}</span><i style="width:100%"></i></div><div><strong>Tổng tiền trả hàng</strong><span>${formatMoney(totalReturn)}</span><i style="width:100%; background: #f97316;"></i></div><div><strong>Tổng doanh thu</strong><span>${formatMoney(totalRevenue)}</span><i style="width:100%; background: #22c55e;"></i></div>`;
         }
     };
 
@@ -241,28 +289,53 @@
         const table = page.querySelector('[data-report-table]');
         if (!table) return;
 
+        const getPeriod = (dateString) => {
+            if (!dateString) return 'all';
+            const d = new Date(dateString);
+            const today = new Date();
+            const isToday = d.toDateString() === today.toDateString();
+            const diffTime = Math.abs(today - d);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            const isLast7 = diffDays <= 7;
+            const isThisMonth = d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear();
+            const lastMonth = new Date(today); lastMonth.setMonth(today.getMonth() - 1);
+            const isLastMonth = d.getMonth() === lastMonth.getMonth() && d.getFullYear() === lastMonth.getFullYear();
+            let periods = ['all'];
+            if (isToday) periods.push('today');
+            if (isLast7) periods.push('last7');
+            if (isThisMonth) periods.push('this-month');
+            if (isLastMonth) periods.push('last-month');
+            return periods.join(' ');
+        };
+
         try {
             if (type === 'revenue') {
                 const rows = await window.kidCityApi.get('reports/revenue.php?from=1900-01-01&to=2999-12-31');
                 if (!Array.isArray(rows)) return;
+                const totalInvoice = rows.reduce((sum, item) => sum + Number(item.invoice_total || 0), 0);
+                const totalExchange = rows.reduce((sum, item) => sum + Number(item.exchange_total || 0), 0);
+                const totalReturn = rows.reduce((sum, item) => sum + Number(item.return_total || 0), 0);
                 const totalRevenue = rows.reduce((sum, item) => sum + Number(item.revenue || 0), 0);
                 const totalOrders = rows.reduce((sum, item) => sum + Number(item.orders || 0), 0);
+
                 const cards = page.querySelectorAll('.stat-card h3');
-                if (cards[0]) cards[0].textContent = formatMoney(totalRevenue);
-                if (cards[1]) cards[1].textContent = formatMoney(totalRevenue * 0.33);
-                if (cards[2]) cards[2].textContent = totalOrders;
-                if (cards[3]) cards[3].textContent = formatMoney(totalOrders ? totalRevenue / totalOrders : 0);
+                if (cards[0]) cards[0].textContent = formatMoney(totalInvoice);
+                if (cards[1]) cards[1].textContent = formatMoney(totalExchange);
+                if (cards[2]) cards[2].textContent = formatMoney(totalReturn);
                 renderRevenuePanels(page, rows, totalRevenue, totalOrders);
-                table.innerHTML = rows.map((item) => `
-                    <tr data-period="all today last7 this-month last-month">
+                table.innerHTML = rows.map((item) => {
+                    const exchangeColor = Number(item.exchange_total || 0) >= 0 ? 'text-green' : 'text-red';
+                    const exchangeSign = Number(item.exchange_total || 0) > 0 ? '+' : '';
+                    return `
+                    <tr data-period="${getPeriod(item.invoice_date)}" data-invoice="${item.invoice_total || 0}" data-return="${item.return_total || 0}" data-exchange="${item.exchange_total || 0}" data-revenue="${item.revenue || 0}">
                         <td class="fw-bold">${formatReportDate(item.invoice_date)}</td>
-                        <td class="fw-bold">${formatMoney(item.revenue)}</td>
-                        <td>${item.orders || 0}</td>
-                        <td class="text-green fw-bold">${formatMoney(Number(item.revenue || 0) * 0.33)}</td>
-                        <td class="text-green">T\u1eeb database</td>
-                        <td>${totalOrders} hóa đơn</td>
+                        <td class="fw-bold">${formatMoney(item.invoice_total)}</td>
+                        <td class="text-orange fw-bold">-${formatMoney(item.return_total)}</td>
+                        <td class="${exchangeColor} fw-bold">${exchangeSign}${formatMoney(item.exchange_total)}</td>
+                        <td class="text-blue fw-bold">${formatMoney(item.revenue)}</td>
+                        <td>${item.orders || 0} đơn bán</td>
                     </tr>
-                `).join('');
+                `}).join('');
                 bindReportFilters();
             }
 
@@ -271,10 +344,38 @@
                 if (!Array.isArray(rows)) return;
                 const cards = page.querySelectorAll('.stat-card h3');
                 if (cards[0]) cards[0].textContent = rows.length;
+                if (cards[1]) cards[1].textContent = rows.filter((item) => Number(item.stock || 0) > 0).length;
                 if (cards[2]) cards[2].textContent = rows.filter((item) => Number(item.stock || 0) <= 5).length;
                 if (cards[3]) cards[3].textContent = formatMoney(rows.reduce((sum, item) => sum + Number(item.revenue || 0), 0));
+                
+                const rankList = page.querySelector('.rank-list');
+                if (rankList) {
+                    const topProducts = [...rows].sort((a, b) => Number(b.sold_quantity) - Number(a.sold_quantity)).slice(0, 5);
+                    const maxSold = Math.max(...topProducts.map((item) => Number(item.sold_quantity || 0)), 1);
+                    rankList.innerHTML = topProducts.length && maxSold > 0 ? topProducts.map((item) => {
+                        const width = Math.max(8, Math.round(Number(item.sold_quantity || 0) / maxSold * 100));
+                        return `<div><strong>${item.name || '-'}</strong><span>${item.sold_quantity} đã bán</span><i style="width:${width}%"></i></div>`;
+                    }).join('') : '<p class="report-empty-inline">Chưa có dữ liệu bán hàng.</p>';
+                }
+
+                const barChart = page.querySelector('.bar-chart.small');
+                if (barChart) {
+                    const stockByCategory = {};
+                    rows.forEach(item => {
+                        const cat = item.category_name || 'Khác';
+                        stockByCategory[cat] = (stockByCategory[cat] || 0) + Number(item.stock || 0);
+                    });
+                    const cats = Object.keys(stockByCategory);
+                    const maxStock = Math.max(...Object.values(stockByCategory), 1);
+                    barChart.innerHTML = cats.length ? cats.slice(0, 7).map(cat => {
+                        const stock = stockByCategory[cat];
+                        const height = Math.max(12, Math.round(stock / maxStock * 100));
+                        return `<div style="--h:${height}%" title="${cat}: ${stock}"><span>${stock}</span><b>${cat.substring(0, 8)}</b></div>`;
+                    }).join('') : '<p class="report-empty-inline">Chưa có dữ liệu tồn kho.</p>';
+                }
+
                 table.innerHTML = rows.map((item) => `
-                    <tr data-period="all today last7 this-month last-month">
+                    <tr data-period="all today yesterday last7 this-month last-month">
                         <td class="fw-bold text-blue">${item.code || ''}</td>
                         <td>${item.name || ''}</td>
                         <td>${item.category_name || ''}</td>
@@ -294,12 +395,10 @@
                 if (cards[0]) cards[0].textContent = rows.length;
                 const totalOrders = rows.reduce((sum, item) => sum + Number(item.order_count || 0), 0);
                 const totalSpent = rows.reduce((sum, item) => sum + Number(item.total_spent || 0), 0);
-                if (cards[1]) cards[1].textContent = rows.filter((item) => Number(item.order_count || 0) >= 2).length;
-                if (cards[2]) cards[2].textContent = formatMoney(totalSpent);
-                if (cards[3]) cards[3].textContent = formatMoney(totalOrders ? totalSpent / totalOrders : 0);
+                if (cards[1]) cards[1].textContent = formatMoney(totalOrders ? totalSpent / totalOrders : 0);
                 renderTopCustomers(page, rows);
                 table.innerHTML = rows.map((item) => `
-                    <tr data-period="all today last7 this-month last-month">
+                    <tr data-period="${getPeriod(item.last_purchase)}" data-spent="${item.total_spent || 0}" data-orders="${item.order_count || 0}">
                         <td class="fw-bold text-blue">${item.code || ''}</td>
                         <td>${item.name || ''}</td>
                         <td>${item.phone || ''}</td>

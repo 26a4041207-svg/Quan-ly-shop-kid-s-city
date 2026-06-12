@@ -305,7 +305,7 @@ window.initSalePage = function initSalePage(container) {
     };
     const rowText = (row, index) => row.children[index]?.textContent.trim() || '';
     const searchableRowText = (row) => normalize(`${row.dataset.key || ''} ${row.textContent || ''}`);
-    const invoiceLink = (code) => `<a class="invoice-code-link" href="#">${code}</a>`;
+    const invoiceLink = (code) => `<a class="invoice-code-link" href="#" style="color: black; text-decoration: underline;">${code}</a>`;
 
     const usedInvoiceCodes = () => {
         const otherPageCodes = root.id === 'exchange-page' ? initialReturnInvoiceCodes : initialExchangeInvoiceCodes;
@@ -457,21 +457,27 @@ window.initSalePage = function initSalePage(container) {
             const body = root.querySelector('#exchange-table');
             if (!body || !Array.isArray(exchanges)) return;
             body.innerHTML = '';
+            let totalRefund = 0;
             exchanges.forEach((item) => {
+                totalRefund += Number(item.refund_amount || 0);
                 const row = document.createElement('tr');
                 row.dataset.key = normalize(`${item.code || ''} ${item.invoice_code || ''} ${item.staff_name || ''} ${item.reason || ''}`);
+                row.dataset.refund = formatMoney(item.refund_amount || 0);
                 row.dataset.reason = item.reason || '';
                 row.dataset.oldProduct = item.old_product_name || '';
                 row.dataset.newProduct = item.new_product_name || '-';
                 row.dataset.quantity = String(item.quantity || 1);
-                row.innerHTML = `<td><strong>${item.code || ''}</strong></td><td>${invoiceLink(item.invoice_code || '')}</td><td>${item.exchange_date || ''}</td><td>${item.staff_name || ''}</td><td></td>`;
+                row.dataset.updatedAt = item.updated_at || '';
+                row.innerHTML = `<td><strong>${item.code || ''}</strong></td><td>${invoiceLink(item.invoice_code || '')}</td><td>${item.exchange_date || ''}</td><td>${item.reason || ''}</td><td>${item.staff_name || ''}</td><td></td>`;
                 attachActions(row.lastElementChild, 'exchange', 'exchange-detail');
                 body.appendChild(row);
             });
             updateFirstStat(exchanges.length);
+            const stats = root.querySelectorAll('.sales-stat strong');
+            if (stats[1]) stats[1].textContent = formatMoney(totalRefund);
         } catch (error) {
             console.warn('Khong the tai phieu doi hang tu API:', error.message);
-            showTableError('#exchange-table', 5);
+            showTableError('#exchange-table', 6);
         }
     };
 
@@ -482,17 +488,22 @@ window.initSalePage = function initSalePage(container) {
             const body = root.querySelector('#return-table');
             if (!body || !Array.isArray(returns)) return;
             body.innerHTML = '';
+            let totalRefund = 0;
             returns.forEach((item) => {
+                totalRefund += Number(item.refund_amount || 0);
                 const row = document.createElement('tr');
                 row.dataset.key = normalize(`${item.code || ''} ${item.invoice_code || ''} ${item.reason || ''} ${item.staff_name || ''}`);
                 row.dataset.product = item.product_name || '';
                 row.dataset.quantity = String(item.quantity || 1);
                 row.dataset.refund = formatMoney(item.refund_amount);
+                row.dataset.updatedAt = item.updated_at || '';
                 row.innerHTML = `<td><strong>${item.code || ''}</strong></td><td>${invoiceLink(item.invoice_code || '')}</td><td>${item.return_date || ''}</td><td>${item.reason || ''}</td><td>${item.staff_name || ''}</td><td></td>`;
                 attachActions(row.lastElementChild, 'return', 'return-detail');
                 body.appendChild(row);
             });
             updateFirstStat(returns.length);
+            const stats = root.querySelectorAll('.sales-stat strong');
+            if (stats[1]) stats[1].textContent = formatMoney(totalRefund);
         } catch (error) {
             console.warn('Khong the tai phieu tra hang tu API:', error.message);
             showTableError('#return-table', 6);
@@ -520,8 +531,9 @@ window.initSalePage = function initSalePage(container) {
         detail.querySelector('.detail-grid').innerHTML = `
             <div class="detail-item"><span>Mã hóa đơn</span><strong>${invoiceCode}</strong></div>
             <div class="detail-item"><span>Ngày đổi</span><strong>${rowText(row, 2)}</strong></div>
-            <div class="detail-item"><span>Nhân viên xử lý</span><strong>${rowText(row, 3)}</strong></div>
-            <div class="detail-item"><span>Lý do</span><strong>${row.dataset.reason || 'Không có'}</strong></div>
+            <div class="detail-item"><span>Lý do</span><strong>${rowText(row, 3) || row.dataset.reason || 'Không có'}</strong></div>
+            <div class="detail-item"><span>Nhân viên xử lý</span><strong>${rowText(row, 4)}</strong></div>
+            <div class="detail-item"><span>Ngày cập nhật</span><strong>${row.dataset.updatedAt || 'Chưa cập nhật'}</strong></div>
         `;
         detail.querySelector('tbody').innerHTML = `
             <tr>
@@ -544,6 +556,7 @@ window.initSalePage = function initSalePage(container) {
             <div class="detail-item"><span>Ngày trả</span><strong>${rowText(row, 2)}</strong></div>
             <div class="detail-item"><span>Lý do</span><strong>${rowText(row, 3) || 'Không có'}</strong></div>
             <div class="detail-item"><span>Nhân viên xử lý</span><strong>${rowText(row, 4)}</strong></div>
+            <div class="detail-item"><span>Ngày cập nhật</span><strong>${row.dataset.updatedAt || 'Chưa cập nhật'}</strong></div>
         `;
         detail.querySelector('tbody').innerHTML = `
             <tr>
@@ -809,26 +822,53 @@ window.initSalePage = function initSalePage(container) {
         const modal = showWorkModal('exchange-edit-modal', `Sửa phiếu đổi ${code}`, `
             <div class="edit-summary">Cập nhật thông tin phiếu đổi và chi tiết sản phẩm đổi.</div>
             <div class="form-grid edit-grid">
-                <div class="field"><label>Mã đổi hàng</label><input data-field="code" value="${code}" disabled></div>
-                <div class="field"><label>Mã hóa đơn</label><input data-field="invoiceCode" value="${rowText(row, 1)}"></div>
-                <div class="field"><label>Ngày đổi</label><input type="date" data-field="date" value="${rowText(row, 2)}"></div>
-                <div class="field"><label>Nhân viên xử lý</label><input data-field="staff" value="${rowText(row, 3)}"></div>
+                <div class="field"><label>Mã đổi hàng</label><input data-field="code" value="${code}" disabled style="background-color: #eef2f5; color: #666;"></div>
+                <div class="field"><label>Mã hóa đơn</label><input data-field="invoiceCode" value="${rowText(row, 1)}" disabled style="background-color: #eef2f5; color: #666;"></div>
+                <div class="field"><label>Ngày đổi</label><input type="date" data-field="date" value="${rowText(row, 2)}" disabled style="background-color: #eef2f5; color: #666;"></div>
+                <div class="field"><label>Nhân viên xử lý</label><input data-field="staff" value="${rowText(row, 3)}" disabled style="background-color: #eef2f5; color: #666;"></div>
                 <div class="field full"><label>Lý do</label><input data-field="reason" value="${reason}"></div>
             </div>
-            <h3 class="section-title edit-section-title">Chi tiết đổi hàng</h3>
-            <div class="form-grid edit-grid">
-                <div class="field"><label>SP cũ</label><input data-field="oldProduct" value="${oldProduct}"></div>
-                <div class="field"><label>SP mới</label><input data-field="newProduct" value="${newProduct}"></div>
-                <div class="field"><label>Số lượng</label><input type="number" min="1" data-field="quantity" value="${quantity}"></div>
+            <h3 class="section-title edit-section-title" style="display:flex; justify-content:space-between; align-items:center;">Chi tiết đổi hàng <button class="sales-btn primary" data-add-exchange-product type="button" style="padding: 4px 8px; font-size: 0.9em;"><i class='bx bx-plus'></i></button></h3>
+            <div class="product-list-container">
+                <div class="form-grid edit-grid product-row" style="position: relative; padding-right: 40px; margin-bottom: 10px; border-bottom: 1px dashed #eee; padding-bottom: 10px;">
+                    <div class="field"><label>SP cũ</label><input data-field="oldProduct" value="${oldProduct}"></div>
+                    <div class="field"><label>SP mới</label><input data-field="newProduct" value="${newProduct}"></div>
+                    <div class="field"><label>Số lượng</label><input type="number" min="1" data-field="quantity" value="${quantity}"></div>
+                    <button class="action-btn delete" data-remove-row type="button" style="position: absolute; right: 0; top: 50%; transform: translateY(-50%); background: none; border: none; color: #ff4d4f; font-size: 1.2em; cursor: pointer;"><i class='bx bx-trash'></i></button>
+                </div>
             </div>
         `, `<button class="sales-btn light" data-close>Hủy</button><button class="sales-btn primary" data-save-edit="exchange">Lưu thay đổi</button>`);
 
+        modal.querySelector('[data-add-exchange-product]').onclick = () => {
+            const container = modal.querySelector('.product-list-container');
+            const newRow = document.createElement('div');
+            newRow.className = 'form-grid edit-grid product-row';
+            newRow.style.cssText = 'position: relative; padding-right: 40px; margin-bottom: 10px; border-bottom: 1px dashed #eee; padding-bottom: 10px;';
+            newRow.innerHTML = `
+                <div class="field"><label>SP cũ</label><input data-field="oldProduct" value=""></div>
+                <div class="field"><label>SP mới</label><input data-field="newProduct" value=""></div>
+                <div class="field"><label>Số lượng</label><input type="number" min="1" data-field="quantity" value="1"></div>
+                <button class="action-btn delete" data-remove-row type="button" style="position: absolute; right: 0; top: 50%; transform: translateY(-50%); background: none; border: none; color: #ff4d4f; font-size: 1.2em; cursor: pointer;"><i class='bx bx-trash'></i></button>
+            `;
+            container.appendChild(newRow);
+        };
+
+        modal.addEventListener('click', (event) => {
+            const removeBtn = event.target.closest('[data-remove-row]');
+            if (removeBtn) {
+                removeBtn.closest('.product-row').remove();
+            }
+        });
+
         modal.querySelector('[data-save-edit="exchange"]').onclick = () => {
-            row.innerHTML = `<td><strong>${code}</strong></td><td>${invoiceLink(fieldValue(modal, 'invoiceCode'))}</td><td>${fieldValue(modal, 'date')}</td><td>${fieldValue(modal, 'staff')}</td><td></td>`;
+            const firstRow = modal.querySelector('.product-row');
+            row.innerHTML = `<td><strong>${code}</strong></td><td>${invoiceLink(fieldValue(modal, 'invoiceCode'))}</td><td>${fieldValue(modal, 'date')}</td><td>${fieldValue(modal, 'reason')}</td><td>${fieldValue(modal, 'staff')}</td><td></td>`;
             row.dataset.reason = fieldValue(modal, 'reason');
-            row.dataset.oldProduct = fieldValue(modal, 'oldProduct');
-            row.dataset.newProduct = fieldValue(modal, 'newProduct');
-            row.dataset.quantity = fieldValue(modal, 'quantity') || '1';
+            if (firstRow) {
+                row.dataset.oldProduct = firstRow.querySelector('[data-field="oldProduct"]').value;
+                row.dataset.newProduct = firstRow.querySelector('[data-field="newProduct"]').value;
+                row.dataset.quantity = firstRow.querySelector('[data-field="quantity"]').value || '1';
+            }
             attachActions(row.lastElementChild, 'exchange', 'exchange-detail');
             updateRowKey(row);
             closeModal(modal);
@@ -843,25 +883,52 @@ window.initSalePage = function initSalePage(container) {
         const modal = showWorkModal('return-edit-modal', `Sửa phiếu trả ${code}`, `
             <div class="edit-summary">Cập nhật thông tin phiếu trả và chi tiết sản phẩm trả.</div>
             <div class="form-grid edit-grid">
-                <div class="field"><label>Mã trả hàng</label><input data-field="code" value="${code}" disabled></div>
-                <div class="field"><label>Mã hóa đơn</label><input data-field="invoiceCode" value="${rowText(row, 1)}"></div>
-                <div class="field"><label>Ngày trả</label><input type="date" data-field="date" value="${rowText(row, 2)}"></div>
-                <div class="field"><label>Nhân viên xử lý</label><input data-field="staff" value="${rowText(row, 4)}"></div>
+                <div class="field"><label>Mã trả hàng</label><input data-field="code" value="${code}" disabled style="background-color: #eef2f5; color: #666;"></div>
+                <div class="field"><label>Mã hóa đơn</label><input data-field="invoiceCode" value="${rowText(row, 1)}" disabled style="background-color: #eef2f5; color: #666;"></div>
+                <div class="field"><label>Ngày trả</label><input type="date" data-field="date" value="${rowText(row, 2)}" disabled style="background-color: #eef2f5; color: #666;"></div>
+                <div class="field"><label>Nhân viên xử lý</label><input data-field="staff" value="${rowText(row, 4)}" disabled style="background-color: #eef2f5; color: #666;"></div>
                 <div class="field full"><label>Lý do</label><input data-field="reason" value="${rowText(row, 3)}"></div>
             </div>
-            <h3 class="section-title edit-section-title">Chi tiết sản phẩm trả</h3>
-            <div class="form-grid edit-grid">
-                <div class="field"><label>Sản phẩm</label><input data-field="product" value="${product}"></div>
-                <div class="field"><label>Số lượng trả</label><input type="number" min="1" data-field="quantity" value="${quantity}"></div>
-                <div class="field"><label>Tiền hoàn</label><input data-field="refund" value="${refund}"></div>
+            <h3 class="section-title edit-section-title" style="display:flex; justify-content:space-between; align-items:center;">Chi tiết sản phẩm trả <button class="sales-btn primary" data-add-return-product type="button" style="padding: 4px 8px; font-size: 0.9em;"><i class='bx bx-plus'></i></button></h3>
+            <div class="product-list-container">
+                <div class="form-grid edit-grid product-row" style="position: relative; padding-right: 40px; margin-bottom: 10px; border-bottom: 1px dashed #eee; padding-bottom: 10px;">
+                    <div class="field"><label>Sản phẩm</label><input data-field="product" value="${product}"></div>
+                    <div class="field"><label>Số lượng trả</label><input type="number" min="1" data-field="quantity" value="${quantity}"></div>
+                    <div class="field"><label>Tiền hoàn</label><input data-field="refund" value="${refund}"></div>
+                    <button class="action-btn delete" data-remove-row type="button" style="position: absolute; right: 0; top: 50%; transform: translateY(-50%); background: none; border: none; color: #ff4d4f; font-size: 1.2em; cursor: pointer;"><i class='bx bx-trash'></i></button>
+                </div>
             </div>
         `, `<button class="sales-btn light" data-close>Hủy</button><button class="sales-btn primary" data-save-edit="return">Lưu thay đổi</button>`);
 
+        modal.querySelector('[data-add-return-product]').onclick = () => {
+            const container = modal.querySelector('.product-list-container');
+            const newRow = document.createElement('div');
+            newRow.className = 'form-grid edit-grid product-row';
+            newRow.style.cssText = 'position: relative; padding-right: 40px; margin-bottom: 10px; border-bottom: 1px dashed #eee; padding-bottom: 10px;';
+            newRow.innerHTML = `
+                <div class="field"><label>Sản phẩm</label><input data-field="product" value=""></div>
+                <div class="field"><label>Số lượng trả</label><input type="number" min="1" data-field="quantity" value="1"></div>
+                <div class="field"><label>Tiền hoàn</label><input data-field="refund" value="0đ"></div>
+                <button class="action-btn delete" data-remove-row type="button" style="position: absolute; right: 0; top: 50%; transform: translateY(-50%); background: none; border: none; color: #ff4d4f; font-size: 1.2em; cursor: pointer;"><i class='bx bx-trash'></i></button>
+            `;
+            container.appendChild(newRow);
+        };
+
+        modal.addEventListener('click', (event) => {
+            const removeBtn = event.target.closest('[data-remove-row]');
+            if (removeBtn) {
+                removeBtn.closest('.product-row').remove();
+            }
+        });
+
         modal.querySelector('[data-save-edit="return"]').onclick = () => {
+            const firstRow = modal.querySelector('.product-row');
             row.innerHTML = `<td><strong>${code}</strong></td><td>${invoiceLink(fieldValue(modal, 'invoiceCode'))}</td><td>${fieldValue(modal, 'date')}</td><td>${fieldValue(modal, 'reason')}</td><td>${fieldValue(modal, 'staff')}</td><td></td>`;
-            row.dataset.product = fieldValue(modal, 'product');
-            row.dataset.quantity = fieldValue(modal, 'quantity') || '1';
-            row.dataset.refund = fieldValue(modal, 'refund') || '0đ';
+            if (firstRow) {
+                row.dataset.product = firstRow.querySelector('[data-field="product"]').value;
+                row.dataset.quantity = firstRow.querySelector('[data-field="quantity"]').value || '1';
+                row.dataset.refund = firstRow.querySelector('[data-field="refund"]').value || '0đ';
+            }
             attachActions(row.lastElementChild, 'return', 'return-detail');
             updateRowKey(row);
             closeModal(modal);
@@ -875,7 +942,6 @@ window.initSalePage = function initSalePage(container) {
             <div class="delete-message">
                 <i class='bx bx-error-circle'></i>
                 <p>Bạn có chắc muốn xóa <strong>${code}</strong> không?</p>
-                <span>Thao tác này chỉ xóa dữ liệu tạm trên giao diện hiện tại.</span>
             </div>
         `, `<button class="sales-btn light" data-close>Hủy</button><button class="sales-btn primary danger" data-confirm-delete>Xóa</button>`);
 
@@ -885,8 +951,22 @@ window.initSalePage = function initSalePage(container) {
                 updateFirstStat(countRows('#invoice-table'));
                 renderInvoicePagination();
             }
-            if (type === 'exchange') updateFirstStat(countRows('#exchange-table'));
-            if (type === 'return') updateFirstStat(countRows('#return-table'));
+            if (type === 'exchange') {
+                updateFirstStat(countRows('#exchange-table'));
+                const stats = root.querySelectorAll('.sales-stat strong');
+                if (stats[1]) {
+                    const totalRefund = Array.from(root.querySelectorAll('#exchange-table tr')).reduce((sum, r) => sum + moneyNumber(r.dataset.refund || '0'), 0);
+                    stats[1].textContent = formatMoney(totalRefund);
+                }
+            }
+            if (type === 'return') {
+                updateFirstStat(countRows('#return-table'));
+                const stats = root.querySelectorAll('.sales-stat strong');
+                if (stats[1]) {
+                    const totalRefund = Array.from(root.querySelectorAll('#return-table tr')).reduce((sum, r) => sum + moneyNumber(r.dataset.refund || '0'), 0);
+                    stats[1].textContent = formatMoney(totalRefund);
+                }
+            }
             closeModal(modal);
         };
     };
@@ -1209,31 +1289,41 @@ window.initSalePage = function initSalePage(container) {
     /* =====================================================
        EXCHANGES - Tạo phiếu đổi hàng frontend tạm
        ===================================================== */
-    const updateExchangeCreateMode = () => {
+    const updateExchangeRefund = () => {
         const modal = root.querySelector('#exchange-create');
         if (!modal) return;
-        const typeSelect = getTypeSelect(modal);
-        const newPanel = modal.querySelector('.swap-panel.new');
-        const newTitle = newPanel?.previousElementSibling;
-        const newSelectedLine = newPanel?.nextElementSibling?.classList.contains('selected-items') ? newPanel.nextElementSibling : null;
-        const isReturn = typeSelect?.value === 'Trả hàng';
-
-        [newTitle, newPanel, newSelectedLine].forEach((element) => {
-            if (element) element.style.display = isReturn ? 'none' : '';
-        });
+        const returnSelect = modal.querySelector('.swap-panel.return-only select');
+        const returnQty = modal.querySelector('.swap-panel.return-only input[type="number"]');
+        const oldSelect = modal.querySelector('.swap-panel.old select');
+        const oldQty = modal.querySelector('.swap-panel.old input[type="number"]');
+        const newSelect = modal.querySelector('.swap-panel.new select');
+        const newQty = modal.querySelector('.swap-panel.new input[type="number"]');
+        
+        let refund = 0;
+        if (validSelect(returnSelect)) refund += (prices[returnSelect.value] || 100000) * Math.max(1, Number(returnQty?.value || 1));
+        if (validSelect(oldSelect)) refund += (prices[oldSelect.value] || 100000) * Math.max(1, Number(oldQty?.value || 1));
+        if (validSelect(newSelect)) refund -= (prices[newSelect.value] || 100000) * Math.max(1, Number(newQty?.value || 1));
+        
+        const totalRefundEl = modal.querySelector('#exchange-total-refund');
+        if (totalRefundEl) {
+            totalRefundEl.textContent = formatMoney(refund);
+            totalRefundEl.className = refund >= 0 ? 'green font-weight-600' : 'red font-weight-600';
+        }
     };
 
     const createExchange = async () => {
         const modal = root.querySelector('#exchange-create');
         const invoiceSelect = getInvoiceControl(modal);
-        const typeSelect = getTypeSelect(modal);
         const dateInput = modal.querySelector('input[type="date"]');
         const noteInput = getNoteInput(modal);
+        
+        const returnPanel = modal.querySelector('.swap-panel.return-only');
         const oldPanel = modal.querySelector('.swap-panel.old');
         const newPanel = modal.querySelector('.swap-panel.new');
+        
+        const returnSelect = returnPanel.querySelector('select');
         const oldSelect = oldPanel.querySelector('select');
         const newSelect = newPanel.querySelector('select');
-        const isReturn = typeSelect?.value === 'Trả hàng';
 
         if (!validSelect(invoiceSelect)) {
             alert('Vui lòng chọn hóa đơn gốc.');
@@ -1243,102 +1333,151 @@ window.initSalePage = function initSalePage(container) {
             alert('Hóa đơn này đã có phiếu đổi/trả. Mỗi hóa đơn chỉ được đổi hoặc trả một lần.');
             return;
         }
-        if (!validSelect(oldSelect)) {
-            alert('Vui lòng chọn sản phẩm khách trả lại.');
-            return;
-        }
-        if (!isReturn && !validSelect(newSelect)) {
-            alert('Vui lòng chọn sản phẩm đổi mới.');
+        if (!validSelect(returnSelect) && !(validSelect(oldSelect) && validSelect(newSelect))) {
+            alert('Vui lòng chọn ít nhất 1 sản phẩm trả lại hoặc 1 cặp sản phẩm đổi.');
             return;
         }
 
-        const code = nextCode('#exchange-table', 'DH');
         const invoiceCode = invoiceSelect.value;
         const date = dateInput.value || today();
-        const reason = noteInput?.value.trim() || (isReturn ? 'Trả hàng' : 'Đổi sang mẫu khác');
+        const reason = noteInput?.value.trim() || 'Đổi/trả hàng';
+
         if (window.kidCityApi) {
             try {
-                await window.kidCityApi.post('sales/exchanges.php', {
-                    invoice_id: invoiceIdByCode(invoiceCode),
-                    old_product_id: invoiceProductId(invoiceCode, oldSelect.value),
-                    new_product_id: isReturn ? null : (productDetails[newSelect.value]?.productId || 0),
-                    exchange_date: date,
-                    quantity: Math.max(1, Number(oldPanel.querySelector('input').value || 1)),
-                    reason,
-                    type: isReturn ? 'Trả hàng' : 'Đổi hàng'
-                });
+                if (validSelect(returnSelect)) {
+                    await window.kidCityApi.post('sales/returns.php', {
+                        invoice_id: invoiceIdByCode(invoiceCode),
+                        product_id: invoiceProductId(invoiceCode, returnSelect.value),
+                        return_date: date,
+                        quantity: Math.max(1, Number(returnPanel.querySelector('input').value || 1)),
+                        refund_amount: (prices[returnSelect.value] || 100000) * Math.max(1, Number(returnPanel.querySelector('input').value || 1)),
+                        reason: reason + ' (Trả)'
+                    });
+                }
+                if (validSelect(oldSelect) && validSelect(newSelect)) {
+                    await window.kidCityApi.post('sales/exchanges.php', {
+                        invoice_id: invoiceIdByCode(invoiceCode),
+                        old_product_id: invoiceProductId(invoiceCode, oldSelect.value),
+                        new_product_id: productDetails[newSelect.value]?.productId || 0,
+                        exchange_date: date,
+                        quantity: Math.max(1, Number(oldPanel.querySelector('input').value || 1)),
+                        reason: reason + ' (Đổi)',
+                        type: 'Đổi hàng'
+                    });
+                }
                 closeModal(modal);
                 await loadExchangeTableFromApi();
                 return;
             } catch (error) {
-                alert(error.message || 'Không thể tạo phiếu đổi hàng.');
+                alert(error.message || 'Không thể tạo phiếu đổi/trả hàng.');
                 return;
             }
         }
+        
         const body = root.querySelector('#exchange-table');
-        const row = document.createElement('tr');
-        row.dataset.key = normalize(`${code} ${invoiceCode} Nguyễn Văn An ${reason}`);
-        row.innerHTML = `<td><strong>${code}</strong></td><td>${invoiceLink(invoiceCode)}</td><td>${date}</td><td>Nguyễn Văn An</td><td></td>`;
-        attachActions(row.lastElementChild, 'exchange', 'exchange-detail');
-        body.prepend(row);
+        if (validSelect(returnSelect)) {
+            const code = nextCode('#exchange-table', 'TH');
+            const row = document.createElement('tr');
+            row.dataset.key = normalize(`${code} ${invoiceCode} ${reason} Nguyễn Văn An`);
+            row.dataset.reason = reason + ' (Trả)';
+            row.dataset.oldProduct = returnSelect.value;
+            row.dataset.newProduct = '-';
+            row.dataset.quantity = Math.max(1, Number(returnPanel.querySelector('input').value || 1));
+            row.dataset.refund = formatMoney((prices[returnSelect.value] || 100000) * row.dataset.quantity);
+            row.innerHTML = `<td><strong>${code}</strong></td><td>${invoiceLink(invoiceCode)}</td><td>${date}</td><td>${reason} (Trả)</td><td>Nguyễn Văn An</td><td></td>`;
+            attachActions(row.lastElementChild, 'exchange', 'exchange-detail');
+            body.prepend(row);
+        }
+        if (validSelect(oldSelect) && validSelect(newSelect)) {
+            const code = nextCode('#exchange-table', 'DH');
+            const row = document.createElement('tr');
+            row.dataset.key = normalize(`${code} ${invoiceCode} ${reason} Nguyễn Văn An`);
+            row.dataset.reason = reason + ' (Đổi)';
+            row.dataset.oldProduct = oldSelect.value;
+            row.dataset.newProduct = newSelect.value;
+            row.dataset.quantity = Math.max(1, Number(oldPanel.querySelector('input').value || 1));
+            row.dataset.refund = formatMoney(0);
+            row.innerHTML = `<td><strong>${code}</strong></td><td>${invoiceLink(invoiceCode)}</td><td>${date}</td><td>${reason} (Đổi)</td><td>Nguyễn Văn An</td><td></td>`;
+            attachActions(row.lastElementChild, 'exchange', 'exchange-detail');
+            body.prepend(row);
+        }
         updateFirstStat(countRows('#exchange-table'));
-
-        const detail = root.querySelector('#exchange-detail .sales-modal-body');
-        detail.querySelector('.detail-title').textContent = `Chi tiết ${isReturn ? 'trả hàng' : 'đổi hàng'} ${code}`;
-        detail.querySelector('.detail-grid').innerHTML = `<div class="detail-item"><span>Mã hóa đơn</span><strong>${invoiceCode}</strong></div><div class="detail-item"><span>Ngày ${isReturn ? 'trả' : 'đổi'}</span><strong>${date}</strong></div><div class="detail-item"><span>Nhân viên xử lý</span><strong>Nguyễn Văn An</strong></div><div class="detail-item"><span>Lý do</span><strong>${reason}</strong></div>`;
-        detail.querySelector('tbody').innerHTML = `<tr><td>${oldSelect.value}</td><td>${isReturn ? '-' : newSelect.value}</td><td><strong>${Math.max(1, Number(oldPanel.querySelector('input').value || 1))}</strong></td></tr>`;
+        const stats = root.querySelectorAll('.sales-stat strong');
+        if (stats[1]) {
+            const totalRefund = Array.from(root.querySelectorAll('#exchange-table tr')).reduce((sum, r) => sum + moneyNumber(r.dataset.refund || '0'), 0);
+            stats[1].textContent = formatMoney(totalRefund);
+        }
         closeModal(modal);
     };
 
     const bindExchangePage = () => {
-        showTableLoading('#exchange-table', 5);
+        showTableLoading('#exchange-table', 6);
         loadExchangeTableFromApi();
         const modal = root.querySelector('#exchange-create');
-        const invoiceSelect = enhanceInvoiceControl(modal, 'exchange-invoice-combo', '.swap-panel.old');
-        const typeSelect = getTypeSelect(modal);
-        root.querySelector('.swap-panel.old .sales-btn').addEventListener('click', () => addSelectedLine(root.querySelector('.swap-panel.old'), 'SP cũ'));
-        root.querySelector('.swap-panel.new .sales-btn').addEventListener('click', () => addSelectedLine(root.querySelector('.swap-panel.new'), 'SP mới'));
-        invoiceSelect?.addEventListener('change', () => syncInvoiceProductPanel(modal, '.swap-panel.old'));
-        typeSelect?.addEventListener('change', updateExchangeCreateMode);
+        const invoiceSelect = enhanceInvoiceControl(modal, 'exchange-invoice-combo', '.swap-panel.return-only');
+        
+        invoiceSelect?.addEventListener('change', () => { 
+            syncInvoiceProductPanel(modal, '.swap-panel.return-only');
+            syncInvoiceProductPanel(modal, '.swap-panel.old');
+            updateExchangeRefund(); 
+        });
+        modal.querySelector('.swap-panel.return-only select')?.addEventListener('change', updateExchangeRefund);
+        modal.querySelector('.swap-panel.return-only input')?.addEventListener('input', updateExchangeRefund);
+        modal.querySelector('.swap-panel.old select')?.addEventListener('change', updateExchangeRefund);
+        modal.querySelector('.swap-panel.old input')?.addEventListener('input', updateExchangeRefund);
+        modal.querySelector('.swap-panel.new select')?.addEventListener('change', updateExchangeRefund);
+        modal.querySelector('.swap-panel.new input')?.addEventListener('input', updateExchangeRefund);
         root.querySelector('#exchange-create .modal-actions .sales-btn.primary').addEventListener('click', createExchange);
+        
+        syncInvoiceProductPanel(modal, '.swap-panel.return-only');
         syncInvoiceProductPanel(modal, '.swap-panel.old');
         mergeInvoicesFromApi().then(() => {
             refreshInvoiceDatalist(modal);
+            syncInvoiceProductPanel(modal, '.swap-panel.return-only');
             syncInvoiceProductPanel(modal, '.swap-panel.old');
+            updateExchangeRefund();
         });
-        updateExchangeCreateMode();
+        updateExchangeRefund();
     };
 
     /* =====================================================
        RETURNS - Tạo phiếu trả hàng frontend tạm
        ===================================================== */
-    const updateReturnCreateMode = () => {
+    const updateReturnRefund = () => {
         const modal = root.querySelector('#return-create');
         if (!modal) return;
-        const typeSelect = getTypeSelect(modal);
-        const isExchange = typeSelect?.value === 'Đổi hàng';
-        const exchangeTargets = modal.querySelectorAll('.return-exchange-target');
-        const newPanel = modal.querySelector('.swap-panel.new.return-exchange-target');
-        const newSelectedLine = newPanel?.nextElementSibling?.classList.contains('selected-items') ? newPanel.nextElementSibling : null;
-
-        exchangeTargets.forEach((element) => {
-            element.style.display = isExchange ? '' : 'none';
-        });
-        if (newSelectedLine) newSelectedLine.style.display = isExchange ? '' : 'none';
+        const returnSelect = modal.querySelector('.swap-panel.return-only select');
+        const returnQty = modal.querySelector('.swap-panel.return-only input[type="number"]');
+        const oldSelect = modal.querySelector('.swap-panel.old select');
+        const oldQty = modal.querySelector('.swap-panel.old input[type="number"]');
+        const newSelect = modal.querySelector('.swap-panel.new select');
+        const newQty = modal.querySelector('.swap-panel.new input[type="number"]');
+        
+        let refund = 0;
+        if (validSelect(returnSelect)) refund += (prices[returnSelect.value] || 100000) * Math.max(1, Number(returnQty?.value || 1));
+        if (validSelect(oldSelect)) refund += (prices[oldSelect.value] || 100000) * Math.max(1, Number(oldQty?.value || 1));
+        if (validSelect(newSelect)) refund -= (prices[newSelect.value] || 100000) * Math.max(1, Number(newQty?.value || 1));
+        
+        const totalRefundEl = modal.querySelector('#return-total-refund');
+        if (totalRefundEl) {
+            totalRefundEl.textContent = formatMoney(refund);
+            totalRefundEl.className = refund >= 0 ? 'green font-weight-600' : 'red font-weight-600';
+        }
     };
 
     const createReturn = async () => {
         const modal = root.querySelector('#return-create');
         const invoiceSelect = getInvoiceControl(modal);
-        const typeSelect = getTypeSelect(modal);
         const dateInput = modal.querySelector('input[type="date"]');
         const noteInput = getNoteInput(modal);
-        const panel = modal.querySelector('.return-panel');
-        const newPanel = modal.querySelector('.swap-panel.new.return-exchange-target');
-        const productSelect = panel.querySelector('select');
-        const newProductSelect = newPanel?.querySelector('select');
-        const qtyInput = panel.querySelector('input[type="number"]');
-        const isExchange = typeSelect?.value === 'Đổi hàng';
+        
+        const returnPanel = modal.querySelector('.swap-panel.return-only');
+        const oldPanel = modal.querySelector('.swap-panel.old');
+        const newPanel = modal.querySelector('.swap-panel.new');
+        
+        const returnSelect = returnPanel.querySelector('select');
+        const oldSelect = oldPanel.querySelector('select');
+        const newSelect = newPanel.querySelector('select');
 
         if (!validSelect(invoiceSelect)) {
             alert('Vui lòng chọn hóa đơn gốc.');
@@ -1348,79 +1487,76 @@ window.initSalePage = function initSalePage(container) {
             alert('Hóa đơn này đã có phiếu đổi/trả. Mỗi hóa đơn chỉ được đổi hoặc trả một lần.');
             return;
         }
-        if (!validSelect(productSelect)) {
-            alert('Vui lòng chọn sản phẩm khách trả lại.');
-            return;
-        }
-        if (isExchange && !validSelect(newProductSelect)) {
-            alert('Vui lòng chọn sản phẩm đổi mới.');
+        if (!validSelect(returnSelect) && !(validSelect(oldSelect) && validSelect(newSelect))) {
+            alert('Vui lòng chọn ít nhất 1 sản phẩm trả lại hoặc 1 cặp sản phẩm đổi.');
             return;
         }
 
-        const code = nextCode('#return-table', 'TH');
         const invoiceCode = invoiceSelect.value;
         const date = dateInput.value || today();
-        const reason = noteInput?.value.trim() || (isExchange ? 'Đổi hàng' : 'Khách trả hàng');
-        const product = productSelect.value;
-        const newProduct = newProductSelect?.value || '-';
-        const quantity = Math.max(1, Number(qtyInput.value || 1));
-        const refund = (prices[product] || 100000) * quantity;
+        const reason = noteInput?.value.trim() || 'Đổi/trả hàng';
 
         if (window.kidCityApi) {
             try {
-                if (isExchange) {
-                    await window.kidCityApi.post('sales/exchanges.php', {
-                        invoice_id: invoiceIdByCode(invoiceCode),
-                        old_product_id: invoiceProductId(invoiceCode, product),
-                        new_product_id: productDetails[newProduct]?.productId || 0,
-                        exchange_date: date,
-                        quantity,
-                        reason,
-                        type: 'Đổi hàng'
-                    });
-                    closeModal(modal);
-                    await loadExchangeTableFromApi();
-                } else {
+                if (validSelect(returnSelect)) {
                     await window.kidCityApi.post('sales/returns.php', {
                         invoice_id: invoiceIdByCode(invoiceCode),
-                        product_id: invoiceProductId(invoiceCode, product),
+                        product_id: invoiceProductId(invoiceCode, returnSelect.value),
                         return_date: date,
-                        quantity,
-                        refund_amount: refund,
-                        reason
+                        quantity: Math.max(1, Number(returnPanel.querySelector('input').value || 1)),
+                        refund_amount: (prices[returnSelect.value] || 100000) * Math.max(1, Number(returnPanel.querySelector('input').value || 1)),
+                        reason: reason + ' (Trả)'
                     });
-                    closeModal(modal);
-                    await loadReturnTableFromApi();
                 }
+                if (validSelect(oldSelect) && validSelect(newSelect)) {
+                    await window.kidCityApi.post('sales/exchanges.php', {
+                        invoice_id: invoiceIdByCode(invoiceCode),
+                        old_product_id: invoiceProductId(invoiceCode, oldSelect.value),
+                        new_product_id: productDetails[newSelect.value]?.productId || 0,
+                        exchange_date: date,
+                        quantity: Math.max(1, Number(oldPanel.querySelector('input').value || 1)),
+                        reason: reason + ' (Đổi)',
+                        type: 'Đổi hàng'
+                    });
+                }
+                closeModal(modal);
+                await loadReturnTableFromApi();
                 return;
             } catch (error) {
-                alert(error.message || 'Không thể tạo phiếu trả/đổi hàng.');
+                alert(error.message || 'Không thể tạo phiếu đổi/trả hàng.');
                 return;
             }
         }
+        
         const body = root.querySelector('#return-table');
-        const row = document.createElement('tr');
-        row.dataset.key = normalize(`${code} ${invoiceCode} ${reason} Nguyễn Văn An`);
-        row.innerHTML = `<td><strong>${code}</strong></td><td>${invoiceLink(invoiceCode)}</td><td>${date}</td><td>${reason}</td><td>Nguyễn Văn An</td><td></td>`;
-        attachActions(row.lastElementChild, 'return', 'return-detail');
-        body.prepend(row);
+        if (validSelect(returnSelect)) {
+            const code = nextCode('#return-table', 'TH');
+            const row = document.createElement('tr');
+            const qty = Math.max(1, Number(returnPanel.querySelector('input').value || 1));
+            row.dataset.key = normalize(`${code} ${invoiceCode} ${reason} Nguyễn Văn An`);
+            row.dataset.product = returnSelect.value;
+            row.dataset.quantity = qty;
+            row.dataset.refund = formatMoney((prices[returnSelect.value] || 100000) * qty);
+            row.innerHTML = `<td><strong>${code}</strong></td><td>${invoiceLink(invoiceCode)}</td><td>${date}</td><td>${reason} (Trả)</td><td>Nguyễn Văn An</td><td></td>`;
+            attachActions(row.lastElementChild, 'return', 'return-detail');
+            body.prepend(row);
+        }
+        if (validSelect(oldSelect) && validSelect(newSelect)) {
+            const code = nextCode('#return-table', 'DH');
+            const row = document.createElement('tr');
+            row.dataset.key = normalize(`${code} ${invoiceCode} ${reason} Nguyễn Văn An`);
+            row.dataset.product = oldSelect.value;
+            row.dataset.quantity = Math.max(1, Number(oldPanel.querySelector('input').value || 1));
+            row.dataset.refund = formatMoney(0);
+            row.innerHTML = `<td><strong>${code}</strong></td><td>${invoiceLink(invoiceCode)}</td><td>${date}</td><td>${reason} (Đổi)</td><td>Nguyễn Văn An</td><td></td>`;
+            attachActions(row.lastElementChild, 'return', 'return-detail');
+            body.prepend(row);
+        }
         updateFirstStat(countRows('#return-table'));
-
-        const detail = root.querySelector('#return-detail .sales-modal-body');
-        detail.querySelector('.detail-title').textContent = `Chi tiết ${isExchange ? 'đổi hàng' : 'trả hàng'} ${code}`;
-        detail.querySelector('.detail-grid').innerHTML = `<div class="detail-item"><span>Mã hóa đơn</span><strong>${invoiceCode}</strong></div><div class="detail-item"><span>Ngày ${isExchange ? 'đổi' : 'trả'}</span><strong>${date}</strong></div><div class="detail-item"><span>Lý do</span><strong>${reason}</strong></div><div class="detail-item"><span>Nhân viên xử lý</span><strong>Nguyễn Văn An</strong></div>`;
-
-        if (isExchange) {
-            detail.querySelector('.section-title').textContent = 'Chi tiết đổi hàng';
-            detail.querySelector('thead').innerHTML = '<tr><th>SP khách trả lại</th><th>SP đổi mới</th><th>Số lượng</th></tr>';
-            detail.querySelector('tbody').innerHTML = `<tr><td>${product}</td><td>${newProduct}</td><td><strong>${quantity}</strong></td></tr>`;
-            detail.querySelector('.total-line').style.display = 'none';
-        } else {
-            detail.querySelector('.section-title').textContent = 'Chi tiết sản phẩm trả';
-            detail.querySelector('thead').innerHTML = '<tr><th>Sản phẩm</th><th>Số lượng trả</th><th>Tiền hoàn</th></tr>';
-            detail.querySelector('tbody').innerHTML = `<tr><td>${product}</td><td><strong>${quantity}</strong></td><td class="red font-weight-600">${formatMoney(refund)}</td></tr>`;
-            detail.querySelector('.total-line').style.display = '';
-            detail.querySelector('.total-line').innerHTML = `Tổng tiền hoàn: <span class="red">${formatMoney(refund)}</span>`;
+        const stats = root.querySelectorAll('.sales-stat strong');
+        if (stats[1]) {
+            const totalRefund = Array.from(root.querySelectorAll('#return-table tr')).reduce((sum, r) => sum + moneyNumber(r.dataset.refund || '0'), 0);
+            stats[1].textContent = formatMoney(totalRefund);
         }
         closeModal(modal);
     };
@@ -1429,20 +1565,30 @@ window.initSalePage = function initSalePage(container) {
         showTableLoading('#return-table', 6);
         loadReturnTableFromApi();
         const modal = root.querySelector('#return-create');
-        const invoiceSelect = enhanceInvoiceControl(modal, 'return-invoice-combo', '.return-panel');
-        const typeSelect = getTypeSelect(modal);
-        root.querySelector('.return-panel .sales-btn').addEventListener('click', () => addSelectedLine(root.querySelector('.return-panel'), 'SP trả'));
-        const newPanelButton = root.querySelector('.swap-panel.new.return-exchange-target .sales-btn');
-        if (newPanelButton) newPanelButton.addEventListener('click', () => addSelectedLine(root.querySelector('.swap-panel.new.return-exchange-target'), 'SP mới'));
-        invoiceSelect?.addEventListener('change', () => syncInvoiceProductPanel(modal, '.return-panel'));
-        typeSelect?.addEventListener('change', updateReturnCreateMode);
+        const invoiceSelect = enhanceInvoiceControl(modal, 'return-invoice-combo', '.swap-panel.return-only');
+        
+        invoiceSelect?.addEventListener('change', () => { 
+            syncInvoiceProductPanel(modal, '.swap-panel.return-only');
+            syncInvoiceProductPanel(modal, '.swap-panel.old');
+            updateReturnRefund(); 
+        });
+        modal.querySelector('.swap-panel.return-only select')?.addEventListener('change', updateReturnRefund);
+        modal.querySelector('.swap-panel.return-only input')?.addEventListener('input', updateReturnRefund);
+        modal.querySelector('.swap-panel.old select')?.addEventListener('change', updateReturnRefund);
+        modal.querySelector('.swap-panel.old input')?.addEventListener('input', updateReturnRefund);
+        modal.querySelector('.swap-panel.new select')?.addEventListener('change', updateReturnRefund);
+        modal.querySelector('.swap-panel.new input')?.addEventListener('input', updateReturnRefund);
         root.querySelector('#return-create .modal-actions .sales-btn.primary').addEventListener('click', createReturn);
-        syncInvoiceProductPanel(modal, '.return-panel');
+        
+        syncInvoiceProductPanel(modal, '.swap-panel.return-only');
+        syncInvoiceProductPanel(modal, '.swap-panel.old');
         mergeInvoicesFromApi().then(() => {
             refreshInvoiceDatalist(modal);
-            syncInvoiceProductPanel(modal, '.return-panel');
+            syncInvoiceProductPanel(modal, '.swap-panel.return-only');
+            syncInvoiceProductPanel(modal, '.swap-panel.old');
+            updateReturnRefund();
         });
-        updateReturnCreateMode();
+        updateReturnRefund();
     };
 
     /* =====================================================
