@@ -59,8 +59,8 @@
 .field label { display: block; color: #475569; font-weight: 600; font-size: 14px; margin-bottom: 8px; }
 .field input, .field select { width: 100%; height: 42px; border: 1px solid #e5e7eb; border-radius: 10px; padding: 0 14px; outline: none; color: #334155; background: #fff; }
 .field.full { grid-column: 1 / -1; }
-.import-add-product { background: #f1f7ff; border: 1px solid #dbeafe; border-radius: 12px; padding: 16px; display: grid; grid-template-columns: 2fr 1.2fr .8fr .9fr .8fr auto; gap: 12px; align-items: end; margin: 16px 0; }
-.import-add-product .image-field { grid-column: 1 / 3; }
+.import-add-product { background: #f1f7ff; border: 1px solid #dbeafe; border-radius: 12px; padding: 16px; display: block; margin: 16px 0; }
+.import-add-grid { display: grid; grid-template-columns: 2fr 1.2fr 1.5fr 1fr; gap: 12px; margin-bottom: 15px; }
 .import-section-title { margin: 22px 0 14px; }
 .detail-title { margin-bottom: 26px; }
 .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 26px 80px; margin-bottom: 24px; }
@@ -71,24 +71,58 @@
    IMPORT EDIT - Bảng sửa sản phẩm trong phiếu nhập
    ========================================================= */
 .import-edit-products-card { border-radius: 14px; overflow-x: auto; }
-.import-edit-table { min-width: 780px; table-layout: fixed; }
-.import-edit-table th { padding: 16px 18px; font-size: 14px; text-transform: none; }
-.import-edit-table td { padding: 14px 16px; }
-.import-edit-table input {
+.import-edit-table { min-width: 920px; table-layout: auto; width: 100%; }
+.import-edit-table th { padding: 12px 10px; font-size: 13px; text-transform: none; white-space: nowrap; }
+.import-edit-table td { padding: 10px 8px; vertical-align: top; white-space: normal; word-break: break-word; }
+.import-edit-table .col-image { width: 76px; min-width: 76px; }
+.import-edit-table .col-product { min-width: 120px; }
+.import-edit-table .col-category { min-width: 100px; }
+.import-edit-table .col-size { width: 68px; min-width: 68px; }
+.import-edit-table .col-color { width: 76px; min-width: 76px; }
+.import-edit-table .col-qty { width: 62px; min-width: 62px; }
+.import-edit-table .col-price { width: 96px; min-width: 96px; }
+.import-edit-table .col-action { width: 48px; min-width: 48px; text-align: center; }
+.import-edit-table textarea,
+.import-edit-table input[type="text"],
+.import-edit-table input[type="number"] {
     width: 100%;
-    height: 44px;
+    min-height: 44px;
+    height: auto;
     border: 1px solid #dbe5f1;
     border-radius: 10px;
-    padding: 0 14px;
+    padding: 8px 10px;
     background: #f8fafc;
     color: #334155;
-    font-size: 14px;
+    font-size: 13px;
+    line-height: 1.45;
     outline: none;
+    box-sizing: border-box;
+    resize: none;
+    word-wrap: break-word;
+    white-space: normal;
+    overflow-wrap: anywhere;
 }
+.import-edit-table textarea {
+    min-height: 52px;
+    max-height: 76px;
+    field-sizing: content;
+}
+.import-edit-table input[type="number"] {
+    min-height: 44px;
+    padding: 8px 6px;
+}
+.import-edit-table textarea:focus,
 .import-edit-table input:focus {
     background: #fff;
     border-color: #3b82f6;
     box-shadow: 0 0 0 3px rgba(59, 130, 246, .12);
+}
+#import-edit .import-dialog { width: min(1080px, 100%); }
+.import-table .import-cell-wrap {
+    white-space: normal;
+    word-break: break-word;
+    line-height: 1.45;
+    max-width: 220px;
 }
 
 /* =========================================================
@@ -96,7 +130,7 @@
    ========================================================= */
 @media (max-width: 900px) {
     .import-stats { grid-template-columns: repeat(2, 1fr); }
-    .import-add-product, .form-grid { grid-template-columns: 1fr; }
+    .import-add-grid, .form-grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 640px) {
     .import-toolbar { flex-direction: column; align-items: stretch; }
@@ -112,3 +146,55 @@
 .import-page-btn:hover { border-color: #2f80ed; color: #2f80ed; }
 .import-page-btn.active { background: #2f80ed; border-color: #2f80ed; color: #fff; }
 .import-page-btn:disabled { opacity: .45; cursor: not-allowed; }
+
+/* =========================================================
+   IMPORT PRODUCT IMAGE - Ảnh sản phẩm trong phiếu nhập
+   ========================================================= */
+.import-product-thumb {
+    width: 44px;
+    height: 44px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    background: #f8fafc;
+}
+.import-product-image-preview img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 10px;
+    border: 1px solid #dbeafe;
+}
+.import-edit-image-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+.import-edit-image-cell .edit-item-image-preview,
+.import-edit-image-cell .edit-item-image-preview-wrap .import-product-thumb,
+.import-edit-image-cell .edit-item-image-preview-wrap .edit-item-image-preview {
+    width: 44px;
+    height: 44px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    background: #f8fafc;
+    display: block;
+}
+.import-edit-image-cell .edit-item-image-preview-wrap {
+    width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.import-edit-image-cell input[type="file"] {
+    width: 100%;
+    font-size: 11px;
+    height: auto;
+    padding: 4px 0;
+    border: 0;
+    background: transparent;
+}
+.import-no-image { color: #94a3b8; font-size: 13px; }

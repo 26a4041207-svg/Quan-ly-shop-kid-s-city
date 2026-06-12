@@ -10,7 +10,7 @@
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 
     <link rel="stylesheet" href="../assets/css/index.css">
-    <link rel="stylesheet" href="customers.css?v=20260531-customer-detail-compact">
+    <link rel="stylesheet" href="customers.css">
 
 </head>
 
@@ -231,106 +231,7 @@
 
         </div>
 
-        <!-- STATS -->
-        <div class="stats-grid">
 
-            <!-- TOTAL -->
-            <div class="stat-card">
-
-                <div>
-
-                    <p class="stat-title">
-                        Tổng khách hàng
-                    </p>
-
-                    <h3 class="stat-value"
-                        id="totalCustomers">
-                        0
-                    </h3>
-
-                </div>
-
-                <div class="stat-icon blue-light">
-
-                    <i class='bx bx-user'></i>
-
-                </div>
-
-            </div>
-
-            <!-- NEW -->
-            <div class="stat-card">
-
-                <div>
-
-                    <p class="stat-title">
-                        Khách mới tháng này
-                    </p>
-
-                    <h3 class="stat-value"
-                        id="newCustomers">
-                        0
-                    </h3>
-
-                </div>
-
-                <div class="stat-icon green-light">
-
-                    <i class='bx bx-user-plus'></i>
-
-                </div>
-
-            </div>
-
-            <!-- ORDERS -->
-            <div class="stat-card">
-
-                <div>
-
-                    <p class="stat-title">
-                        Tổng đơn hàng
-                    </p>
-
-                    <h3 class="stat-value"
-                        id="totalOrders">
-                        0
-                    </h3>
-
-                </div>
-
-                <div class="stat-icon orange-light">
-
-                    <i class='bx bx-receipt'></i>
-
-                </div>
-
-            </div>
-
-            <!-- AVG -->
-            <div class="stat-card">
-
-                <div>
-
-                    <p class="stat-title">
-                        TB đơn / khách
-                    </p>
-
-                    <h3 class="stat-value"
-                        id="avgOrders">
-                        0
-                    </h3>
-
-                </div>
-
-                <div class="stat-icon purple-light">
-
-                    <i class='bx bx-bar-chart'></i>
-
-                </div>
-
-            </div>
-
-        </div>
 
         <!-- TOOLBAR -->
         <div class="toolbar">
@@ -344,29 +245,9 @@
 
                     <input type="text"
                            id="searchCustomer"
-                           placeholder="Tìm khách hàng...">
+                           placeholder="Tìm khách hàng theo tên hoặc số điện thoại...">
 
                 </div>
-
-                <!-- FROM DATE -->
-                <input type="date"
-                       id="fromDate"
-                       class="filter-input">
-
-                <!-- TO DATE -->
-                <input type="date"
-                       id="toDate"
-                       class="filter-input">
-
-                <!-- FILTER -->
-                <button class="btn-secondary"
-                        onclick="filterCustomers()">
-
-                    <i class='bx bx-filter-alt'></i>
-
-                    Lọc
-
-                </button>
 
             </div>
 
@@ -410,6 +291,11 @@
 
             </table>
 
+        </div>
+
+        <!-- PAGINATION -->
+        <div class="pagination" id="customerPagination">
+            <!-- RENDER JS -->
         </div>
 
     </main>
@@ -568,7 +454,7 @@
 </div>
 <script src="../js/api.js"></script>
 <script src="../js/auth.js?v=20260531-staff-role-normalize"></script>
-<script src="customers.js?v=20260528-db-views"></script>
+<script src="customers.js"></script>
 </body>
 
 </html>

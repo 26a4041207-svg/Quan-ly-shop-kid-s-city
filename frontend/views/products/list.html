@@ -9,7 +9,7 @@
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 
     <link rel="stylesheet" href="../../assets/css/index.css">
-    <link rel="stylesheet" href="products.css?v=20260531-product-image-file">
+    <link rel="stylesheet" href="products.css?v=2">
 </head>
 
 <body>
@@ -208,62 +208,7 @@
                 <p>Quản lý sản phẩm trong hệ thống</p>
             </div>
 
-            <!-- STATS -->
-            <div class="stats-grid">
 
-                <div class="stat-card">
-
-                    <div>
-                        <p class="stat-title">Tổng sản phẩm</p>
-                        <h3 class="stat-value" id="totalProduct">0</h3>
-                    </div>
-
-                    <div class="stat-icon blue-light">
-                        <i class='bx bx-package'></i>
-                    </div>
-
-                </div>
-
-                <div class="stat-card">
-
-                    <div>
-                        <p class="stat-title">Đang bán</p>
-                        <h3 class="stat-value" id="sellingProduct">0</h3>
-                    </div>
-
-                    <div class="stat-icon green-light">
-                        <i class='bx bx-check-circle'></i>
-                    </div>
-
-                </div>
-
-                <div class="stat-card">
-
-                    <div>
-                        <p class="stat-title">Ngừng bán</p>
-                        <h3 class="stat-value" id="stoppedProduct">0</h3>
-                    </div>
-
-                    <div class="stat-icon orange-light">
-                        <i class='bx bx-x-circle'></i>
-                    </div>
-
-                </div>
-
-                <div class="stat-card">
-
-                    <div>
-                        <p class="stat-title">Sắp hết hàng</p>
-                        <h3 class="stat-value" id="lowStockProduct">0</h3>
-                    </div>
-
-                    <div class="stat-icon purple-light">
-                        <i class='bx bx-error-circle'></i>
-                    </div>
-
-                </div>
-
-            </div>
 
             <!-- FILTER -->
             <div class="toolbar">
@@ -311,14 +256,6 @@
                     </div>
                 </div>
 
-                <button class="btn-primary" id="openModalBtn">
-
-                    <i class='bx bx-plus'></i>
-
-                    Thêm sản phẩm
-
-                </button>
-
             </div>
 
             <!-- TABLE -->
@@ -338,7 +275,6 @@
                             <th>Màu</th>
                             <th>Giá</th>
                             <th>SL</th>
-                            <th>Ngày tạo</th>
                             <th>Thao tác</th>
 
                         </tr>
@@ -350,7 +286,9 @@
                 </table>
 
             </div>
-
+<div class="pagination" id="productPagination">
+    <!-- RENDER JS -->
+</div>
         </main>
 
     </div>
@@ -377,6 +315,15 @@
         <div class="modal-body">
 
             <div class="form-grid">
+
+                <!-- MÃ SP (chỉ hiển thị khi sửa) -->
+                <div class="form-group full-width" id="productIdGroup" style="display: none;">
+
+                    <label>Mã sản phẩm</label>
+
+                    <input type="text" id="productId" disabled style="background: #f5f5f5; color: #999;">
+
+                </div>
 
                 <!-- ẢNH SP -->
                 <div class="form-group full-width">
@@ -455,7 +402,7 @@
 
                 </div>
 
-                <!-- GIÁ -->
+                <!-- GIÁ BÁN -->
                 <div class="form-group">
 
                     <label>Giá bán *</label>
@@ -494,14 +441,27 @@
 
                 </div>
 
-                <!-- NGÀY -->
-                <div class="form-group">
+                <!-- NGÀY TẠO (chỉ hiển thị khi sửa) -->
+                <div class="form-group" id="productCreatedAtGroup" style="display: none;">
 
                     <label>Ngày tạo</label>
 
                     <input type="date"
                            id="productCreatedAt"
-                           readonly>
+                           disabled
+                           style="background: #f5f5f5; color: #999;">
+
+                </div>
+
+                <!-- NGÀY CẬP NHẬT (chỉ hiển thị khi sửa) -->
+                <div class="form-group" id="productUpdatedAtGroup" style="display: none;">
+
+                    <label>Ngày cập nhật</label>
+
+                    <input type="date"
+                           id="productUpdatedAt"
+                           disabled
+                           style="background: #f5f5f5; color: #999;">
 
                 </div>
 
@@ -680,9 +640,9 @@
     </div>
 
 </div>
-    <script src="../../js/api.js?v=20260609-db-only"></script>
+    <script src="../../js/api.js"></script>
     <script src="../../js/auth.js?v=20260531-staff-role-normalize"></script>
-    <script src="list.js?v=20260609-db-only"></script>
+    <script src="list.js"></script>
 
 </body>
 

@@ -64,7 +64,7 @@ CREATE TABLE products (
     price DECIMAL(12,2) NOT NULL DEFAULT 0,
     import_price DECIMAL(12,2) NOT NULL DEFAULT 0,
     stock INT NOT NULL DEFAULT 0,
-    image VARCHAR(255) DEFAULT '',
+    image MEDIUMTEXT,
     status ENUM('Đang bán', 'Ngừng bán') NOT NULL DEFAULT 'Đang bán',
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,

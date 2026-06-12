@@ -31,6 +31,8 @@ let categories = [];
 let products = [];
 
 let currentEditId = null;
+const pageSize = 6;
+let currentPage = 1;
 function getTodayDate() {
 
     return new Date()
@@ -235,11 +237,7 @@ saveProductCategoryBtn?.addEventListener("click", () => {
 });
 function getVisibleProducts() {
 
-    return products.filter(product =>
-
-        product.status === "selling"
-
-    );
+    return products;
 
 }
 
@@ -272,17 +270,39 @@ function showProductsLoading() {
     }
 
 }
+function sortProductsByStatus(data) {
+    return [...data].sort((a, b) => {
+        if (a.status === "selling" && b.status === "stopped") return -1;
+        if (a.status === "stopped" && b.status === "selling") return 1;
+        return 0;
+    });
+}
+
 function renderProducts(data = getVisibleProducts()) {
 
     table.innerHTML = "";
 
-    if (data.length === 0) {
+    const sortedData = sortProductsByStatus(data);
 
+    const totalPages = Math.max(
+        1,
+        Math.ceil(sortedData.length / pageSize)
+    );
+
+    if (currentPage > totalPages) {
+        currentPage = totalPages;
+    }
+
+    const start = (currentPage - 1) * pageSize;
+
+    const paginatedData = sortedData.slice(start, start + pageSize);
+
+    if (paginatedData.length === 0) {
         table.innerHTML = `
 
             <tr>
 
-                <td colspan="10" class="empty-data">
+                <td colspan="9" class="empty-data">
 
                     Không có sản phẩm nào
 
@@ -296,11 +316,35 @@ function renderProducts(data = getVisibleProducts()) {
 
     }
 
-    data.forEach(product => {
+    paginatedData.forEach(product => {
+        const isStopped = product.status === "stopped";
+        const rowStyle = isStopped ? 'style="opacity: 0.5; background-color: #f9f9f9;"' : '';
+
+        const editBtnHtml = isStopped ? "" : `
+            <button class="action-btn edit-btn"
+                    onclick="editProduct('${product.id}')" title="Sửa">
+                <i class='bx bx-edit'></i>
+            </button>
+        `;
+
+        const actionBtnHtml = isStaffRole() ? "" : (product.status === "selling"
+            ? `
+                <button class="action-btn stop-btn"
+                        onclick="stopSelling('${product.id}')" title="Ngừng bán">
+                    <i class='bx bx-block'></i>
+                </button>
+            `
+            : `
+                <button class="action-btn restore-btn"
+                        onclick="restoreProduct('${product.id}')" title="Khôi phục">
+                    <i class='bx bx-refresh'></i>
+                </button>
+            `
+        );
 
         table.innerHTML += `
 
-            <tr>
+            <tr ${rowStyle}>
 
                 <td>
 
@@ -348,54 +392,20 @@ function renderProducts(data = getVisibleProducts()) {
 
                 <td>${product.quantity}</td>
 
-                <td>${product.createdAt}</td>
-
                 <td>
 
                     <div class="table-actions">
 
                         <button class="action-btn view-btn"
-                                onclick="viewProduct('${product.id}')">
+                                onclick="viewProduct('${product.id}')" title="Xem chi tiết">
 
                             <i class='bx bx-show'></i>
 
                         </button>
 
-                        <button class="action-btn edit-btn"
-                                onclick="editProduct('${product.id}')">
+                        ${editBtnHtml}
 
-                            <i class='bx bx-edit'></i>
-
-                        </button>
-
-                        ${isStaffRole() ? "" : product.status === "selling"
-
-                ?
-
-                `
-
-                            <button class="action-btn stop-btn"
-                                    onclick="stopSelling('${product.id}')">
-
-                                <i class='bx bx-block'></i>
-
-                            </button>
-
-                            `
-
-                :
-
-                `
-
-                            <button class="action-btn restore-btn"
-                                    onclick="restoreProduct('${product.id}')">
-
-                                <i class='bx bx-refresh'></i>
-
-                            </button>
-
-                            `
-            }
+                        ${actionBtnHtml}
 
                     </div>
 
@@ -408,7 +418,56 @@ function renderProducts(data = getVisibleProducts()) {
     });
 
     updateStats();
+    renderPagination(data.length);
 
+}
+function renderPagination(totalItems) {
+
+    const pagination =
+        document.getElementById("productPagination");
+
+    if (!pagination) return;
+
+    const totalPages = Math.max(
+        1,
+        Math.ceil(totalItems / pageSize)
+    );
+
+    if (totalItems === 0) {
+        pagination.innerHTML = "";
+        return;
+    }
+
+    let buttons = "";
+
+    for (let i = 1; i <= totalPages; i++) {
+
+        buttons += `
+            <button
+                class="page-btn ${i === currentPage ? "active" : ""}"
+                data-page="${i}">
+                ${i}
+            </button>
+        `;
+    }
+
+    pagination.innerHTML = `
+        <button
+            class="page-btn"
+            data-page="prev"
+            ${currentPage === 1 ? "disabled" : ""}>
+            ‹
+        </button>
+
+        ${buttons}
+
+        <button
+            class="page-btn"
+            data-page="next"
+            ${currentPage === totalPages ? "disabled" : ""}>
+            ›
+        </button>
+    `;
 }
 
 // =========================
@@ -416,36 +475,20 @@ function renderProducts(data = getVisibleProducts()) {
 // =========================
 
 function updateStats() {
-
-    document.getElementById("totalProduct").innerText =
-        products.length;
-
-    document.getElementById("sellingProduct").innerText =
-        products.filter(product =>
-            product.status === "selling"
-        ).length;
-
-    document.getElementById("stoppedProduct").innerText =
-        products.filter(product =>
-            product.status === "stopped"
-        ).length;
-
-    document.getElementById("lowStockProduct").innerText =
-        products.filter(product =>
-            product.quantity <= 5
-        ).length;
-
+    // Stats cards are removed from HTML, do nothing
 }
 
 // =========================
 // FILTER
 // =========================
-
-function filterProducts() {
+function getFilteredProducts() {
 
     let filtered = getVisibleProducts();
 
-    const keyword = (productSearch?.value || "").trim().toLowerCase();
+    const keyword =
+        (productSearch?.value || "")
+        .trim()
+        .toLowerCase();
 
     if (keyword) {
 
@@ -456,45 +499,44 @@ function filterProducts() {
                 product.name,
                 product.category,
                 product.size,
-                product.color,
-                product.price,
-                product.quantity,
-                product.createdAt,
-                product.updatedAt,
-                product.status === "selling" ? "đang bán selling" : "ngừng bán stopped"
-            ].join(" ").toLowerCase();
+                product.color
+            ]
+            .join(" ")
+            .toLowerCase();
 
             return searchable.includes(keyword);
 
         });
-
     }
 
     if (categoryFilter.value) {
 
-        filtered = filtered.filter(product =>
-
-            product.category === categoryFilter.value
-
+        filtered = filtered.filter(
+            product =>
+                product.category === categoryFilter.value
         );
-
     }
 
     if (minPrice.value && maxPrice.value) {
 
-        filtered = filtered.filter(product =>
-
-            product.price >= Number(minPrice.value)
-
-            &&
-
-            product.price <= Number(maxPrice.value)
-
+        filtered = filtered.filter(
+            product =>
+                product.price >= Number(minPrice.value)
+                &&
+                product.price <= Number(maxPrice.value)
         );
-
     }
 
-    renderProducts(filtered);
+    return filtered;
+}
+
+function filterProducts() {
+
+    currentPage = 1;
+
+    renderProducts(
+        getFilteredProducts()
+    );
 
 }
 function setupPriceRange() {
@@ -651,6 +693,39 @@ maxPrice.addEventListener(
     "input",
     handlePriceRangeInput
 );
+document.getElementById("productPagination")
+?.addEventListener("click", event => {
+
+    const btn = event.target.closest(".page-btn");
+
+    if (!btn || btn.disabled) return;
+
+    const filtered = getFilteredProducts();
+
+    const totalPages = Math.max(
+        1,
+        Math.ceil(filtered.length / pageSize)
+    );
+
+    if (btn.dataset.page === "prev") {
+
+        currentPage =
+            Math.max(1, currentPage - 1);
+
+    } else if (btn.dataset.page === "next") {
+
+        currentPage =
+            Math.min(totalPages, currentPage + 1);
+
+    } else {
+
+        currentPage =
+            Number(btn.dataset.page);
+    }
+
+    renderProducts(filtered);
+
+});
 // =========================
 // MODAL
 // =========================
@@ -668,25 +743,26 @@ function closeModal() {
 
 }
 
-openModalBtn.addEventListener("click", () => {
+if (openModalBtn) {
+    openModalBtn.addEventListener("click", () => {
 
-    currentEditId = null;
+        currentEditId = null;
 
-    modalTitle.innerText = "Thêm sản phẩm mới";
+        modalTitle.innerText = "Thêm sản phẩm mới";
 
-    clearForm();
+        clearForm();
 
-    enableForm();
+        enableForm();
 
-    saveProductBtn.style.display = "flex";
+        saveProductBtn.style.display = "flex";
 
-    showAddCategoryButton();
+        showAddCategoryButton();
 
-    updateAddProductCategoryGate();
+        updateAddProductCategoryGate();
 
-    openModal();
-
-});
+        openModal();
+    });
+}
 
 closeModalBtn.addEventListener(
     "click",
@@ -877,6 +953,11 @@ function viewProduct(id) {
 
     modalTitle.innerText = "Chi tiết sản phẩm";
 
+    // Show ID, Created At, Updated At groups
+    document.getElementById("productIdGroup").style.display = "block";
+    document.getElementById("productCreatedAtGroup").style.display = "block";
+    document.getElementById("productUpdatedAtGroup").style.display = "block";
+
     openModal();
 
 }
@@ -887,23 +968,37 @@ function viewProduct(id) {
 
 function editProduct(id) {
 
-    currentEditId = id;
-
     const product = products.find(product =>
 
         product.id === id
 
     );
 
+    if (!product || product.status === "stopped") {
+        return;
+    }
+
+    currentEditId = id;
+
     fillForm(product);
 
     enableForm();
+
+    // Disable code, createdAt, updatedAt
+    document.getElementById("productId").disabled = true;
+    document.getElementById("productCreatedAt").disabled = true;
+    document.getElementById("productUpdatedAt").disabled = true;
 
     saveProductBtn.style.display = "flex";
 
     hideAddCategoryButton();
 
     modalTitle.innerText = "Cập nhật sản phẩm";
+
+    // Show groups
+    document.getElementById("productIdGroup").style.display = "block";
+    document.getElementById("productCreatedAtGroup").style.display = "block";
+    document.getElementById("productUpdatedAtGroup").style.display = "block";
 
     openModal();
 
@@ -933,7 +1028,7 @@ function closeStopConfirmModal() {
 
 }
 
-function confirmStopSelling() {
+async function confirmStopSelling() {
 
     if (isStaffRole()) return;
 
@@ -947,20 +1042,41 @@ function confirmStopSelling() {
 
     if (!product) return;
 
-    product.status = "stopped";
-
-    pendingStopProductId = null;
-
-    stopConfirmModal.classList.remove("show");
-
-    setupPriceRange();
-
-    filterProducts();
-
-    stopSuccessMessage.innerText =
-        `B\u1ea1n \u0111\u00e3 ng\u1eebng kinh doanh s\u1ea3n ph\u1ea9m ${product.id} - ${product.name}`;
-
-    stopSuccessModal.classList.add("show");
+    if (window.kidCityApi) {
+        try {
+            const payload = {
+                id: product.dbId,
+                code: product.id,
+                category_id: product.categoryId || null,
+                name: product.name,
+                size: product.size,
+                color: product.color,
+                price: product.price,
+                stock: product.quantity,
+                image: product.image,
+                status: "Ngừng bán"
+            };
+            await window.kidCityApi.put("products/items.php", payload);
+            product.status = "stopped";
+            pendingStopProductId = null;
+            stopConfirmModal.classList.remove("show");
+            setupPriceRange();
+            filterProducts();
+            stopSuccessMessage.innerText = `Bạn đã ngừng kinh doanh sản phẩm ${product.id} - ${product.name}`;
+            stopSuccessModal.classList.add("show");
+        } catch (error) {
+            alert(error.message || "Không thể ngừng bán sản phẩm.");
+        }
+    } else {
+        product.status = "stopped";
+        pendingStopProductId = null;
+        stopConfirmModal.classList.remove("show");
+        setupPriceRange();
+        filterProducts();
+        stopSuccessMessage.innerText =
+            `B\u1ea1n \u0111\u00e3 ng\u1eebng kinh doanh s\u1ea3n ph\u1ea9m ${product.id} - ${product.name}`;
+        stopSuccessModal.classList.add("show");
+    }
 
 }
 
@@ -973,7 +1089,7 @@ function closeStopSuccessModal() {
 // RESTORE PRODUCT
 // =========================
 
-function restoreProduct(id) {
+async function restoreProduct(id) {
 
     if (isStaffRole()) return;
 
@@ -983,11 +1099,39 @@ function restoreProduct(id) {
 
     );
 
-    product.status = "selling";
+    if (!product) return;
 
-    setupPriceRange();
-
-    filterProducts();
+    if (window.kidCityApi) {
+        try {
+            const payload = {
+                id: product.dbId,
+                code: product.id,
+                category_id: product.categoryId || null,
+                name: product.name,
+                size: product.size,
+                color: product.color,
+                price: product.price,
+                stock: product.quantity,
+                image: product.image,
+                status: "Đang bán"
+            };
+            await window.kidCityApi.put("products/items.php", payload);
+            product.status = "selling";
+            setupPriceRange();
+            filterProducts();
+            if (window.showToast) {
+                window.showToast("Khôi phục sản phẩm thành công!");
+            } else {
+                alert("Khôi phục sản phẩm thành công!");
+            }
+        } catch (error) {
+            alert(error.message || "Không thể khôi phục sản phẩm.");
+        }
+    } else {
+        product.status = "selling";
+        setupPriceRange();
+        filterProducts();
+    }
 
 }
 
@@ -996,6 +1140,8 @@ function restoreProduct(id) {
 // =========================
 
 function fillForm(product) {
+
+    document.getElementById("productId").value = product.id;
 
     productName.value = product.name;
 
@@ -1017,9 +1163,13 @@ function fillForm(product) {
 
     productCreatedAt.value = product.createdAt;
 
+    document.getElementById("productUpdatedAt").value = product.updatedAt;
+
 }
 
 function clearForm() {
+
+    document.getElementById("productId").value = "";
 
     productName.value = "";
 
@@ -1041,11 +1191,18 @@ function clearForm() {
 
     productCreatedAt.value = getTodayDate();
 
+    document.getElementById("productUpdatedAt").value = "";
+
     updateProductImagePreview();
 
     if (currentEditId === null) {
         updateAddProductCategoryGate();
     }
+
+    // Hide ID, Created At, Updated At groups
+    document.getElementById("productIdGroup").style.display = "none";
+    document.getElementById("productCreatedAtGroup").style.display = "none";
+    document.getElementById("productUpdatedAtGroup").style.display = "none";
 
 }
 

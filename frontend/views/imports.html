@@ -5,10 +5,6 @@
         <p>Quản lý phiếu hàng nhập</p>
     </div>
 
-    <div class="import-stats">
-        <div class="import-stat"><span>Tổng phiếu hàng nhập</span><strong>10</strong></div>
-    </div>
-
     <div class="import-toolbar">
         <label class="import-search"><i class='bx bx-search'></i><input type="text" id="import-search" placeholder="Tìm kiếm phiếu hàng nhập..."></label>
         <button class="import-btn primary" data-import-open="import-create"><i class='bx bx-plus'></i> Tạo phiếu hàng nhập</button>
@@ -16,48 +12,147 @@
 
     <div class="import-card">
         <table class="import-table">
-            <thead><tr><th>Mã phiếu hàng nhập</th><th>Ngày nhập</th><th>Người tạo phiếu</th><th>Thao tác</th></tr></thead>
+            <thead><tr><th>Mã phiếu hàng nhập</th><th>Ngày tạo</th><th>Người tạo phiếu</th><th>Thao tác</th></tr></thead>
             <tbody id="import-table">
+                <tr data-key="NH001 2026-04-01 nguyễn văn an"><td><strong>NH001</strong></td><td>2026-04-01</td><td>Nguyễn Văn An</td><td></td></tr>
+                <tr data-key="NH002 2026-04-05 nguyễn văn an"><td><strong>NH002</strong></td><td>2026-04-05</td><td>Nguyễn Văn An</td><td></td></tr>
+                <tr data-key="NH003 2026-04-08 nguyễn văn an"><td><strong>NH003</strong></td><td>2026-04-08</td><td>Nguyễn Văn An</td><td></td></tr>
+                <tr data-key="NH004 2026-04-12 nguyễn văn an"><td><strong>NH004</strong></td><td>2026-04-12</td><td>Nguyễn Văn An</td><td></td></tr>
+                <tr data-key="NH005 2026-04-15 nguyễn văn an"><td><strong>NH005</strong></td><td>2026-04-15</td><td>Nguyễn Văn An</td><td></td></tr>
+                <tr data-key="NH006 2026-04-18 nguyễn văn an"><td><strong>NH006</strong></td><td>2026-04-18</td><td>Nguyễn Văn An</td><td></td></tr>
+                <tr data-key="NH007 2026-04-22 lê minh châu"><td><strong>NH007</strong></td><td>2026-04-22</td><td>Lê Minh Châu</td><td></td></tr>
+                <tr data-key="NH008 2026-04-25 trần thị bình"><td><strong>NH008</strong></td><td>2026-04-25</td><td>Trần Thị Bình</td><td></td></tr>
+                <tr data-key="NH009 2026-04-29 nguyễn văn an"><td><strong>NH009</strong></td><td>2026-04-29</td><td>Nguyễn Văn An</td><td></td></tr>
+                <tr data-key="NH010 2026-05-02 lê minh châu"><td><strong>NH010</strong></td><td>2026-05-02</td><td>Lê Minh Châu</td><td></td></tr>
             </tbody>
         </table>
     </div>
     <div class="import-pagination" id="import-pagination"></div>
+ 
+     <div class="import-modal" id="import-create">
+         <div class="import-dialog">
+             <div class="import-modal-header"><h3>Tạo phiếu hàng nhập</h3><button class="modal-close" data-import-close>&times;</button></div>
+             <div class="import-modal-body">
+                 <div class="form-grid">
+                     <div class="field full"><label>Nhà cung cấp <span class="required">*</span></label><input data-import-field="supplier" type="text" placeholder="Tên nhà cung cấp..."></div>
+                     <div class="field full"><label>Ghi chú</label><input data-import-field="note" type="text" placeholder="Ghi chú phiếu hàng nhập..."></div>
+                 </div>
+ 
+                 <h4 class="import-section-title">Thêm sản phẩm</h4>
+                 <div class="import-add-product">
+                     <div class="import-add-grid">
+                         <div class="field">
+                             <label>Tên sản phẩm <span class="required">*</span></label>
+                             <input data-import-product-name list="import-product-options" type="text" placeholder="Chọn hoặc gõ tên sản phẩm...">
+                             <datalist id="import-product-options"></datalist>
+                         </div>
+                         <div class="field">
+                             <label>Ảnh sản phẩm</label>
+                             <input data-import-product-image type="file" accept="image/*" style="padding: 8px;">
+                             <div class="import-product-image-preview" data-import-product-image-preview style="display: none; margin-top: 8px;"></div>
+                         </div>
+                         <div class="field">
+                             <label>Danh mục <span class="required">*</span></label>
+                             <div style="display: flex; gap: 5px;">
+                                 <select data-import-product-category style="flex: 1;">
+                                     <option value="">Chọn danh mục</option>
+                                 </select>
+                                 <button type="button" class="import-btn primary" data-import-add-category style="padding: 8px 12px; font-size: 14px;" title="Thêm danh mục mới">+</button>
+                             </div>
+                         </div>
+                         <div class="field">
+                             <label>Giá bán <span class="required">*</span></label>
+                             <input data-import-product-price type="number" placeholder="Giá bán" min="0">
+                         </div>
+                     </div>
+ 
+                     <div style="background: #f9f9f9; padding: 12px; border-radius: 6px; margin-bottom: 15px;">
+                         <h5 style="margin: 0 0 10px 0; font-size: 14px; font-weight: 600;">Nhập chi tiết sản phẩm (Size/Màu/Số lượng)</h5>
+                         <div style="overflow-x: auto;">
+                             <table class="import-table" style="width: 100%; margin: 0;">
+                                 <thead>
+                                     <tr style="background: white;">
+                                         <th style="padding: 8px;">Size</th>
+                                         <th style="padding: 8px;">Màu sắc</th>
+                                         <th style="padding: 8px;">Số lượng</th>
+                                         <th style="padding: 8px;">Thao tác</th>
+                                     </tr>
+                                 </thead>
+                                 <tbody data-import-variants-list>
+                                     <tr><td colspan="4" class="empty-row" style="padding: 30px; text-align: center; color: #999;">Chưa có chi tiết. Thêm ở dưới.</td></tr>
+                                 </tbody>
+                             </table>
+                         </div>
+                         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 100px; gap: 8px; margin-top: 10px;">
+                             <input data-import-variant-size type="text" placeholder="Size (S, M, L...)" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                             <input data-import-variant-color type="text" placeholder="Màu sắc" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                             <input data-import-variant-qty type="number" placeholder="Số lượng" min="1" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                             <button type="button" class="import-btn primary" data-import-add-variant style="padding: 8px; font-size: 13px;">Thêm</button>
+                         </div>
+                     </div>
+ 
+                     <button class="import-btn primary" data-import-add-full-product style="width: 100%;"><i class='bx bx-plus'></i> Thêm sản phẩm vào phiếu</button>
+                 </div>
+ 
+                 <h4 class="import-section-title" style="margin-top: 20px;">Sản phẩm trong phiếu nhập</h4>
+                 <div class="import-card"><table class="import-table"><thead><tr><th>STT</th><th>Ảnh</th><th>Sản phẩm</th><th>Danh mục</th><th>Size/Màu</th><th>SL</th><th>Giá bán</th><th>Thao tác</th></tr></thead><tbody data-import-product-list><tr><td colspan="8" class="empty-row">Chưa có sản phẩm. Thêm ở trên.</td></tr></tbody></table></div>
+                 
+                 <div class="import-modal-actions"><button class="import-btn light" data-import-close>Hủy</button><button class="import-btn primary" data-import-save-create>Tạo phiếu hàng nhập</button></div>
+             </div>
+         </div>
+     </div>
+ 
+     <div class="import-modal" id="import-detail">
+         <div class="import-dialog detail">
+             <div class="import-modal-header"><h3>Chi tiết phiếu hàng nhập</h3><button class="modal-close" data-import-close>&times;</button></div>
+             <div class="import-modal-body">
+                 <div class="detail-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                     <div class="detail-item"><span style="color: #666; font-size: 13px;">Mã phiếu nhập</span><strong data-detail-code>-</strong></div>
+                     <div class="detail-item"><span style="color: #666; font-size: 13px;">Ngày tạo</span><strong data-detail-created>-</strong></div>
+                     <div class="detail-item"><span style="color: #666; font-size: 13px;">Ngày cập nhật</span><strong data-detail-updated>-</strong></div>
+                     <div class="detail-item"><span style="color: #666; font-size: 13px;">Người tạo</span><strong data-detail-staff>-</strong></div>
+                     <div class="detail-item" style="grid-column: 1/-1;"><span style="color: #666; font-size: 13px;">Nhà cung cấp</span><strong data-detail-supplier>-</strong></div>
+                     <div class="detail-item" style="grid-column: 1/-1;"><span style="color: #666; font-size: 13px;">Ghi chú</span><strong data-detail-note>-</strong></div>
+                 </div>
+                 
+                 <h3 class="import-section-title">Chi tiết sản phẩm</h3>
+                 <table class="import-table"><thead><tr><th>Ảnh</th><th>Sản phẩm</th><th>Danh mục</th><th>Size</th><th>Màu</th><th>SL</th><th>Giá bán</th></tr></thead><tbody data-detail-product-list></tbody></table>
+                 <button class="import-btn primary block" data-import-close style="margin-top: 15px;">Đóng</button>
+             </div>
+         </div>
+     </div>
+ 
+     <div class="import-modal" id="import-edit">
+         <div class="import-dialog">
+             <div class="import-modal-header"><h3>Sửa phiếu hàng nhập</h3><button class="modal-close" data-import-close>&times;</button></div>
+             <div class="import-modal-body">
+                 <div class="form-grid">
+                     <div class="field"><label>Mã phiếu nhập</label><input data-import-edit-code type="text" disabled style="background: #f5f5f5; color: #999;"></div>
+                     <div class="field"><label>Người tạo</label><input data-import-edit-staff type="text" disabled style="background: #f5f5f5; color: #999;"></div>
+                     <div class="field"><label>Ngày tạo</label><input data-import-edit-created type="text" disabled style="background: #f5f5f5; color: #999;"></div>
+                     <div class="field"><label>Ngày cập nhật</label><input data-import-edit-updated type="text" disabled style="background: #f5f5f5; color: #999;"></div>
+                     <div class="field full"><label>Nhà cung cấp <span class="required">*</span></label><input data-import-edit-supplier type="text" placeholder="Tên nhà cung cấp..."></div>
+                     <div class="field full"><label>Ghi chú</label><input data-import-edit-note type="text" placeholder="Ghi chú phiếu hàng nhập..."></div>
+                 </div>
 
-    <div class="import-modal" id="import-create">
-        <div class="import-dialog">
-            <div class="import-modal-header"><h3>Tạo phiếu hàng nhập</h3><button class="modal-close" data-import-close>&times;</button></div>
-            <div class="import-modal-body">
-                <div class="form-grid">
-                    <div class="field"><label>Nhà cung cấp <span class="required">*</span></label><input data-import-field="supplier" type="text" placeholder="Tên nhà cung cấp..."></div>
-                    <div class="field"><label>Ngày nhập</label><input data-import-field="date" type="date" value="2026-05-06"></div>
-                    <div class="field full"><label>Ghi chú</label><input data-import-field="note" type="text" placeholder="Ghi chú phiếu hàng nhập..."></div>
-                </div>
-
-                <h4 class="import-section-title">Thêm sản phẩm</h4>
-                <div class="import-add-product">
-                    <div class="field product-name-field"><label>Tên sản phẩm *</label><input data-import-product list="import-product-options" type="text" placeholder="Nhập tên sản phẩm..."><datalist id="import-product-options"></datalist></div>
-                    <div class="field"><label>Danh mục *</label><select data-import-category><option value="">Chọn danh mục</option><option>Áo bé trai</option><option>Áo bé gái</option><option>Đầm váy</option><option>Quần bé trai</option><option>Đồ chơi</option></select></div>
-                    <div class="field"><label>Size</label><input data-import-size type="text" placeholder="S, M, L..."></div>
-                    <div class="field"><label>Màu sắc</label><input data-import-color type="text" placeholder="Nhập màu sắc"></div>
-                    <div class="field"><label>Số lượng</label><input data-import-qty type="number" min="1" value="1"></div>
-                    <div class="field image-field"><label>Ảnh sản phẩm</label><input data-import-image type="text" placeholder="Đường dẫn hoặc URL ảnh..."></div>
-                    <button class="import-btn primary" data-import-add-product><i class='bx bx-plus'></i> Thêm SP</button>
-                </div>
-
-                <div class="import-card"><table class="import-table"><thead><tr><th>STT</th><th>SẢN PHẨM</th><th>DANH MỤC</th><th>SIZE</th><th>MÀU</th><th>SL</th><th>THAO TÁC</th></tr></thead><tbody data-import-product-list><tr><td colspan="7" class="empty-row">Chưa có sản phẩm. Thêm ở trên.</td></tr></tbody></table></div>
-                <div class="import-modal-actions"><button class="import-btn light" data-import-close>Hủy</button><button class="import-btn primary" data-import-save-create>Tạo phiếu hàng nhập</button></div>
+                <h4 class="import-section-title" style="margin-top: 20px;">Sản phẩm trong phiếu nhập</h4>
+                <div class="import-card"><table class="import-table import-edit-table"><thead><tr><th>Ảnh</th><th>Sản phẩm</th><th>Danh mục</th><th>Size</th><th>Màu</th><th>SL</th><th>Giá bán</th><th>Thao tác</th></tr></thead><tbody data-import-edit-product-list></tbody></table></div>
+                <button type="button" class="import-btn primary" data-import-edit-add-row style="margin-top: 10px; width: 100%;"><i class='bx bx-plus'></i> Thêm sản phẩm vào phiếu</button>
+                
+                <div class="import-modal-actions"><button class="import-btn light" data-import-close>Hủy</button><button class="import-btn primary" data-import-save-edit>Lưu thay đổi</button></div>
             </div>
         </div>
     </div>
 
-    <div class="import-modal" id="import-detail">
-        <div class="import-dialog detail">
+    <div class="import-modal" id="import-add-category">
+        <div class="import-dialog" style="max-width: 500px;">
+            <div class="import-modal-header"><h3>Thêm danh mục mới</h3><button class="modal-close" data-import-close>&times;</button></div>
             <div class="import-modal-body">
-                <h2 class="detail-title">Chi tiết phiếu hàng nhập</h2>
-                <div class="detail-grid"><div class="detail-item"><span>Người tạo phiếu</span><strong>-</strong></div><div class="detail-item"><span>Ngày nhập</span><strong>-</strong></div></div>
-                <h3 class="import-section-title">Chi tiết sản phẩm</h3>
-                <table class="import-table"><thead><tr><th>Sản phẩm</th><th>Danh mục</th><th>Size</th><th>Màu</th><th>Số lượng nhập</th></tr></thead><tbody></tbody></table>
-                <button class="import-btn primary block" data-import-close>Đóng</button>
+                <div class="form-grid">
+                    <div class="field full"><label>Tên danh mục <span class="required">*</span></label><input data-import-new-category-name type="text" placeholder="Nhập tên danh mục..."></div>
+                    <div class="field full"><label>Mô tả</label><textarea data-import-new-category-desc placeholder="Mô tả danh mục (không bắt buộc)" rows="3" style="border: 1px solid #ddd; padding: 8px; border-radius: 4px;"></textarea></div>
+                </div>
+                <div class="import-modal-actions"><button class="import-btn light" data-import-close>Hủy</button><button class="import-btn primary" data-import-save-new-category>Thêm danh mục</button></div>
             </div>
         </div>
     </div>

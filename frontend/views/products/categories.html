@@ -10,7 +10,7 @@
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 
     <link rel="stylesheet" href="../../assets/css/index.css">
-    <link rel="stylesheet" href="products.css">
+    <link rel="stylesheet" href="products.css?v=2">
 </head>
 
 <body>
@@ -213,99 +213,6 @@
 
             </div>
 
-            <!-- STATS -->
-            <div class="stats-grid">
-
-                <div class="stat-card">
-
-                    <div>
-
-                        <p class="stat-title">
-                            Tổng danh mục
-                        </p>
-
-                        <h3 class="stat-value" id="totalCategory">
-                            0
-                        </h3>
-
-                    </div>
-
-                    <div class="stat-icon blue-light">
-
-                        <i class='bx bx-category'></i>
-
-                    </div>
-
-                </div>
-
-                <div class="stat-card">
-
-                    <div>
-
-                        <p class="stat-title">
-                            Danh mục tháng này
-                        </p>
-
-                        <h3 class="stat-value" id="monthCategory">
-                            0
-                        </h3>
-
-                    </div>
-
-                    <div class="stat-icon green-light">
-
-                        <i class='bx bx-calendar'></i>
-
-                    </div>
-
-                </div>
-
-                <div class="stat-card">
-
-                    <div>
-
-                        <p class="stat-title">
-                            Danh mục hôm nay
-                        </p>
-
-                        <h3 class="stat-value" id="todayCategory">
-                            0
-                        </h3>
-
-                    </div>
-
-                    <div class="stat-icon orange-light">
-
-                        <i class='bx bx-time'></i>
-
-                    </div>
-
-                </div>
-
-                <div class="stat-card">
-
-                    <div>
-
-                        <p class="stat-title">
-                            Mới thêm
-                        </p>
-
-                        <h3 class="stat-value" id="newCategory">
-                            0
-                        </h3>
-
-                    </div>
-
-                    <div class="stat-icon purple-light">
-
-                        <i class='bx bx-star'></i>
-
-                    </div>
-
-                </div>
-
-            </div>
-
             <!-- TOOLBAR -->
             <div class="toolbar">
 
@@ -347,6 +254,7 @@
                             <th>Tên danh mục</th>
                             <th>Mô tả</th>
                             <th>Ngày tạo</th>
+                            <th>Ngày cập nhật</th>
                             <th>Thao tác</th>
 
                         </tr>
@@ -357,6 +265,11 @@
 
                 </table>
 
+            </div>
+
+            <!-- PAGINATION -->
+            <div class="pagination" id="categoryPagination">
+                <!-- RENDER JS -->
             </div>
 
         </main>
@@ -384,19 +297,19 @@
 
             <div class="modal-body">
 
-                <div class="form-group">
+                <div class="form-group" id="categoryIdGroup" style="display: none;">
 
                     <label>Mã danh mục</label>
 
-                    <input type="text" id="categoryId">
+                    <input type="text" id="categoryId" disabled style="background: #f5f5f5; color: #999;">
 
                 </div>
 
                 <div class="form-group">
 
-                    <label>Tên danh mục</label>
+                    <label>Tên danh mục <span style="color: red;">*</span></label>
 
-                    <input type="text" id="categoryName">
+                    <input type="text" id="categoryName" placeholder="Nhập tên danh mục...">
 
                 </div>
 
@@ -404,7 +317,15 @@
 
                     <label>Mô tả</label>
 
-                    <textarea rows="4" id="categoryDescription"></textarea>
+                    <textarea rows="4" id="categoryDescription" placeholder="Nhập mô tả (không bắt buộc)"></textarea>
+
+                </div>
+
+                <div class="form-group" id="categoryUpdatedGroup" style="display: none;">
+
+                    <label>Ngày cập nhật</label>
+
+                    <input type="date" id="categoryUpdated" disabled style="background: #f5f5f5; color: #999;">
 
                 </div>
 
@@ -432,7 +353,7 @@
 
     <script src="../../js/api.js"></script>
     <script src="../../js/auth.js?v=20260531-staff-role-normalize"></script>
-    <script src="categories.js?v=20260528-db-views"></script>
+    <script src="categories.js"></script>
 
 </body>
 

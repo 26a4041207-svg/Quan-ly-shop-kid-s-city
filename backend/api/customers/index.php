@@ -23,22 +23,30 @@ if ($method === 'POST') {
     $data = input();
     require_fields($data, ['name', 'phone']);
 
-    $stmt = db()->prepare(
-        'INSERT INTO customers (code, name, phone, email, address, gender, birthday, note)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
-    );
-    $stmt->execute([
-        $data['code'] ?? null,
-        $data['name'],
-        $data['phone'],
-        $data['email'] ?? '',
-        $data['address'] ?? '',
-        $data['gender'] ?? '',
-        $data['birthday'] ?? null,
-        $data['note'] ?? '',
-    ]);
+    try {
+        $stmt = db()->prepare(
+            'INSERT INTO customers (code, name, phone, email, address, gender, birthday, note)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+        );
+        $stmt->execute([
+            $data['code'] ?? null,
+            $data['name'],
+            $data['phone'],
+            $data['email'] ?? '',
+            $data['address'] ?? '',
+            $data['gender'] ?? '',
+            $data['birthday'] ?? null,
+            $data['note'] ?? '',
+        ]);
 
-    ok(['id' => (int) db()->lastInsertId()], 'Thêm khách hàng thành công');
+        ok(['id' => (int) db()->lastInsertId()], 'Thêm khách hàng thành công');
+    } catch (\Throwable $e) {
+        if ($e instanceof \PDOException && $e->getCode() === '23000') {
+            fail('Số điện thoại hoặc mã khách hàng đã tồn tại.');
+        } else {
+            fail('Lỗi cơ sở dữ liệu: ' . $e->getMessage());
+        }
+    }
 }
 
 if ($method === 'PUT') {
@@ -46,23 +54,31 @@ if ($method === 'PUT') {
     $data = input();
     require_fields($data, ['id', 'name', 'phone']);
 
-    $stmt = db()->prepare(
-        'UPDATE customers SET code = ?, name = ?, phone = ?, email = ?, address = ?, gender = ?, birthday = ?, note = ?, updated_at = NOW()
-         WHERE id = ?'
-    );
-    $stmt->execute([
-        $data['code'] ?? null,
-        $data['name'],
-        $data['phone'],
-        $data['email'] ?? '',
-        $data['address'] ?? '',
-        $data['gender'] ?? '',
-        $data['birthday'] ?? null,
-        $data['note'] ?? '',
-        $data['id'],
-    ]);
+    try {
+        $stmt = db()->prepare(
+            'UPDATE customers SET code = ?, name = ?, phone = ?, email = ?, address = ?, gender = ?, birthday = ?, note = ?, updated_at = NOW()
+             WHERE id = ?'
+        );
+        $stmt->execute([
+            $data['code'] ?? null,
+            $data['name'],
+            $data['phone'],
+            $data['email'] ?? '',
+            $data['address'] ?? '',
+            $data['gender'] ?? '',
+            $data['birthday'] ?? null,
+            $data['note'] ?? '',
+            $data['id'],
+        ]);
 
-    ok(null, 'Cập nhật khách hàng thành công');
+        ok(null, 'Cập nhật khách hàng thành công');
+    } catch (\Throwable $e) {
+        if ($e instanceof \PDOException && $e->getCode() === '23000') {
+            fail('Số điện thoại hoặc mã khách hàng đã tồn tại.');
+        } else {
+            fail('Lỗi cơ sở dữ liệu: ' . $e->getMessage());
+        }
+    }
 }
 
 if ($method === 'DELETE') {

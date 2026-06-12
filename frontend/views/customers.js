@@ -5,19 +5,41 @@
 let customers = [];
 let purchaseHistory = [];
 const invoiceDetails = {};
+const pageSize = 6;
+let currentPage = 1;
 
 /* =========================
    RENDER TABLE
 ========================= */
 
-function renderCustomers(data = customers){
+function renderCustomers(data = getFilteredCustomers()){
 
     const tbody =
         document.getElementById("customerTableBody");
 
+    if (!tbody) return;
     tbody.innerHTML = "";
 
-    data.forEach(customer => {
+    const totalPages = Math.max(1, Math.ceil(data.length / pageSize));
+    if (currentPage > totalPages) currentPage = totalPages;
+
+    const start = (currentPage - 1) * pageSize;
+    const paginatedData = data.slice(start, start + pageSize);
+
+    if (paginatedData.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" class="empty-data" style="text-align:center; padding: 20px; color: #999;">
+                    Không tìm thấy khách hàng nào
+                </td>
+            </tr>
+        `;
+        renderPagination(0);
+        updateStats();
+        return;
+    }
+
+    paginatedData.forEach(customer => {
 
         tbody.innerHTML += `
         
@@ -38,14 +60,14 @@ function renderCustomers(data = customers){
                     <div class="table-actions">
 
                         <button class="action-btn view-btn"
-                                onclick="viewCustomer('${customer.maKhachHang}')">
+                                onclick="viewCustomer('${customer.maKhachHang}')" title="Xem chi tiết">
 
                             <i class='bx bx-show'></i>
 
                         </button>
 
                         <button class="action-btn edit-btn"
-                                onclick="editCustomer('${customer.maKhachHang}')">
+                                onclick="editCustomer('${customer.maKhachHang}')" title="Sửa">
 
                             <i class='bx bx-edit'></i>
 
@@ -60,7 +82,36 @@ function renderCustomers(data = customers){
         `;
     });
 
+    renderPagination(data.length);
     updateStats();
+}
+
+/* =========================
+   PAGINATION
+========================= */
+
+function renderPagination(totalItems) {
+    const pagination = document.getElementById("customerPagination");
+    if (!pagination) return;
+    
+    const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+    
+    if (totalItems === 0) {
+        pagination.innerHTML = "";
+        return;
+    }
+
+    let buttons = "";
+    for (let i = 1; i <= totalPages; i++) {
+        const activeClass = i === currentPage ? "active" : "";
+        buttons += `<button class="page-btn ${activeClass}" data-page="${i}">${i}</button>`;
+    }
+
+    pagination.innerHTML = `
+        <button class="page-btn" data-page="prev" ${currentPage === 1 ? "disabled" : ""}>‹</button>
+        ${buttons}
+        <button class="page-btn" data-page="next" ${currentPage === totalPages ? "disabled" : ""}>›</button>
+    `;
 }
 
 /* =========================
@@ -68,78 +119,31 @@ function renderCustomers(data = customers){
 ========================= */
 
 function updateStats(){
-
-    document.getElementById("totalCustomers").innerText =
-        customers.length;
-
-    const currentMonth = "2026-05";
-
-    const newCustomers =
-        customers.filter(customer =>
-            customer.ngayTao.startsWith(currentMonth)
-        );
-
-    document.getElementById("newCustomers").innerText =
-        newCustomers.length;
-
-    document.getElementById("totalOrders").innerText =
-        purchaseHistory.length;
-
-    const avg =
-        customers.length ? purchaseHistory.length / customers.length : 0;
-
-    document.getElementById("avgOrders").innerText =
-        avg.toFixed(1);
+    // Stats cards are removed from HTML
 }
 
 /* =========================
    SEARCH + FILTER
 ========================= */
 
+function getFilteredCustomers() {
+    const searchInput = document.getElementById("searchCustomer");
+    const keyword = (searchInput?.value || "").toLowerCase().trim();
+
+    return customers.filter(customer => {
+        const searchable = [
+            customer.maKhachHang,
+            customer.tenKhachHang,
+            customer.soDienThoai
+        ].join(" ").toLowerCase();
+
+        return searchable.includes(keyword);
+    });
+}
+
 function filterCustomers(){
-
-    const keyword =
-        document.getElementById("searchCustomer")
-        .value
-        .toLowerCase();
-
-    const fromDate =
-        document.getElementById("fromDate").value;
-
-    const toDate =
-        document.getElementById("toDate").value;
-
-    const filtered =
-        customers.filter(customer => {
-
-            const searchable = [
-                customer.maKhachHang,
-                customer.tenKhachHang,
-                customer.soDienThoai,
-                customer.ngayTao,
-                customer.ngayCapNhat,
-                customer.soDonHang,
-                customer.tongChiTieu
-            ].join(" ").toLowerCase();
-
-            const matchKeyword = searchable.includes(keyword);
-
-            let matchDate = true;
-
-            if(fromDate && toDate){
-
-                matchDate =
-
-                    customer.ngayTao >= fromDate
-
-                    &&
-
-                    customer.ngayTao <= toDate;
-            }
-
-            return matchKeyword && matchDate;
-        });
-
+    currentPage = 1;
+    const filtered = getFilteredCustomers();
     renderCustomers(filtered);
 }
 
@@ -149,7 +153,25 @@ function filterCustomers(){
 
 document
     .getElementById("searchCustomer")
-    .addEventListener("keyup", filterCustomers);
+    ?.addEventListener("input", filterCustomers);
+
+document.getElementById("customerPagination")?.addEventListener("click", event => {
+    const btn = event.target.closest(".page-btn");
+    if (!btn || btn.disabled) return;
+
+    const filtered = getFilteredCustomers();
+    const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+
+    if (btn.dataset.page === "prev") {
+        currentPage = Math.max(1, currentPage - 1);
+    } else if (btn.dataset.page === "next") {
+        currentPage = Math.min(totalPages, currentPage + 1);
+    } else {
+        currentPage = Number(btn.dataset.page);
+    }
+
+    renderCustomers(filtered);
+});
 
 document.addEventListener("click", event => {
 
@@ -633,7 +655,7 @@ async function loadCustomersFromApi(){
             });
         }
 
-        renderCustomers();
+        renderCustomers(getFilteredCustomers());
 
     }catch(error){
 
@@ -671,5 +693,5 @@ window.onclick = function(event){
 customers = [];
 purchaseHistory = [];
 Object.keys(invoiceDetails).forEach(key => delete invoiceDetails[key]);
-renderCustomers();
+renderCustomers(getFilteredCustomers());
 loadCustomersFromApi();
