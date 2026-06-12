@@ -20,6 +20,8 @@ if ($method === 'GET') {
                 p.soLuong AS stock,
                 p.anh AS image,
                 "Đang bán" AS status,
+                p.ngayTao AS created_at,
+                p.ngayCapNhat AS updated_at,
                 c.tenDanhMuc AS category_name
             FROM SanPham p
             LEFT JOIN DanhMucSP c ON c.maDanhMuc = p.maDanhMuc';

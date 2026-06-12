@@ -126,7 +126,7 @@ const userRowHtml = (account) => {
     const status = account.status || 'Chưa kích hoạt';
 
     return `
-        <tr class="${status === 'Khóa' ? 'locked-row' : ''}" data-id="${escapeHtml(account.id)}" data-name="${escapeHtml(account.name)}" data-username="${escapeHtml(account.username)}" data-email="${escapeHtml(account.email)}" data-phone="${escapeHtml(account.phone || account.username)}" data-cccd_image="${escapeHtml(account.cccd_image || '')}" data-role="${escapeHtml(role)}" data-status="${escapeHtml(status)}" data-created="${escapeHtml(account.created)}" data-initial_password="${escapeHtml(account.initial_password || '')}">
+        <tr class="${status === 'Khóa' ? 'locked-row' : ''}" data-id="${escapeHtml(account.id)}" data-name="${escapeHtml(account.name)}" data-username="${escapeHtml(account.username)}" data-email="${escapeHtml(account.email)}" data-phone="${escapeHtml(account.phone || account.username)}" data-cccd_image="${escapeHtml(account.cccd_image || account.cccd || '')}" data-role="${escapeHtml(role)}" data-status="${escapeHtml(status)}" data-created="${escapeHtml(account.created)}" data-initial_password="${escapeHtml(account.initial_password || '')}">
             <td>
                 <div class="user-info">
                     <div class="avatar bg-light">${escapeHtml(avatar)}</div>
@@ -304,9 +304,9 @@ window.openUserDetail = function(button) {
         if (data.cccd_image && data.cccd_image !== 'undefined') {
             let imgSrc = data.cccd_image;
             if (imgSrc.startsWith('backend/')) {
-                imgSrc = `../${imgSrc}`;
+                imgSrc = `../../${imgSrc}`;
             } else if (!imgSrc.startsWith('http') && !imgSrc.startsWith('data:')) {
-                imgSrc = `../backend/uploads/cccd/${imgSrc}`;
+                imgSrc = `../../backend/uploads/cccd/${imgSrc}`;
             }
             imgEl.src = imgSrc;
             imgEl.style.display = 'block';
@@ -355,9 +355,9 @@ window.openUserEdit = function(button) {
             preview.style.display = 'block';
             let imgSrc = data.cccd_image;
             if (imgSrc.startsWith('backend/')) {
-                imgSrc = `../${imgSrc}`;
+                imgSrc = `../../${imgSrc}`;
             } else if (!imgSrc.startsWith('http') && !imgSrc.startsWith('data:')) {
-                imgSrc = `../backend/uploads/cccd/${imgSrc}`;
+                imgSrc = `../../backend/uploads/cccd/${imgSrc}`;
             }
             preview.querySelector('img').src = imgSrc;
         } else {

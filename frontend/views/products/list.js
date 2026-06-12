@@ -1357,8 +1357,8 @@ async function loadProductsFromApi() {
                 color: product.color || "",
                 price: Number(product.price || 0),
                 quantity: Number(product.stock || 0),
-                createdAt: (product.created_at || "").slice(0, 10),
-                updatedAt: (product.updated_at || product.created_at || "").slice(0, 10),
+                createdAt: (product.created_at || ""),
+                updatedAt: (product.updated_at || product.created_at || ""),
                 status: (() => {
                     const rawStatus = String(product.status || "").toLowerCase();
                     return rawStatus.includes("stop") || rawStatus.includes("ng\u1eebng") || rawStatus.includes("ngung") ? "stopped" : "selling";
