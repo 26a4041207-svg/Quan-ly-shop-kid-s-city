@@ -8,10 +8,10 @@ current_user();
 
 $limit = max(1, min(20, (int) ($_GET['limit'] ?? 5)));
 $stmt = db()->prepare(
-    'SELECT p.code, p.name, SUM(d.quantity) AS sold_quantity, SUM(d.line_total) AS revenue
-     FROM invoice_details d
-     INNER JOIN products p ON p.id = d.product_id
-     GROUP BY p.id, p.code, p.name
+    'SELECT CONCAT("SP", LPAD(p.maSanPham, 3, "0")) AS code, p.tenSanPham AS name, SUM(d.soLuong) AS sold_quantity, SUM(d.thanhTien) AS revenue
+     FROM ChiTietHoaDon d
+     INNER JOIN SanPham p ON p.maSanPham = d.maSanPham
+     GROUP BY p.maSanPham, p.tenSanPham
      ORDER BY sold_quantity DESC
      LIMIT ?'
 );

@@ -111,7 +111,28 @@
                         confirmNewPassword
                     });
                     alert('Đổi mật khẩu thành công!');
-                    passwordModal?.classList.remove('active');
+                    
+                    // Unblock UI if it was first login
+                    const currentUserStr = localStorage.getItem("currentUser");
+                    if (currentUserStr) {
+                        try {
+                            const user = JSON.parse(currentUserStr);
+                            user.is_first_login = false;
+                            localStorage.setItem("currentUser", JSON.stringify(user));
+                        } catch(e) {}
+                    }
+                    
+                    if (passwordModal) {
+                        passwordModal.style.pointerEvents = '';
+                        const modalContent = passwordModal.querySelector('.modal-content');
+                        if (modalContent) modalContent.style.pointerEvents = '';
+                        const closeBtns = passwordModal.querySelectorAll('.close-modal');
+                        closeBtns.forEach(btn => btn.style.display = '');
+                        const headerText = passwordModal.querySelector('.modal-header h3');
+                        if (headerText) headerText.textContent = 'Đổi mật khẩu';
+                        passwordModal.classList.remove('active');
+                    }
+                    
                     clearPasswordForm();
                 } catch (error) {
                     showPasswordError(error.message || 'Không thể đổi mật khẩu.');

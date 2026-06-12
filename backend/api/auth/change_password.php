@@ -20,7 +20,7 @@ if (password_matches((string) $data['newPassword'], (string) $user['password_has
     fail('Mật khẩu mới không được trùng với mật khẩu hiện tại.', 422, ['newPassword']);
 }
 
-$stmt = db()->prepare('UPDATE users SET password_hash = ?, updated_at = NOW() WHERE id = ?');
+$stmt = db()->prepare('UPDATE NguoiDung SET matKhau = ?, lanDangNhapDau = 0, trangThai = 1, matKhauBanDau = NULL, ngayCapNhat = NOW() WHERE maNguoiDung = ?');
 $stmt->execute([password_hash((string) $data['newPassword'], PASSWORD_DEFAULT), $user['id']]);
 
 ok(null, 'Đổi mật khẩu thành công');

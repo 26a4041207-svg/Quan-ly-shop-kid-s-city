@@ -7,12 +7,15 @@ route_method(['GET']);
 current_user();
 
 $stmt = db()->query(
-    'SELECT c.code, c.name, c.phone,
-            COUNT(i.id) AS order_count,
-            COALESCE(SUM(i.total), 0) AS total_spent
-     FROM customers c
-     LEFT JOIN invoices i ON i.customer_id = c.id
-     GROUP BY c.id, c.code, c.name, c.phone
+    'SELECT 
+        CONCAT("KH", LPAD(c.maKhachHang, 3, "0")) AS code, 
+        c.tenKhachHang AS name, 
+        c.soDienThoai AS phone,
+        COUNT(i.maHoaDon) AS order_count,
+        COALESCE(SUM(i.tongTien), 0) AS total_spent
+     FROM KhachHang c
+     LEFT JOIN HoaDon i ON i.maKhachHang = c.maKhachHang
+     GROUP BY c.maKhachHang, c.tenKhachHang, c.soDienThoai
      ORDER BY total_spent DESC'
 );
 

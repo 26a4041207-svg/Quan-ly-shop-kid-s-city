@@ -10,7 +10,7 @@ if ($method === 'POST') {
     }
 
     $email = trim($data['email']);
-    $stmt = db()->prepare('SELECT id, name FROM users WHERE email = ? AND status != "Khóa"');
+    $stmt = db()->prepare('SELECT maNguoiDung AS id, tenNguoiDung AS name FROM NguoiDung WHERE email = ? AND trangThai = 1');
     $stmt->execute([$email]);
     $user = $stmt->fetch();
 
@@ -22,7 +22,7 @@ if ($method === 'POST') {
     $otp = sprintf("%06d", mt_rand(1, 999999));
     
     // Save to database
-    $stmt = db()->prepare('UPDATE users SET reset_otp = ?, otp_expires_at = DATE_ADD(NOW(), INTERVAL 15 MINUTE) WHERE id = ?');
+    $stmt = db()->prepare('UPDATE NguoiDung SET reset_otp = ?, otp_expires_at = DATE_ADD(NOW(), INTERVAL 15 MINUTE) WHERE maNguoiDung = ?');
     $stmt->execute([$otp, $user['id']]);
 
     // Attempt to send email

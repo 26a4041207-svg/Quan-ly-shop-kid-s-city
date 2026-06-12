@@ -13,7 +13,7 @@ if ($method === 'POST') {
     $otp = trim($data['otp']);
     $password = $data['password'];
 
-    $stmt = db()->prepare('SELECT id, reset_otp, otp_expires_at FROM users WHERE email = ? AND status != "Khóa"');
+    $stmt = db()->prepare('SELECT maNguoiDung AS id, reset_otp, otp_expires_at FROM NguoiDung WHERE email = ? AND trangThai = 1');
     $stmt->execute([$email]);
     $user = $stmt->fetch();
 
@@ -31,7 +31,7 @@ if ($method === 'POST') {
 
     // Set new password and clear OTP
     $hash = password_hash($password, PASSWORD_DEFAULT);
-    $stmt = db()->prepare('UPDATE users SET password_hash = ?, reset_otp = NULL, otp_expires_at = NULL WHERE id = ?');
+    $stmt = db()->prepare('UPDATE NguoiDung SET matKhau = ?, reset_otp = NULL, otp_expires_at = NULL WHERE maNguoiDung = ?');
     $stmt->execute([$hash, $user['id']]);
 
     ok(['message' => 'Cập nhật mật khẩu thành công.'], 'Đổi mật khẩu thành công');

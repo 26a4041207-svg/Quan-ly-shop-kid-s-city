@@ -86,6 +86,7 @@ window.initSalePage = function initSalePage(container) {
         price: prices[name] || 100000,
         ...(productDetails[name] || {})
     }));
+    const invoiceCustomerOptions = [];
     const invoiceCodes = () => Object.keys(invoiceDetails).sort((a, b) => Number(a.replace(/\D/g, '')) - Number(b.replace(/\D/g, '')));
     const normalizeInvoiceCode = (invoiceCode) => String(invoiceCode || '').trim().toUpperCase();
     const invoiceCodeKey = (invoiceCode) => invoiceCodes().find((code) => code.toUpperCase() === normalizeInvoiceCode(invoiceCode)) || normalizeInvoiceCode(invoiceCode);
@@ -221,26 +222,28 @@ window.initSalePage = function initSalePage(container) {
     };
     const syncInvoiceProductPanel = (modal, panelSelector) => {
         const invoiceSelect = getInvoiceControl(modal);
-        const panel = modal?.querySelector(panelSelector);
-        const productSelect = panel?.querySelector('select');
-        const quantityInput = panel?.querySelector('input[type="number"]');
-        if (!invoiceSelect || !panel || !productSelect) return;
+        const panels = modal?.querySelectorAll(panelSelector) || [];
+        panels.forEach((panel) => {
+            const productSelect = panel?.querySelector('select');
+            const quantityInput = panel?.querySelector('input[type="number"]');
+            if (!invoiceSelect || !productSelect) return;
 
-        renderInvoiceProductSelect(productSelect, invoiceSelect.value);
-        resetSelectedLine(panel);
-        if (quantityInput) {
-            quantityInput.value = '1';
-            quantityInput.removeAttribute('max');
-        }
-
-        productSelect.onchange = () => {
-            const maxQuantity = invoiceProductQuantity(invoiceSelect.value, productSelect.value);
-            if (quantityInput) {
-                quantityInput.max = String(maxQuantity);
-                quantityInput.value = String(Math.min(Math.max(1, Number(quantityInput.value || 1)), maxQuantity));
-            }
+            renderInvoiceProductSelect(productSelect, invoiceSelect.value);
             resetSelectedLine(panel);
-        };
+            if (quantityInput) {
+                quantityInput.value = '1';
+                quantityInput.removeAttribute('max');
+            }
+
+            productSelect.onchange = () => {
+                const maxQuantity = invoiceProductQuantity(invoiceSelect.value, productSelect.value);
+                if (quantityInput) {
+                    quantityInput.max = String(maxQuantity);
+                    quantityInput.value = String(Math.min(Math.max(1, Number(quantityInput.value || 1)), maxQuantity));
+                }
+                resetSelectedLine(panel);
+            };
+        });
     };
 
     // Combobox sản phẩm trong form tạo hóa đơn: vừa gõ tìm kiếm, vừa chọn từ danh sách.
@@ -279,12 +282,12 @@ window.initSalePage = function initSalePage(container) {
         if (!input || !value || !combo) return;
         input.value = productName;
         value.value = productName;
+        value.dispatchEvent(new Event('change', { bubbles: true }));
         combo.classList.remove('open');
         showSelectedProductInfo(modal, productName);
     };
 
-    const initInvoiceProductCombobox = () => {
-        const modal = root.querySelector('#invoice-create');
+    const setupProductCombobox = (modal) => {
         if (!modal || modal.dataset.productComboReady === 'true') return;
         modal.dataset.productComboReady = 'true';
 
@@ -298,7 +301,6 @@ window.initSalePage = function initSalePage(container) {
         renderProductOptions(modal);
         input.addEventListener('focus', () => {
             renderProductOptions(modal, input.value);
-            combo.classList.add('open');
         });
         input.addEventListener('input', () => {
             value.value = '';
@@ -318,6 +320,85 @@ window.initSalePage = function initSalePage(container) {
         });
         document.addEventListener('click', (event) => {
             if (!combo.contains(event.target)) combo.classList.remove('open');
+        });
+    };
+
+    const renderCustomerOptions = (modal, keyword = '') => {
+        const optionsBox = modal.querySelector('[data-customer-options]');
+        if (!optionsBox) return;
+
+        const normalizedKeyword = normalize(keyword);
+        const results = invoiceCustomerOptions.filter((item) => {
+            const searchable = `${item.name} ${item.phone}`;
+            return normalize(searchable).includes(normalizedKeyword);
+        });
+
+        optionsBox.innerHTML = results.length
+            ? results.map((item) => `
+                <button type="button" class="combo-option" data-customer-name="${item.name}" data-customer-id="${item.id}" data-customer-phone="${item.phone}">
+                    <span class="combo-main" style="align-items: center;">
+                        <span class="combo-title"><strong>${item.name}</strong></span>
+                        <span class="combo-meta" style="margin-left: 10px;">
+                            <b><i class='bx bx-phone'></i> ${item.phone || 'Không có số ĐT'}</b>
+                        </span>
+                    </span>
+                </button>
+            `).join('')
+            : '<div class="combo-empty">Không tìm thấy khách hàng.</div>';
+    };
+
+    const setInvoiceCustomer = (modal, customerName) => {
+        const input = modal.querySelector('[data-customer-search]');
+        const value = modal.querySelector('[data-customer-value]');
+        const combo = modal.querySelector('[data-customer-combobox]');
+        if (!input || !value || !combo) return;
+        input.value = customerName;
+        value.value = customerName;
+        combo.classList.remove('open');
+        
+        // Clear error if any
+        const errorSpan = combo.closest('.field').querySelector('.error-message');
+        if (errorSpan) errorSpan.style.display = 'none';
+        input.style.borderColor = '';
+    };
+
+    const initInvoiceCustomerCombobox = () => {
+        const modal = root.querySelector('#invoice-create');
+        if (!modal || modal.dataset.customerComboReady === 'true') return;
+        modal.dataset.customerComboReady = 'true';
+
+        const combo = modal.querySelector('[data-customer-combobox]');
+        const input = modal.querySelector('[data-customer-search]');
+        const value = modal.querySelector('[data-customer-value]');
+        const toggle = modal.querySelector('[data-customer-toggle]');
+        const optionsBox = modal.querySelector('[data-customer-options]');
+        if (!combo || !input || !value || !toggle || !optionsBox) return;
+
+        renderCustomerOptions(modal);
+        input.addEventListener('focus', () => {
+            renderCustomerOptions(modal, input.value);
+            combo.classList.add('open');
+        });
+        input.addEventListener('input', () => {
+            value.value = '';
+            renderCustomerOptions(modal, input.value);
+            combo.classList.add('open');
+        });
+        toggle.addEventListener('click', () => {
+            renderCustomerOptions(modal, input.value);
+            combo.classList.toggle('open');
+            input.focus();
+        });
+        optionsBox.addEventListener('click', (event) => {
+            const option = event.target.closest('[data-customer-name]');
+            if (!option) return;
+            setInvoiceCustomer(modal, option.dataset.customerName);
+            value.dataset.customerId = option.dataset.customerId;
+        });
+        document.addEventListener('click', (event) => {
+            if (!combo.contains(event.target) && !event.target.closest('.add-customer-link')) {
+                combo.classList.remove('open');
+            }
         });
     };
 
@@ -375,6 +456,16 @@ window.initSalePage = function initSalePage(container) {
     };
 
     const invoiceAlreadyProcessed = (invoiceCode) => usedInvoiceCodes().has(invoiceCode);
+    const isProductAlreadyProcessed = (invoiceCode, productId) => {
+        let processed = false;
+        root.querySelectorAll('#exchange-table tr').forEach(row => {
+            if (rowText(row, 1).trim() === invoiceCode && String(row.dataset.oldProductId) === String(productId)) processed = true;
+        });
+        root.querySelectorAll('#return-table tr').forEach(row => {
+            if (rowText(row, 1).trim() === invoiceCode && String(row.dataset.productId) === String(productId)) processed = true;
+        });
+        return processed;
+    };
     const setCell = (row, index, value) => {
         if (row.children[index]) row.children[index].textContent = value;
     };
@@ -458,22 +549,21 @@ window.initSalePage = function initSalePage(container) {
     };
 
     const loadInvoiceFormDataFromApi = async () => {
-        if (!window.kidCityApi || root.id !== 'invoice-page') return;
+        if (!window.kidCityApi) return;
         try {
             const [customers, products] = await Promise.all([
                 window.kidCityApi.get('customers/index.php'),
                 window.kidCityApi.get('products/items.php')
             ]);
 
-            const customerSelect = root.querySelector('#invoice-create .form-grid select');
-            if (customerSelect && Array.isArray(customers)) {
-                customerSelect.innerHTML = '<option value="">-- Chọn khách hàng --</option>';
+            if (Array.isArray(customers)) {
+                invoiceCustomerOptions.splice(0, invoiceCustomerOptions.length);
                 customers.forEach((customer) => {
-                    const option = document.createElement('option');
-                    option.value = customer.name || '';
-                    option.textContent = customer.name || '';
-                    option.dataset.customerId = customer.id || '';
-                    customerSelect.appendChild(option);
+                    invoiceCustomerOptions.push({
+                        id: customer.id || 0,
+                        name: customer.name || '',
+                        phone: customer.phone || ''
+                    });
                 });
             }
 
@@ -562,6 +652,7 @@ window.initSalePage = function initSalePage(container) {
                 row.dataset.reason = item.reason || '';
                 row.dataset.oldProduct = item.old_product_name || '';
                 row.dataset.newProduct = item.new_product_name || '-';
+                row.dataset.oldProductId = item.old_product_id || '';
                 row.dataset.quantity = String(item.quantity || 1);
                 row.dataset.updatedAt = item.updated_at || '';
                 row.innerHTML = `<td><strong>${item.code || ''}</strong></td><td>${invoiceLink(item.invoice_code || '')}</td><td>${item.exchange_date || ''}</td><td>${item.reason || ''}</td><td>${item.staff_name || ''}</td><td></td>`;
@@ -590,6 +681,7 @@ window.initSalePage = function initSalePage(container) {
                 const row = document.createElement('tr');
                 row.dataset.key = normalize(`${item.code || ''} ${item.invoice_code || ''} ${item.reason || ''} ${item.staff_name || ''}`);
                 row.dataset.product = item.product_name || '';
+                row.dataset.productId = item.product_id || '';
                 row.dataset.quantity = String(item.quantity || 1);
                 row.dataset.refund = formatMoney(item.refund_amount);
                 row.dataset.updatedAt = item.updated_at || '';
@@ -623,6 +715,19 @@ window.initSalePage = function initSalePage(container) {
                     dateInput.value = `${date}/${month}/${year}`;
                 }
                 hideSelectedProductInfo(modal);
+            }
+            if (id === 'exchange-create' || id === 'return-create') {
+                const dateInputs = modal.querySelectorAll('[data-current-date]');
+                dateInputs.forEach(input => {
+                    const now = new Date();
+                    const year = now.getFullYear();
+                    const month = String(now.getMonth() + 1).padStart(2, '0');
+                    const date = String(now.getDate()).padStart(2, '0');
+                    const hours = String(now.getHours()).padStart(2, '0');
+                    const minutes = String(now.getMinutes()).padStart(2, '0');
+                    const seconds = String(now.getSeconds()).padStart(2, '0');
+                    input.value = `${year}-${month}-${date} ${hours}:${minutes}:${seconds}`;
+                });
             }
         }
     };
@@ -700,10 +805,16 @@ window.initSalePage = function initSalePage(container) {
                 <td>${item[0]}</td>
                 <td>${item[1]}</td>
                 <td>${item[2]}</td>
-                <td>${item[3]}</td>
                 <td><strong>${item[4]}</strong></td>
             </tr>
         `).join('');
+
+        let subtotalNum = 0;
+        invoice.items.forEach(item => {
+            subtotalNum += Number(item[6] || 0) * Number(item[2] || 1);
+        });
+        const totalNum = moneyNumber(invoice.total || '0');
+        const discountNum = Math.max(0, subtotalNum - totalNum);
 
         let historyHtml = '';
         const snapshots = invoice.historySnapshots || [];
@@ -740,11 +851,26 @@ window.initSalePage = function initSalePage(container) {
                     </div>
                     <h3 class="section-title">Chi tiết sản phẩm</h3>
                     <table class="sales-table">
-                        <thead><tr><th>Sản phẩm</th><th>Đơn giá</th><th>SL</th><th>Giảm giá</th><th>Thành tiền</th></tr></thead>
+                        <thead><tr><th>Sản phẩm</th><th>Đơn giá</th><th>SL</th><th>Thành tiền</th></tr></thead>
                         <tbody class="detail-items-body">${rows}</tbody>
                     </table>
-                    <div class="total-line">Tổng tiền: <span class="green detail-total">${invoice.total}</span></div>
-                    <button class="sales-btn primary block" data-close>Đóng</button>
+                    
+                    <div class="invoice-summary" style="margin-top: 20px; border-top: 1px solid #e2e8f0; padding-top: 15px;">
+                        <div class="summary-row" style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span style="color: #64748b; font-weight: 500;">Tổng tiền</span>
+                            <strong data-detail-subtotal style="color: #334155;">${formatMoney(subtotalNum)}</strong>
+                        </div>
+                        <div class="summary-row discount-row" style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                            <span style="color: #64748b; font-weight: 500;">Ưu đãi</span>
+                            <strong data-detail-discount style="color: #334155;">${formatMoney(discountNum)}</strong>
+                        </div>
+                        <div class="summary-row total-row" style="display: flex; justify-content: space-between; font-size: 1.1em; padding-top: 10px; border-top: 1px dashed #dbe4f0;">
+                            <span style="color: #0f172a; font-weight: 600;">Thành tiền</span>
+                            <strong class="detail-total" style="color: #10b981; font-size: 1.2em;">${invoice.total}</strong>
+                        </div>
+                    </div>
+
+                    <button class="sales-btn primary block" data-close style="margin-top: 20px;">Đóng</button>
                 </div>
             </div>
         `;
@@ -761,6 +887,15 @@ window.initSalePage = function initSalePage(container) {
                     modal.querySelector('.detail-staff').textContent = snap.staff;
                     modal.querySelector('.detail-date').textContent = snap.date;
                     modal.querySelector('.detail-note').textContent = snap.note;
+                    let subNum = 0;
+                    snap.items.forEach(item => {
+                        subNum += Number(item[6] || 0) * Number(item[2] || 1);
+                    });
+                    const totNum = moneyNumber(snap.total || '0');
+                    const discNum = Math.max(0, subNum - totNum);
+
+                    modal.querySelector('[data-detail-subtotal]').textContent = formatMoney(subNum);
+                    modal.querySelector('[data-detail-discount]').textContent = formatMoney(discNum);
                     modal.querySelector('.detail-total').textContent = snap.total;
                     
                     const newRows = snap.items.map((item) => `
@@ -768,7 +903,6 @@ window.initSalePage = function initSalePage(container) {
                             <td>${item[0]}</td>
                             <td>${item[1]}</td>
                             <td>${item[2]}</td>
-                            <td>${item[3]}</td>
                             <td><strong>${item[4]}</strong></td>
                         </tr>
                     `).join('');
@@ -984,10 +1118,12 @@ window.initSalePage = function initSalePage(container) {
             <div style="display: flex; gap: 10px; margin-bottom: 12px; align-items: flex-end; background: #f8fafc; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px;">
                 <div style="flex: 1; display: flex; flex-direction: column; gap: 4px;">
                     <label style="font-size: 13px; font-weight: 600; color: #64748b;">Chọn sản phẩm</label>
-                    <select id="edit-add-product-select" style="width: 100%; border: 1px solid #dbe4f0; border-radius: 8px; padding: 8px 10px; color: #334155; background: #fff; outline: none;">
-                        <option value="">-- Chọn sản phẩm để thêm --</option>
-                        ${productSelectOptions}
-                    </select>
+                    <div class="product-combobox" data-edit-product-combobox style="width: 100%;">
+                        <input type="text" data-edit-product-search placeholder="Nhập tên hoặc mã sản phẩm..." autocomplete="off" style="width: 100%; border: 1px solid #dbe4f0; border-radius: 8px; padding: 8px 10px; color: #334155; outline: none;">
+                        <input type="hidden" data-edit-product-value>
+                        <button type="button" class="combo-toggle" data-edit-product-toggle aria-label="Mở danh sách sản phẩm"><i class='bx bx-chevron-down'></i></button>
+                        <div class="combo-options" data-edit-product-options></div>
+                    </div>
                 </div>
                 <div style="width: 100px; display: flex; flex-direction: column; gap: 4px;">
                     <label style="font-size: 13px; font-weight: 600; color: #64748b;">Số lượng</label>
@@ -1002,6 +1138,16 @@ window.initSalePage = function initSalePage(container) {
                 <thead><tr><th>Sản phẩm</th><th>Đơn giá</th><th>SL</th><th>Thành tiền</th><th style="width: 58px; text-align: center;">Thao tác</th></tr></thead>
                 <tbody>${detailRows}</tbody>
             </table>
+            
+            <div class="invoice-summary" style="margin-top: 20px;">
+                <div class="summary-row"><span>Tổng tiền</span><strong data-invoice-subtotal>0đ</strong></div>
+                <div class="summary-row discount-row" style="flex-wrap: wrap;">
+                    <span>Ưu đãi</span>
+                    <input type="text" data-invoice-discount value="0đ">
+                    <span class="discount-error" style="color: red; font-size: 12px; display: none; width: 100%; text-align: right; margin-top: 4px;">Ưu đãi vượt quá 15% (tối đa <span class="max-discount-val"></span>)</span>
+                </div>
+                <div class="summary-row total-row"><span>Thành tiền</span><strong data-invoice-total>0đ</strong></div>
+            </div>
         `, `<button class="sales-btn light" data-close>Hủy</button><button class="sales-btn primary" data-save-edit="invoice">Lưu thay đổi</button>`);
 
         const recalculateTotals = () => {
@@ -1015,8 +1161,39 @@ window.initSalePage = function initSalePage(container) {
                 sum += lineTotal;
                 row.querySelector('.edit-item-total').textContent = formatMoney(lineTotal);
             });
-            const totalInput = modal.querySelector('[data-field="total"]');
-            if (totalInput) totalInput.value = formatMoney(sum);
+            const subtotalEl = modal.querySelector('[data-invoice-subtotal]');
+            const totalEl = modal.querySelector('[data-invoice-total]');
+            const discountInput = modal.querySelector('[data-invoice-discount]');
+            
+            if (subtotalEl) subtotalEl.textContent = formatMoney(sum);
+            
+            if (discountInput) {
+                if (!discountInput.dataset.manualOverride) {
+                    discountInput.value = sum > 1000000 ? formatMoney(Math.round(sum * 0.1)) : '0đ';
+                }
+            }
+            
+            let discount = moneyNumber(discountInput?.value);
+            const maxDiscount = Math.round(sum * 0.15);
+            const errorSpan = modal.querySelector('.discount-error');
+
+            if (discount > maxDiscount) {
+                discount = maxDiscount;
+                if (discountInput) {
+                    discountInput.value = formatMoney(discount);
+                    discountInput.style.borderColor = 'red';
+                }
+                if (errorSpan) {
+                    errorSpan.style.display = 'block';
+                    const maxValSpan = errorSpan.querySelector('.max-discount-val');
+                    if (maxValSpan) maxValSpan.textContent = formatMoney(maxDiscount);
+                }
+            } else {
+                if (discountInput) discountInput.style.borderColor = '';
+                if (errorSpan) errorSpan.style.display = 'none';
+            }
+
+            if (totalEl) totalEl.textContent = formatMoney(Math.max(0, sum - discount));
         };
 
         // Quantity inputs change
@@ -1041,11 +1218,87 @@ window.initSalePage = function initSalePage(container) {
             }
         });
 
+        // Setup combobox
+        const combo = modal.querySelector('[data-edit-product-combobox]');
+        const input = modal.querySelector('[data-edit-product-search]');
+        const value = modal.querySelector('[data-edit-product-value]');
+        const toggle = modal.querySelector('[data-edit-product-toggle]');
+        const optionsBox = modal.querySelector('[data-edit-product-options]');
+        
+        const renderEditProductOptions = (keyword = '') => {
+            if (!optionsBox) return;
+            const normalizedKeyword = normalize(keyword);
+            const results = invoiceProductOptions.filter((item) => {
+                const searchable = `${item.code} ${item.name} ${item.category || ''} ${item.size || ''} ${item.color || ''} ${item.price || ''} ${item.stock || ''}`;
+                return normalize(searchable).includes(normalizedKeyword);
+            });
+
+            optionsBox.innerHTML = results.length
+                ? results.map((item) => `
+                    <button type="button" class="combo-option" data-product-name="${item.name}">
+                        <span class="combo-main">
+                            <span class="combo-title"><strong>${item.code}</strong> ${item.name}</span>
+                            <span class="combo-meta">
+                                <b>${item.category || 'Chưa phân loại'}</b>
+                                <b>Size: ${item.size || '-'}</b>
+                                <b>Màu: ${item.color || '-'}</b>
+                                <b>SL: ${item.stock ?? '-'}</b>
+                            </span>
+                        </span>
+                        <small>${formatMoney(item.price)}</small>
+                    </button>
+                `).join('')
+                : '<div class="combo-empty">Không tìm thấy sản phẩm phù hợp.</div>';
+        };
+
+        if (combo && input && value && toggle && optionsBox) {
+            renderEditProductOptions();
+            input.addEventListener('focus', () => {
+                renderEditProductOptions(input.value);
+                combo.classList.add('open');
+            });
+            input.addEventListener('input', () => {
+                value.value = '';
+                renderEditProductOptions(input.value);
+                combo.classList.add('open');
+            });
+            toggle.addEventListener('click', () => {
+                renderEditProductOptions(input.value);
+                combo.classList.toggle('open');
+                input.focus();
+            });
+            optionsBox.addEventListener('click', (event) => {
+                const option = event.target.closest('[data-product-name]');
+                if (!option) return;
+                input.value = option.dataset.productName;
+                value.value = option.dataset.productName;
+                combo.classList.remove('open');
+            });
+            document.addEventListener('click', (event) => {
+                if (!combo.contains(event.target)) combo.classList.remove('open');
+            });
+        }
+
+        modal.querySelector('[data-invoice-discount]')?.addEventListener('input', (event) => {
+            event.target.dataset.manualOverride = 'true';
+            recalculateTotals();
+        });
+        modal.querySelector('[data-invoice-discount]')?.addEventListener('blur', (event) => {
+            event.target.value = formatMoney(moneyNumber(event.target.value));
+            recalculateTotals();
+        });
+
         // Adding products
         modal.querySelector('#edit-add-product-btn').onclick = () => {
-            const select = modal.querySelector('#edit-add-product-select');
+            const typed = input?.value.trim();
+            const val = value?.value.trim();
+            let productName = val && prices[val] ? val : '';
+            if (!productName) {
+                const exactMatch = invoiceProductOptions.find((item) => normalize(item.name) === normalize(typed) || normalize(item.code) === normalize(typed));
+                productName = exactMatch?.name || '';
+            }
+
             const qtyInput = modal.querySelector('#edit-add-product-qty');
-            const productName = select.value;
             const quantity = Math.max(1, Number(qtyInput.value || 1));
             
             if (!productName) {
@@ -1081,14 +1334,17 @@ window.initSalePage = function initSalePage(container) {
                 `;
                 tbody.appendChild(newRow);
             }
-            
-            select.value = '';
+            if (input) input.value = '';
+            if (value) value.value = '';
             qtyInput.value = '1';
             recalculateTotals();
         };
 
+        // Initialize totals on open
+        recalculateTotals();
+
         // Saving edits
-        modal.querySelector('[data-save-edit="invoice"]').onclick = () => {
+        modal.querySelector('[data-save-edit="invoice"]').onclick = async () => {
             const customerText = fieldValue(modal, 'customer');
             if (!customerText) {
                 alert('Vui lòng nhập tên khách hàng.');
@@ -1119,133 +1375,298 @@ window.initSalePage = function initSalePage(container) {
                     priceNum
                 ]);
             });
-
-            const totalText = formatMoney(sum);
-
-            row.innerHTML = `<td><strong>${code}</strong></td><td>${dateText}</td><td>${customerText}</td><td>${staffText}</td><td></td>`;
-            attachActions(row.lastElementChild, 'invoice', 'invoice-detail');
+            const discountInput = modal.querySelector('[data-invoice-discount]');
+            let discount = moneyNumber(discountInput?.value);
+            const maxDiscount = Math.round(sum * 0.15);
+            if (discount > maxDiscount) discount = maxDiscount;
             
-            if (!invoiceDetails[code]) invoiceDetails[code] = {};
+            const totalText = formatMoney(Math.max(0, sum - discount));
+            
+            const putData = {
+                id: invoiceDetails[code]?.id || invoiceIdByCode(code),
+                note: invoiceDetails[code]?.note || '',
+                discount: discount,
+                items: items.map(item => ({
+                    product_id: item[5],
+                    quantity: Number(item[2]),
+                    price: item[6],
+                    discount: 0
+                }))
+            };
 
-            const now = new Date();
-            const year = now.getFullYear();
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const date = String(now.getDate()).padStart(2, '0');
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            const seconds = String(now.getSeconds()).padStart(2, '0');
-            const formattedTime = `${date}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+            try {
+                await window.kidCityApi.put('sales/invoices.php', putData);
+                row.innerHTML = `<td><strong>${code}</strong></td><td>${dateText}</td><td>${customerText}</td><td>${staffText}</td><td></td>`;
+                attachActions(row.lastElementChild, 'invoice', 'invoice-detail');
+                
+                if (!invoiceDetails[code]) invoiceDetails[code] = {};
 
-            if (!invoiceDetails[code].historySnapshots) {
-                invoiceDetails[code].historySnapshots = [{
-                    customer: invoiceDetails[code].customer || customerText,
-                    staff: invoiceDetails[code].staff || staffText,
-                    date: invoiceDetails[code].date || dateText,
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const date = String(now.getDate()).padStart(2, '0');
+                const hours = String(now.getHours()).padStart(2, '0');
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                const seconds = String(now.getSeconds()).padStart(2, '0');
+                const formattedTime = `${date}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+
+                if (!invoiceDetails[code].historySnapshots) {
+                    invoiceDetails[code].historySnapshots = [{
+                        customer: invoiceDetails[code].customer || customerText,
+                        staff: invoiceDetails[code].staff || staffText,
+                        date: invoiceDetails[code].date || dateText,
+                        note: invoiceDetails[code].note || 'Không có',
+                        total: invoiceDetails[code].total || totalText,
+                        items: invoiceDetails[code].items || items,
+                        timestamp: formatDateTime(invoiceDetails[code].createdAt) || 'Thời gian ban đầu'
+                    }];
+                }
+
+                invoiceDetails[code].historySnapshots.push({
+                    customer: customerText,
+                    staff: staffText,
+                    date: dateText,
                     note: invoiceDetails[code].note || 'Không có',
-                    total: invoiceDetails[code].total || totalText,
-                    items: invoiceDetails[code].items || items,
-                    timestamp: formatDateTime(invoiceDetails[code].createdAt) || 'Thời gian ban đầu'
-                }];
+                    total: totalText,
+                    items: items,
+                    timestamp: formattedTime
+                });
+
+                invoiceDetails[code].date = dateText;
+                invoiceDetails[code].customer = customerText;
+                invoiceDetails[code].staff = staffText;
+                invoiceDetails[code].total = totalText;
+                invoiceDetails[code].items = items;
+                invoiceDetails[code].updatedAt = `${year}-${month}-${date} ${hours}:${minutes}:${seconds}`;
+                if (!invoiceDetails[code].updateHistory) {
+                    invoiceDetails[code].updateHistory = [];
+                }
+                invoiceDetails[code].updateHistory.push(formattedTime);
+
+                updateRowKey(row);
+                renderInvoicePagination();
+                closeModal(modal);
+            } catch (error) {
+                alert(error.message || 'Không thể cập nhật hóa đơn.');
+                console.error(error);
             }
-
-            invoiceDetails[code].historySnapshots.push({
-                customer: customerText,
-                staff: staffText,
-                date: dateText,
-                note: invoiceDetails[code].note || 'Không có',
-                total: totalText,
-                items: items,
-                timestamp: formattedTime
-            });
-
-            invoiceDetails[code].date = dateText;
-            invoiceDetails[code].customer = customerText;
-            invoiceDetails[code].staff = staffText;
-            invoiceDetails[code].total = totalText;
-            invoiceDetails[code].items = items;
-            invoiceDetails[code].updatedAt = `${year}-${month}-${date} ${hours}:${minutes}:${seconds}`;
-            if (!invoiceDetails[code].updateHistory) {
-                invoiceDetails[code].updateHistory = [];
-            }
-            invoiceDetails[code].updateHistory.push(formattedTime);
-
-            updateRowKey(row);
-            renderInvoicePagination();
-            closeModal(modal);
         };
     };
 
     const openExchangeEditModal = (row) => {
         const code = rowText(row, 0);
-        const reason = row.dataset.reason || 'Đổi sang mẫu khác';
-        const oldProduct = row.dataset.oldProduct || 'Áo thun Mickey Mouse';
-        const newProduct = row.dataset.newProduct || 'Áo thun Elsa Frozen';
+        const invoiceCode = rowText(row, 1);
+        const oldProduct = row.dataset.oldProduct || '';
+        const newProduct = row.dataset.newProduct || '';
         const quantity = row.dataset.quantity || '1';
+        
+        const invoice = invoiceDetails[invoiceCode] || {};
+        const items = invoice.items || [];
+        
+        let oldProductOptions = items.map(item => `<option value="${item[5]}" data-name="${item[0]}" data-price="${item[6]}" data-max="${item[2]}" ${item[0] === oldProduct || String(item[5]) === String(row.dataset.oldProductId) ? 'selected' : ''}>${item[0]} (Tối đa: ${item[2]})</option>`).join('');
+        if (!oldProductOptions) oldProductOptions = `<option value="${row.dataset.oldProductId || ''}" data-name="${oldProduct}" data-price="0" data-max="${quantity}" selected>${oldProduct}</option>`;
+
         const modal = showWorkModal('exchange-edit-modal', `Sửa phiếu đổi ${code}`, `
             <div class="edit-summary">Cập nhật thông tin phiếu đổi và chi tiết sản phẩm đổi.</div>
             <div class="form-grid edit-grid">
                 <div class="field"><label>Mã đổi hàng</label><input data-field="code" value="${code}" disabled style="background-color: #eef2f5; color: #666;"></div>
-                <div class="field"><label>Mã hóa đơn</label><input data-field="invoiceCode" value="${rowText(row, 1)}" disabled style="background-color: #eef2f5; color: #666;"></div>
+                <div class="field"><label>Mã hóa đơn</label><input data-field="invoiceCode" value="${invoiceCode}" disabled style="background-color: #eef2f5; color: #666;"></div>
                 <div class="field"><label>Ngày đổi</label><input type="date" data-field="date" value="${rowText(row, 2)}" disabled style="background-color: #eef2f5; color: #666;"></div>
                 <div class="field"><label>Nhân viên xử lý</label><input data-field="staff" value="${rowText(row, 3)}" disabled style="background-color: #eef2f5; color: #666;"></div>
-                <div class="field full"><label>Lý do</label><input data-field="reason" value="${reason}"></div>
+                <div class="field full"><label>Lý do</label><input data-field="reason" value="${rowText(row, 3)}"></div>
             </div>
             <h3 class="section-title edit-section-title" style="display:flex; justify-content:space-between; align-items:center;">Chi tiết đổi hàng <button class="sales-btn primary" data-add-exchange-product type="button" style="padding: 4px 8px; font-size: 0.9em;"><i class='bx bx-plus'></i></button></h3>
             <div class="product-list-container">
                 <div class="form-grid edit-grid product-row" style="position: relative; padding-right: 40px; margin-bottom: 10px; border-bottom: 1px dashed #eee; padding-bottom: 10px;">
-                    <div class="field"><label>SP cũ</label><input data-field="oldProduct" value="${oldProduct}"></div>
-                    <div class="field"><label>SP mới</label><input data-field="newProduct" value="${newProduct}"></div>
+                    <div class="field"><label>SP cũ (Trả)</label><select data-field="oldProduct">${oldProductOptions}</select></div>
+                    <div class="field" style="position: relative;">
+                        <label>SP mới (Đổi)</label>
+                        <div class="product-combobox" data-product-combobox>
+                            <input type="text" data-product-search placeholder="Tìm hoặc chọn SP..." value="${newProduct}">
+                            <button type="button" class="combo-toggle" data-product-toggle><i class='bx bx-chevron-down'></i></button>
+                            <input type="hidden" data-product-value value="${newProduct}">
+                            <div class="combo-options" data-product-options></div>
+                        </div>
+                    </div>
                     <div class="field"><label>Số lượng</label><input type="number" min="1" data-field="quantity" value="${quantity}"></div>
+                    <div class="field"><label>Bù/hoàn dòng</label><input data-field="rowExchangeRefund" value="0đ" readonly style="background-color: #eef2f5; color: #666;"></div>
                     <button class="action-btn delete" data-remove-row type="button" style="position: absolute; right: 0; top: 50%; transform: translateY(-50%); background: none; border: none; color: #ff4d4f; font-size: 1.2em; cursor: pointer;"><i class='bx bx-trash'></i></button>
                 </div>
             </div>
+            <div class="field full" style="margin-top: 10px;">
+                <label>Tổng tiền hoàn/bù</label>
+                <input data-field="exchangeRefund" value="0đ" readonly style="background-color: #eef2f5; color: #666; font-weight: bold; font-size: 1.1em;">
+            </div>
         `, `<button class="sales-btn light" data-close>Hủy</button><button class="sales-btn primary" data-save-edit="exchange">Lưu thay đổi</button>`);
 
+        delete modal.dataset.productComboReady;
+        setupProductCombobox(modal);
+
+        const container = modal.querySelector('.product-list-container');
+        const refundInput = modal.querySelector('[data-field="exchangeRefund"]');
+        
+        const updateExchangeRefund = () => {
+            let totalRefund = 0;
+            const rows = container.querySelectorAll('.product-row');
+            rows.forEach(r => {
+                const oldSelect = r.querySelector('[data-field="oldProduct"]');
+                const newValueInput = r.querySelector('[data-product-value]');
+                const newSearchInput = r.querySelector('[data-product-search]');
+                const qtyInput = r.querySelector('[data-field="quantity"]');
+                const rowRefundInput = r.querySelector('[data-field="rowExchangeRefund"]');
+                
+                let refund = 0;
+                const oldOption = oldSelect.options[oldSelect.selectedIndex];
+                if (oldOption) {
+                    const maxQty = parseInt(oldOption.dataset.max, 10) || 1;
+                    let qty = parseInt(qtyInput.value, 10) || 1;
+                    if (qty > maxQty) { qty = maxQty; qtyInput.value = qty; }
+                    if (qty < 1) { qty = 1; qtyInput.value = 1; }
+                    refund -= (parseFloat(oldOption.dataset.price) || 0) * qty;
+                }
+                
+                let newQty = parseInt(qtyInput.value, 10) || 1;
+                if (newValueInput.value && productDetails[newValueInput.value]) {
+                    const newPrice = productDetails[newValueInput.value].priceNum || 0;
+                    refund += newPrice * newQty;
+                } else if (newSearchInput && newSearchInput.value === newProduct && row.dataset.newProductId) {
+                    refund += 0; 
+                }
+                
+                rowRefundInput.dataset.rawTotal = refund;
+                rowRefundInput.value = formatMoney(refund);
+                totalRefund += refund;
+            });
+            
+            refundInput.dataset.rawTotal = totalRefund;
+            refundInput.value = formatMoney(totalRefund);
+            if (totalRefund > 0) refundInput.style.color = '#ff4d4f'; 
+            else if (totalRefund < 0) refundInput.style.color = '#52c41a'; 
+            else refundInput.style.color = '#666';
+        };
+
+        const attachRowEvents = (r) => {
+            const oldSelect = r.querySelector('[data-field="oldProduct"]');
+            const newValueInput = r.querySelector('[data-product-value]');
+            const qtyInput = r.querySelector('[data-field="quantity"]');
+            
+            oldSelect.addEventListener('change', () => {
+                const opt = oldSelect.options[oldSelect.selectedIndex];
+                if (opt) {
+                    qtyInput.max = opt.dataset.max;
+                    qtyInput.value = '1';
+                }
+                updateExchangeRefund();
+            });
+            qtyInput.addEventListener('input', updateExchangeRefund);
+            newValueInput.addEventListener('change', updateExchangeRefund);
+        };
+
+        const firstRow = container.querySelector('.product-row');
+        attachRowEvents(firstRow);
+        const initialOpt = firstRow.querySelector('[data-field="oldProduct"]').options[firstRow.querySelector('[data-field="oldProduct"]').selectedIndex];
+        if (initialOpt) firstRow.querySelector('[data-field="quantity"]').max = initialOpt.dataset.max;
+        updateExchangeRefund(); 
+
         modal.querySelector('[data-add-exchange-product]').onclick = () => {
-            const container = modal.querySelector('.product-list-container');
             const newRow = document.createElement('div');
             newRow.className = 'form-grid edit-grid product-row';
             newRow.style.cssText = 'position: relative; padding-right: 40px; margin-bottom: 10px; border-bottom: 1px dashed #eee; padding-bottom: 10px;';
             newRow.innerHTML = `
-                <div class="field"><label>SP cũ</label><input data-field="oldProduct" value=""></div>
-                <div class="field"><label>SP mới</label><input data-field="newProduct" value=""></div>
+                <div class="field"><label>SP cũ (Trả)</label><select data-field="oldProduct">${oldProductOptions}</select></div>
+                <div class="field" style="position: relative;">
+                    <label>SP mới (Đổi)</label>
+                    <div class="product-combobox" data-product-combobox>
+                        <input type="text" data-product-search placeholder="Tìm hoặc chọn SP..." value="">
+                        <button type="button" class="combo-toggle" data-product-toggle><i class='bx bx-chevron-down'></i></button>
+                        <input type="hidden" data-product-value value="">
+                        <div class="combo-options" data-product-options></div>
+                    </div>
+                </div>
                 <div class="field"><label>Số lượng</label><input type="number" min="1" data-field="quantity" value="1"></div>
+                <div class="field"><label>Bù/hoàn dòng</label><input data-field="rowExchangeRefund" value="0đ" readonly style="background-color: #eef2f5; color: #666;"></div>
                 <button class="action-btn delete" data-remove-row type="button" style="position: absolute; right: 0; top: 50%; transform: translateY(-50%); background: none; border: none; color: #ff4d4f; font-size: 1.2em; cursor: pointer;"><i class='bx bx-trash'></i></button>
             `;
             container.appendChild(newRow);
+            attachRowEvents(newRow);
+            
+            delete modal.dataset.productComboReady;
+            setupProductCombobox(modal);
+            
+            const oldSelect = newRow.querySelector('[data-field="oldProduct"]');
+            if (oldSelect.options.length > 0) oldSelect.selectedIndex = 0;
+            const opt = oldSelect.options[oldSelect.selectedIndex];
+            if (opt) newRow.querySelector('[data-field="quantity"]').max = opt.dataset.max;
+            updateExchangeRefund();
         };
 
         modal.addEventListener('click', (event) => {
             const removeBtn = event.target.closest('[data-remove-row]');
             if (removeBtn) {
                 removeBtn.closest('.product-row').remove();
+                updateExchangeRefund();
             }
         });
 
-        modal.querySelector('[data-save-edit="exchange"]').onclick = () => {
-            const firstRow = modal.querySelector('.product-row');
-            row.innerHTML = `<td><strong>${code}</strong></td><td>${invoiceLink(fieldValue(modal, 'invoiceCode'))}</td><td>${fieldValue(modal, 'date')}</td><td>${fieldValue(modal, 'reason')}</td><td>${fieldValue(modal, 'staff')}</td><td></td>`;
-            row.dataset.reason = fieldValue(modal, 'reason');
-            if (firstRow) {
-                row.dataset.oldProduct = firstRow.querySelector('[data-field="oldProduct"]').value;
-                row.dataset.newProduct = firstRow.querySelector('[data-field="newProduct"]').value;
-                row.dataset.quantity = firstRow.querySelector('[data-field="quantity"]').value || '1';
+        modal.querySelector('[data-save-edit="exchange"]').onclick = async () => {
+            const reason = fieldValue(modal, 'reason');
+            const id = parseInt(code.replace(/\D/g, ''), 10);
+            const totalRefund = parseFloat(refundInput.dataset.rawTotal || 0);
+            
+            const items = [];
+            container.querySelectorAll('.product-row').forEach(r => {
+                const oldPid = r.querySelector('[data-field="oldProduct"]').value;
+                const newPName = r.querySelector('[data-product-value]').value;
+                const newPid = productDetails[newPName]?.productId || row.dataset.newProductId || 0;
+                const qty = parseInt(r.querySelector('[data-field="quantity"]').value, 10) || 1;
+                items.push({ old_product_id: oldPid, new_product_id: newPid, quantity: qty });
+            });
+
+            if (items.length === 0) {
+                alert('Vui lòng chọn ít nhất 1 sản phẩm.');
+                return;
             }
-            attachActions(row.lastElementChild, 'exchange', 'exchange-detail');
-            updateRowKey(row);
-            closeModal(modal);
+
+            if (window.kidCityApi) {
+                try {
+                    await window.kidCityApi.put('sales/exchanges.php', { 
+                        id, 
+                        reason,
+                        items,
+                        exchange_refund: totalRefund
+                    });
+                    await loadExchangeTableFromApi();
+                    closeModal(modal);
+                } catch (e) {
+                    alert(e.message || 'Lỗi cập nhật phiếu đổi hàng');
+                }
+            } else {
+                row.dataset.reason = reason;
+                row.dataset.updatedAt = today();
+                row.innerHTML = `<td><strong>${code}</strong></td><td>${invoiceLink(invoiceCode)}</td><td>${fieldValue(modal, 'date')}</td><td>${reason}</td><td>${fieldValue(modal, 'staff')}</td><td></td>`;
+                attachActions(row.lastElementChild, 'exchange', 'exchange-detail');
+                updateRowKey(row);
+                closeModal(modal);
+            }
         };
     };
-
-    const openReturnEditModal = (row) => {
+const openReturnEditModal = (row) => {
         const code = rowText(row, 0);
-        const product = row.dataset.product || 'Váy hoa nhí công chúa';
+        const invoiceCode = rowText(row, 1);
+        const product = row.dataset.product || '';
         const quantity = row.dataset.quantity || '1';
-        const refund = row.dataset.refund || '220.000đ';
+        const refund = row.dataset.refund || '0đ';
+        
+        const invoice = invoiceDetails[invoiceCode] || {};
+        const items = invoice.items || [];
+        
+        let productOptions = items.map(item => `<option value="${item[5]}" data-name="${item[0]}" data-price="${item[6]}" data-max="${item[2]}" ${item[0] === product || String(item[5]) === String(row.dataset.productId) ? 'selected' : ''}>${item[0]} (Tối đa: ${item[2]})</option>`).join('');
+        if (!productOptions) productOptions = `<option value="${row.dataset.productId || ''}" data-name="${product}" data-price="0" data-max="${quantity}" selected>${product}</option>`;
+
         const modal = showWorkModal('return-edit-modal', `Sửa phiếu trả ${code}`, `
             <div class="form-grid edit-grid">
                 <div class="field"><label>Mã trả hàng</label><input data-field="code" value="${code}" disabled style="background-color: #eef2f5; color: #666;"></div>
-                <div class="field"><label>Mã hóa đơn</label><input data-field="invoiceCode" value="${rowText(row, 1)}" disabled style="background-color: #eef2f5; color: #666;"></div>
+                <div class="field"><label>Mã hóa đơn</label><input data-field="invoiceCode" value="${invoiceCode}" disabled style="background-color: #eef2f5; color: #666;"></div>
                 <div class="field"><label>Ngày trả</label><input type="date" data-field="date" value="${rowText(row, 2)}" disabled style="background-color: #eef2f5; color: #666;"></div>
                 <div class="field"><label>Nhân viên xử lý</label><input data-field="staff" value="${rowText(row, 4)}" disabled style="background-color: #eef2f5; color: #666;"></div>
                 <div class="field full"><label>Lý do</label><input data-field="reason" value="${rowText(row, 3)}"></div>
@@ -1253,46 +1674,137 @@ window.initSalePage = function initSalePage(container) {
             <h3 class="section-title edit-section-title" style="display:flex; justify-content:space-between; align-items:center;">Chi tiết sản phẩm trả <button class="sales-btn primary" data-add-return-product type="button" style="padding: 4px 8px; font-size: 0.9em;"><i class='bx bx-plus'></i></button></h3>
             <div class="product-list-container">
                 <div class="form-grid edit-grid product-row" style="position: relative; padding-right: 40px; margin-bottom: 10px; border-bottom: 1px dashed #eee; padding-bottom: 10px;">
-                    <div class="field"><label>Sản phẩm</label><input data-field="product" value="${product}"></div>
+                    <div class="field"><label>Sản phẩm</label><select data-field="product">${productOptions}</select></div>
                     <div class="field"><label>Số lượng trả</label><input type="number" min="1" data-field="quantity" value="${quantity}"></div>
-                    <div class="field"><label>Tiền hoàn</label><input data-field="refund" value="${refund}"></div>
+                    <div class="field"><label>Tiền hoàn</label><input data-field="rowRefund" value="${refund}" readonly style="background-color: #eef2f5; color: #666;"></div>
                     <button class="action-btn delete" data-remove-row type="button" style="position: absolute; right: 0; top: 50%; transform: translateY(-50%); background: none; border: none; color: #ff4d4f; font-size: 1.2em; cursor: pointer;"><i class='bx bx-trash'></i></button>
                 </div>
             </div>
+            <div class="field full" style="margin-top: 10px;">
+                <label>Tổng tiền hoàn</label>
+                <input data-field="refund" value="${refund}" readonly style="background-color: #eef2f5; color: #52c41a; font-weight: bold; font-size: 1.1em;">
+            </div>
         `, `<button class="sales-btn light" data-close>Hủy</button><button class="sales-btn primary" data-save-edit="return">Lưu thay đổi</button>`);
 
+        const container = modal.querySelector('.product-list-container');
+        const refundInput = modal.querySelector('[data-field="refund"]');
+        
+        const updateRefundAmount = () => {
+            let totalRefund = 0;
+            const rows = container.querySelectorAll('.product-row');
+            rows.forEach(r => {
+                const pSelect = r.querySelector('[data-field="product"]');
+                const qInput = r.querySelector('[data-field="quantity"]');
+                const rowRefundInput = r.querySelector('[data-field="rowRefund"]');
+                
+                const selectedOption = pSelect.options[pSelect.selectedIndex];
+                if (!selectedOption) return;
+                
+                const price = parseFloat(selectedOption.dataset.price) || 0;
+                const maxQty = parseInt(selectedOption.dataset.max, 10) || 1;
+                
+                let qty = parseInt(qInput.value, 10) || 1;
+                if (qty > maxQty) { qty = maxQty; qInput.value = qty; }
+                if (qty < 1) { qty = 1; qInput.value = 1; }
+                
+                const rowTotal = price * qty;
+                rowRefundInput.value = formatMoney(rowTotal);
+                rowRefundInput.dataset.rawTotal = rowTotal;
+                totalRefund += rowTotal;
+            });
+            
+            refundInput.dataset.rawTotal = totalRefund;
+            refundInput.value = formatMoney(totalRefund);
+        };
+
+        const attachRowEvents = (r) => {
+            const pSelect = r.querySelector('[data-field="product"]');
+            const qInput = r.querySelector('[data-field="quantity"]');
+            
+            pSelect.addEventListener('change', () => {
+                const selectedOption = pSelect.options[pSelect.selectedIndex];
+                if (selectedOption) {
+                    qInput.max = selectedOption.dataset.max;
+                    qInput.value = '1';
+                }
+                updateRefundAmount();
+            });
+            qInput.addEventListener('input', updateRefundAmount);
+        };
+
+        const firstRow = container.querySelector('.product-row');
+        attachRowEvents(firstRow);
+        const initialSelected = firstRow.querySelector('[data-field="product"]').options[firstRow.querySelector('[data-field="product"]').selectedIndex];
+        if (initialSelected) firstRow.querySelector('[data-field="quantity"]').max = initialSelected.dataset.max;
+        updateRefundAmount();
+
         modal.querySelector('[data-add-return-product]').onclick = () => {
-            const container = modal.querySelector('.product-list-container');
             const newRow = document.createElement('div');
             newRow.className = 'form-grid edit-grid product-row';
             newRow.style.cssText = 'position: relative; padding-right: 40px; margin-bottom: 10px; border-bottom: 1px dashed #eee; padding-bottom: 10px;';
             newRow.innerHTML = `
-                <div class="field"><label>Sản phẩm</label><input data-field="product" value=""></div>
+                <div class="field"><label>Sản phẩm</label><select data-field="product">${productOptions}</select></div>
                 <div class="field"><label>Số lượng trả</label><input type="number" min="1" data-field="quantity" value="1"></div>
-                <div class="field"><label>Tiền hoàn</label><input data-field="refund" value="0đ"></div>
+                <div class="field"><label>Tiền hoàn</label><input data-field="rowRefund" value="0đ" readonly style="background-color: #eef2f5; color: #666;"></div>
                 <button class="action-btn delete" data-remove-row type="button" style="position: absolute; right: 0; top: 50%; transform: translateY(-50%); background: none; border: none; color: #ff4d4f; font-size: 1.2em; cursor: pointer;"><i class='bx bx-trash'></i></button>
             `;
             container.appendChild(newRow);
+            attachRowEvents(newRow);
+            
+            const pSelect = newRow.querySelector('[data-field="product"]');
+            if (pSelect.options.length > 0) pSelect.selectedIndex = 0;
+            const opt = pSelect.options[pSelect.selectedIndex];
+            if (opt) newRow.querySelector('[data-field="quantity"]').max = opt.dataset.max;
+            updateRefundAmount();
         };
 
         modal.addEventListener('click', (event) => {
             const removeBtn = event.target.closest('[data-remove-row]');
             if (removeBtn) {
                 removeBtn.closest('.product-row').remove();
+                updateRefundAmount();
             }
         });
 
-        modal.querySelector('[data-save-edit="return"]').onclick = () => {
-            const firstRow = modal.querySelector('.product-row');
-            row.innerHTML = `<td><strong>${code}</strong></td><td>${invoiceLink(fieldValue(modal, 'invoiceCode'))}</td><td>${fieldValue(modal, 'date')}</td><td>${fieldValue(modal, 'reason')}</td><td>${fieldValue(modal, 'staff')}</td><td></td>`;
-            if (firstRow) {
-                row.dataset.product = firstRow.querySelector('[data-field="product"]').value;
-                row.dataset.quantity = firstRow.querySelector('[data-field="quantity"]').value || '1';
-                row.dataset.refund = firstRow.querySelector('[data-field="refund"]').value || '0đ';
+        modal.querySelector('[data-save-edit="return"]').onclick = async () => {
+            const reason = fieldValue(modal, 'reason');
+            const id = parseInt(code.replace(/\D/g, ''), 10);
+            const totalRefund = parseFloat(refundInput.dataset.rawTotal || 0);
+            
+            const items = [];
+            container.querySelectorAll('.product-row').forEach(r => {
+                const pid = r.querySelector('[data-field="product"]').value;
+                const qty = parseInt(r.querySelector('[data-field="quantity"]').value, 10) || 1;
+                const rowRefund = parseFloat(r.querySelector('[data-field="rowRefund"]').dataset.rawTotal || 0);
+                items.push({ product_id: pid, quantity: qty, refund_amount: rowRefund });
+            });
+
+            if (items.length === 0) {
+                alert('Vui lòng chọn ít nhất 1 sản phẩm.');
+                return;
             }
-            attachActions(row.lastElementChild, 'return', 'return-detail');
-            updateRowKey(row);
-            closeModal(modal);
+
+            if (window.kidCityApi) {
+                try {
+                    await window.kidCityApi.put('sales/returns.php', { 
+                        id, 
+                        reason,
+                        items,
+                        refund_amount: totalRefund
+                    });
+                    await loadReturnTableFromApi();
+                    closeModal(modal);
+                } catch (e) {
+                    alert(e.message || 'Lỗi cập nhật phiếu trả hàng');
+                }
+            } else {
+                row.dataset.reason = reason;
+                row.dataset.updatedAt = today();
+                row.innerHTML = `<td><strong>${code}</strong></td><td>${invoiceLink(invoiceCode)}</td><td>${fieldValue(modal, 'date')}</td><td>${reason}</td><td>${fieldValue(modal, 'staff')}</td><td></td>`;
+                attachActions(row.lastElementChild, 'return', 'return-detail');
+                updateRowKey(row);
+                closeModal(modal);
+            }
         };
     };
 
@@ -1377,16 +1889,23 @@ window.initSalePage = function initSalePage(container) {
                     Size: ${detail.size || '-'} · Màu: ${detail.color || '-'} · Tồn: ${detail.stock ?? '-'}
                 </div>
             </td>
-            <td>${quantity}</td>
+            <td><input type="number" class="draft-qty-input" min="1" value="${quantity}" style="width: 60px; text-align: center; border: 1px solid #dbe4f0; border-radius: 4px; padding: 4px;"></td>
             <td>${formatMoney(price)}</td>
-            <td><strong>${formatMoney(price * quantity)}</strong></td>
+            <td class="draft-item-total"><strong>${formatMoney(price * quantity)}</strong></td>
             <td>
                 <div class="draft-actions">
-                    <button class="draft-action edit" data-edit-draft-product title="Sửa sản phẩm"><i class='bx bx-edit-alt'></i></button>
                     <button class="draft-action delete" data-delete-draft-product title="Xóa sản phẩm"><i class='bx bx-trash'></i></button>
                 </div>
             </td>
         `;
+
+        const qtyInput = row.querySelector('.draft-qty-input');
+        qtyInput.addEventListener('input', (e) => {
+            const newQty = Math.max(1, Number(e.target.value) || 1);
+            row.dataset.quantity = String(newQty);
+            row.querySelector('.draft-item-total strong').textContent = formatMoney(price * newQty);
+            updateInvoiceSummary(row.closest('#invoice-create'));
+        });
     };
 
     const refreshInvoiceDraftTable = (body) => {
@@ -1411,10 +1930,31 @@ window.initSalePage = function initSalePage(container) {
         if (subtotalEl) subtotalEl.textContent = formatMoney(subtotal);
         if (discountInput) {
             discountInput.disabled = false;
-            discountInput.value = subtotal > 1000000 ? formatMoney(Math.round(subtotal * 0.1)) : '0đ';
+            if (!discountInput.dataset.manualOverride) {
+                discountInput.value = subtotal > 1000000 ? formatMoney(Math.round(subtotal * 0.1)) : '0đ';
+            }
         }
 
-        const discount = Math.min(moneyNumber(discountInput?.value), subtotal);
+        let discount = moneyNumber(discountInput?.value);
+        const maxDiscount = Math.round(subtotal * 0.15);
+        const errorSpan = modal.querySelector('.discount-error');
+
+        if (discount > maxDiscount) {
+            discount = maxDiscount;
+            if (discountInput) {
+                discountInput.value = formatMoney(discount);
+                discountInput.style.borderColor = 'red';
+            }
+            if (errorSpan) {
+                errorSpan.style.display = 'block';
+                const maxValSpan = errorSpan.querySelector('.max-discount-val');
+                if (maxValSpan) maxValSpan.textContent = formatMoney(maxDiscount);
+            }
+        } else {
+            if (discountInput) discountInput.style.borderColor = '';
+            if (errorSpan) errorSpan.style.display = 'none';
+        }
+
         if (totalEl) totalEl.textContent = formatMoney(Math.max(0, subtotal - discount));
     };
 
@@ -1451,28 +1991,6 @@ window.initSalePage = function initSalePage(container) {
         hideSelectedProductInfo(modal);
         modal.querySelector('[data-product-search]').focus();
     };
-    const openDraftEditModal = (row) => {
-        if (!row) return;
-        const productOptions = Object.keys(prices).map((name) => `<option ${row.dataset.product === name ? 'selected' : ''}>${name}</option>`).join('');
-        const modal = showWorkModal('invoice-draft-edit-modal', 'Sửa sản phẩm trong hóa đơn', `
-            <div class="form-grid edit-grid">
-                <div class="field"><label>Sản phẩm</label><select data-field="product">${productOptions}</select></div>
-                <div class="field"><label>Số lượng</label><input type="number" min="1" data-field="quantity" value="${row.dataset.quantity || 1}"></div>
-            </div>
-        `, `<button class="sales-btn light" data-close>Hủy</button><button class="sales-btn primary" data-save-draft-product>Lưu thay đổi</button>`);
-
-        modal.querySelector('[data-save-draft-product]').onclick = () => {
-            const product = fieldValue(modal, 'product');
-            const quantity = Math.max(1, Number(fieldValue(modal, 'quantity') || 1));
-            row.dataset.product = product;
-            row.dataset.productCode = productCodes[product] || 'SP000';
-            row.dataset.price = String(prices[product] || 100000);
-            row.dataset.quantity = String(quantity);
-            refreshInvoiceDraftTable(row.closest('tbody'));
-            closeModal(modal);
-        };
-    };
-
     const openDraftDeleteModal = (row) => {
         if (!row) return;
         const modal = showWorkModal('invoice-draft-delete-modal', 'Xóa sản phẩm khỏi hóa đơn', `
@@ -1494,20 +2012,28 @@ window.initSalePage = function initSalePage(container) {
     const bindInvoiceDraftActions = () => {
         const modal = root.querySelector('#invoice-create');
         modal.addEventListener('click', (event) => {
-            const editBtn = event.target.closest('[data-edit-draft-product]');
             const deleteBtn = event.target.closest('[data-delete-draft-product]');
-            if (editBtn) openDraftEditModal(editBtn.closest('tr'));
             if (deleteBtn) openDraftDeleteModal(deleteBtn.closest('tr'));
         });
     };
 
     const createInvoice = async () => {
         const modal = root.querySelector('#invoice-create');
-        const customerSelect = modal.querySelector('.form-grid select');
+        const customerValue = modal.querySelector('[data-customer-value]');
+        const customerInput = modal.querySelector('[data-customer-search]');
         const dateInput = modal.querySelector('#invoice-date-input');
         const productRows = Array.from(modal.querySelectorAll('.sales-card tbody tr')).filter((row) => !row.querySelector('.empty-row'));
-        if (!validSelect(customerSelect)) {
-            alert('Vui lòng chọn khách hàng.');
+        
+        const customerId = customerValue ? Number(customerValue.dataset.customerId || 0) : 0;
+        const customerText = customerValue ? customerValue.value.trim() : '';
+
+        if (!customerText || !customerId) {
+            const errorSpan = modal.querySelector('.invoice-customer-field .error-message');
+            if (errorSpan) errorSpan.style.display = 'block';
+            if (customerInput) {
+                customerInput.style.borderColor = 'red';
+                customerInput.focus();
+            }
             return;
         }
         if (!productRows.length) {
@@ -1528,9 +2054,8 @@ window.initSalePage = function initSalePage(container) {
 
         if (window.kidCityApi) {
             try {
-                const selectedCustomer = customerSelect.selectedOptions[0];
                 await window.kidCityApi.post('sales/invoices.php', {
-                    customer_id: Number(selectedCustomer?.dataset.customerId || 0),
+                    customer_id: customerId,
                     invoice_date: invoiceDate,
                     discount: moneyNumber(modal.querySelector('[data-invoice-discount]')?.value),
                     items: productRows.map((row) => ({
@@ -1551,7 +2076,7 @@ window.initSalePage = function initSalePage(container) {
         }
 
         const code = nextCode('#invoice-table', 'HD');
-        const customer = customerSelect.value;
+        const customer = customerText;
         const body = root.querySelector('#invoice-table');
         const row = document.createElement('tr');
         row.dataset.key = normalize(`${code} ${customer} Nguyễn Văn An`);
@@ -1609,7 +2134,6 @@ window.initSalePage = function initSalePage(container) {
 
     const openInvoiceCustomerModal = () => {
         const invoiceModal = root.querySelector('#invoice-create');
-        const customerSelect = invoiceModal?.querySelector('.form-grid select');
         const modal = showWorkModal('invoice-customer-create-modal', 'Thêm khách hàng', `
             <div class="form-grid edit-grid customer-create-grid">
                 <div class="field full">
@@ -1624,24 +2148,29 @@ window.initSalePage = function initSalePage(container) {
         `, `<button class="sales-btn light" data-close>Hủy</button><button class="sales-btn primary" data-save-invoice-customer>Lưu</button>`);
 
         modal.querySelector('[data-save-invoice-customer]').onclick = () => {
-            const name = fieldValue(modal, 'customerName');
-            const phone = fieldValue(modal, 'customerPhone');
+            const name = fieldValue(modal, 'customerName').trim();
+            const phone = fieldValue(modal, 'customerPhone').trim();
             if (!name || !phone) {
                 alert('Vui lòng nhập đầy đủ tên và số điện thoại khách hàng.');
                 return;
             }
 
-            if (customerSelect) {
-                let option = Array.from(customerSelect.options).find((item) => normalize(item.value) === normalize(name));
-                if (!option) {
-                    option = document.createElement('option');
-                    option.value = name;
-                    option.textContent = name;
-                    option.dataset.phone = phone;
-                    customerSelect.appendChild(option);
-                }
-                customerSelect.value = name;
+            const existingPhone = invoiceCustomerOptions.find((c) => c.phone === phone);
+            if (existingPhone) {
+                alert('Số điện thoại này đã tồn tại trong hệ thống. Vui lòng kiểm tra lại!');
+                return;
             }
+
+            const newCustomer = {
+                id: Date.now(), // Fake ID for local additions before sync
+                name: name,
+                phone: phone
+            };
+            invoiceCustomerOptions.push(newCustomer);
+            
+            setInvoiceCustomer(invoiceModal, name);
+            const valueInput = invoiceModal.querySelector('[data-customer-value]');
+            if (valueInput) valueInput.dataset.customerId = newCustomer.id;
 
             closeModal(modal);
         };
@@ -1652,9 +2181,11 @@ window.initSalePage = function initSalePage(container) {
         renderInvoicePagination();
         loadInvoiceFormDataFromApi();
         loadInvoiceTableFromApi();
-        initInvoiceProductCombobox();
+        setupProductCombobox(root.querySelector('#invoice-create'));
+        initInvoiceCustomerCombobox();
         root.querySelector('#invoice-create .add-product .sales-btn.primary').addEventListener('click', addInvoiceProduct);
         root.querySelector('#invoice-create [data-invoice-discount]')?.addEventListener('input', (event) => {
+            event.target.dataset.manualOverride = 'true';
             updateInvoiceSummary(event.target.closest('#invoice-create'));
         });
         root.querySelector('#invoice-create [data-invoice-discount]')?.addEventListener('blur', (event) => {
@@ -1667,6 +2198,16 @@ window.initSalePage = function initSalePage(container) {
             event.preventDefault();
             openInvoiceCustomerModal();
         });
+        
+        const customerInput = root.querySelector('#invoice-create .invoice-customer-field [data-customer-search]');
+        if (customerInput) {
+            customerInput.addEventListener('input', () => {
+                const errorSpan = customerInput.closest('.field').querySelector('.error-message');
+                if (errorSpan) errorSpan.style.display = 'none';
+                customerInput.style.borderColor = '';
+            });
+        }
+        
         bindInvoiceDraftActions();
     };
 
@@ -1707,25 +2248,42 @@ window.initSalePage = function initSalePage(container) {
         const returnQty = modal.querySelector('.swap-panel.return-only input[type="number"]');
         const oldSelect = modal.querySelector('.swap-panel.old select');
         const oldQty = modal.querySelector('.swap-panel.old input[type="number"]');
-        const newSelect = modal.querySelector('.swap-panel.new select');
+        const newSelectValue = modal.querySelector('.swap-panel.new [data-product-value]');
         const newQty = modal.querySelector('.swap-panel.new input[type="number"]');
         
-        let refund = 0;
-        if (validSelect(returnSelect)) refund += (prices[returnSelect.value] || 100000) * Math.max(1, Number(returnQty?.value || 1));
-        if (validSelect(oldSelect)) refund += (prices[oldSelect.value] || 100000) * Math.max(1, Number(oldQty?.value || 1));
-        if (validSelect(newSelect)) refund -= (prices[newSelect.value] || 100000) * Math.max(1, Number(newQty?.value || 1));
+        if (returnSelect && oldSelect) {
+            Array.from(returnSelect.options).forEach(opt => {
+                if (!opt.value) return;
+                opt.disabled = oldSelect.value === opt.value;
+            });
+            Array.from(oldSelect.options).forEach(opt => {
+                if (!opt.value) return;
+                opt.disabled = returnSelect.value === opt.value;
+            });
+        }
+        
+        let returnRefund = 0;
+        let exchangeRefund = 0;
+        if (validSelect(returnSelect)) returnRefund = (prices[returnSelect.value] || 100000) * Math.max(1, Number(returnQty?.value || 1));
+        if (validSelect(oldSelect)) exchangeRefund += (prices[oldSelect.value] || 100000) * Math.max(1, Number(oldQty?.value || 1));
+        if (newSelectValue && newSelectValue.value) exchangeRefund -= (prices[newSelectValue.value] || 100000) * Math.max(1, Number(newQty?.value || 1));
+        
+        const totalRefund = returnRefund + exchangeRefund;
+        
+        const returnTotalEl = modal.querySelector('#exchange-return-refund');
+        if (returnTotalEl) returnTotalEl.textContent = formatMoney(returnRefund);
+        
+        const exchangeTotalEl = modal.querySelector('#exchange-exchange-refund');
+        if (exchangeTotalEl) exchangeTotalEl.textContent = formatMoney(exchangeRefund);
         
         const totalRefundEl = modal.querySelector('#exchange-total-refund');
-        if (totalRefundEl) {
-            totalRefundEl.textContent = formatMoney(refund);
-            totalRefundEl.className = refund >= 0 ? 'green font-weight-600' : 'red font-weight-600';
-        }
+        if (totalRefundEl) totalRefundEl.textContent = formatMoney(totalRefund);
     };
 
     const createExchange = async () => {
         const modal = root.querySelector('#exchange-create');
         const invoiceSelect = getInvoiceControl(modal);
-        const dateInput = modal.querySelector('input[type="date"]');
+        const dateInput = modal.querySelector('[data-current-date]');
         const noteInput = getNoteInput(modal);
         
         const returnPanel = modal.querySelector('.swap-panel.return-only');
@@ -1734,23 +2292,27 @@ window.initSalePage = function initSalePage(container) {
         
         const returnSelect = returnPanel.querySelector('select');
         const oldSelect = oldPanel.querySelector('select');
-        const newSelect = newPanel.querySelector('select');
+        const newSelect = newPanel.querySelector('[data-product-value]');
 
         if (!validSelect(invoiceSelect)) {
             alert('Vui lòng chọn hóa đơn gốc.');
-            return;
-        }
-        if (invoiceAlreadyProcessed(invoiceSelect.value)) {
-            alert('Hóa đơn này đã có phiếu đổi/trả. Mỗi hóa đơn chỉ được đổi hoặc trả một lần.');
             return;
         }
         if (!validSelect(returnSelect) && !(validSelect(oldSelect) && validSelect(newSelect))) {
             alert('Vui lòng chọn ít nhất 1 sản phẩm trả lại hoặc 1 cặp sản phẩm đổi.');
             return;
         }
+        if (validSelect(returnSelect) && isProductAlreadyProcessed(invoiceSelect.value, invoiceProductId(invoiceSelect.value, returnSelect.value))) {
+            alert(`Sản phẩm '${returnSelect.value}' đã được đổi/trả trước đó.`);
+            return;
+        }
+        if (validSelect(oldSelect) && isProductAlreadyProcessed(invoiceSelect.value, invoiceProductId(invoiceSelect.value, oldSelect.value))) {
+            alert(`Sản phẩm '${oldSelect.value}' đã được đổi/trả trước đó.`);
+            return;
+        }
 
         const invoiceCode = invoiceSelect.value;
-        const date = dateInput.value || today();
+        const date = dateInput ? dateInput.value.split(' ')[0] : today();
         const reason = noteInput?.value.trim() || 'Đổi/trả hàng';
 
         if (window.kidCityApi) {
@@ -1765,7 +2327,10 @@ window.initSalePage = function initSalePage(container) {
                         reason: reason + ' (Trả)'
                     });
                 }
-                if (validSelect(oldSelect) && validSelect(newSelect)) {
+                if (validSelect(oldSelect) && newSelect && newSelect.value) {
+                    let exchangeRefund = 0;
+                    exchangeRefund -= (prices[oldSelect.value] || 100000) * Math.max(1, Number(oldPanel.querySelector('input').value || 1));
+                    exchangeRefund += (prices[newSelect.value] || 100000) * Math.max(1, Number(newPanel.querySelector('input[type="number"]').value || 1));
                     await window.kidCityApi.post('sales/exchanges.php', {
                         invoice_id: invoiceIdByCode(invoiceCode),
                         old_product_id: invoiceProductId(invoiceCode, oldSelect.value),
@@ -1773,11 +2338,14 @@ window.initSalePage = function initSalePage(container) {
                         exchange_date: date,
                         quantity: Math.max(1, Number(oldPanel.querySelector('input').value || 1)),
                         reason: reason + ' (Đổi)',
-                        type: 'Đổi hàng'
+                        type: 'Đổi hàng',
+                        exchange_refund: exchangeRefund
                     });
                 }
                 closeModal(modal);
                 await loadExchangeTableFromApi();
+                if (typeof loadReturnTableFromApi === 'function') await loadReturnTableFromApi();
+                alert('Tạo phiếu thành công!');
                 return;
             } catch (error) {
                 alert(error.message || 'Không thể tạo phiếu đổi/trả hàng.');
@@ -1824,20 +2392,21 @@ window.initSalePage = function initSalePage(container) {
     const bindExchangePage = () => {
         showTableLoading('#exchange-table', 6);
         loadExchangeTableFromApi();
+        loadInvoiceFormDataFromApi();
         const modal = root.querySelector('#exchange-create');
-        const invoiceSelect = enhanceInvoiceControl(modal, 'exchange-invoice-combo', '.swap-panel.return-only');
+        const invoiceSelect = enhanceInvoiceControl(modal, 'exchange-invoice-combo', '.swap-panel.return-only, .swap-panel.old');
+        setupProductCombobox(modal);
         
         invoiceSelect?.addEventListener('change', () => { 
-            syncInvoiceProductPanel(modal, '.swap-panel.return-only');
-            syncInvoiceProductPanel(modal, '.swap-panel.old');
+            syncInvoiceProductPanel(modal, '.swap-panel.return-only, .swap-panel.old');
             updateExchangeRefund(); 
         });
         modal.querySelector('.swap-panel.return-only select')?.addEventListener('change', updateExchangeRefund);
         modal.querySelector('.swap-panel.return-only input')?.addEventListener('input', updateExchangeRefund);
         modal.querySelector('.swap-panel.old select')?.addEventListener('change', updateExchangeRefund);
         modal.querySelector('.swap-panel.old input')?.addEventListener('input', updateExchangeRefund);
-        modal.querySelector('.swap-panel.new select')?.addEventListener('change', updateExchangeRefund);
-        modal.querySelector('.swap-panel.new input')?.addEventListener('input', updateExchangeRefund);
+        modal.querySelector('.swap-panel.new [data-product-value]')?.addEventListener('change', updateExchangeRefund);
+        modal.querySelector('.swap-panel.new input[type="number"]')?.addEventListener('input', updateExchangeRefund);
         root.querySelector('#exchange-create .modal-actions .sales-btn.primary').addEventListener('click', createExchange);
         
         syncInvoiceProductPanel(modal, '.swap-panel.return-only');
@@ -1861,25 +2430,42 @@ window.initSalePage = function initSalePage(container) {
         const returnQty = modal.querySelector('.swap-panel.return-only input[type="number"]');
         const oldSelect = modal.querySelector('.swap-panel.old select');
         const oldQty = modal.querySelector('.swap-panel.old input[type="number"]');
-        const newSelect = modal.querySelector('.swap-panel.new select');
+        const newSelectValue = modal.querySelector('.swap-panel.new [data-product-value]');
         const newQty = modal.querySelector('.swap-panel.new input[type="number"]');
         
-        let refund = 0;
-        if (validSelect(returnSelect)) refund += (prices[returnSelect.value] || 100000) * Math.max(1, Number(returnQty?.value || 1));
-        if (validSelect(oldSelect)) refund += (prices[oldSelect.value] || 100000) * Math.max(1, Number(oldQty?.value || 1));
-        if (validSelect(newSelect)) refund -= (prices[newSelect.value] || 100000) * Math.max(1, Number(newQty?.value || 1));
+        if (returnSelect && oldSelect) {
+            Array.from(returnSelect.options).forEach(opt => {
+                if (!opt.value) return;
+                opt.disabled = oldSelect.value === opt.value;
+            });
+            Array.from(oldSelect.options).forEach(opt => {
+                if (!opt.value) return;
+                opt.disabled = returnSelect.value === opt.value;
+            });
+        }
+        
+        let returnRefund = 0;
+        let exchangeRefund = 0;
+        if (validSelect(returnSelect)) returnRefund = (prices[returnSelect.value] || 100000) * Math.max(1, Number(returnQty?.value || 1));
+        if (validSelect(oldSelect)) exchangeRefund += (prices[oldSelect.value] || 100000) * Math.max(1, Number(oldQty?.value || 1));
+        if (newSelectValue && newSelectValue.value) exchangeRefund -= (prices[newSelectValue.value] || 100000) * Math.max(1, Number(newQty?.value || 1));
+        
+        const totalRefund = returnRefund + exchangeRefund;
+        
+        const returnTotalEl = modal.querySelector('#return-return-refund');
+        if (returnTotalEl) returnTotalEl.textContent = formatMoney(returnRefund);
+        
+        const exchangeTotalEl = modal.querySelector('#return-exchange-refund');
+        if (exchangeTotalEl) exchangeTotalEl.textContent = formatMoney(exchangeRefund);
         
         const totalRefundEl = modal.querySelector('#return-total-refund');
-        if (totalRefundEl) {
-            totalRefundEl.textContent = formatMoney(refund);
-            totalRefundEl.className = refund >= 0 ? 'green font-weight-600' : 'red font-weight-600';
-        }
+        if (totalRefundEl) totalRefundEl.textContent = formatMoney(totalRefund);
     };
 
     const createReturn = async () => {
         const modal = root.querySelector('#return-create');
         const invoiceSelect = getInvoiceControl(modal);
-        const dateInput = modal.querySelector('input[type="date"]');
+        const dateInput = modal.querySelector('[data-current-date]');
         const noteInput = getNoteInput(modal);
         
         const returnPanel = modal.querySelector('.swap-panel.return-only');
@@ -1888,23 +2474,27 @@ window.initSalePage = function initSalePage(container) {
         
         const returnSelect = returnPanel.querySelector('select');
         const oldSelect = oldPanel.querySelector('select');
-        const newSelect = newPanel.querySelector('select');
+        const newSelect = newPanel.querySelector('[data-product-value]');
 
         if (!validSelect(invoiceSelect)) {
             alert('Vui lòng chọn hóa đơn gốc.');
-            return;
-        }
-        if (invoiceAlreadyProcessed(invoiceSelect.value)) {
-            alert('Hóa đơn này đã có phiếu đổi/trả. Mỗi hóa đơn chỉ được đổi hoặc trả một lần.');
             return;
         }
         if (!validSelect(returnSelect) && !(validSelect(oldSelect) && validSelect(newSelect))) {
             alert('Vui lòng chọn ít nhất 1 sản phẩm trả lại hoặc 1 cặp sản phẩm đổi.');
             return;
         }
+        if (validSelect(returnSelect) && isProductAlreadyProcessed(invoiceSelect.value, invoiceProductId(invoiceSelect.value, returnSelect.value))) {
+            alert(`Sản phẩm '${returnSelect.value}' đã được đổi/trả trước đó.`);
+            return;
+        }
+        if (validSelect(oldSelect) && isProductAlreadyProcessed(invoiceSelect.value, invoiceProductId(invoiceSelect.value, oldSelect.value))) {
+            alert(`Sản phẩm '${oldSelect.value}' đã được đổi/trả trước đó.`);
+            return;
+        }
 
         const invoiceCode = invoiceSelect.value;
-        const date = dateInput.value || today();
+        const date = dateInput ? dateInput.value.split(' ')[0] : today();
         const reason = noteInput?.value.trim() || 'Đổi/trả hàng';
 
         if (window.kidCityApi) {
@@ -1919,7 +2509,10 @@ window.initSalePage = function initSalePage(container) {
                         reason: reason + ' (Trả)'
                     });
                 }
-                if (validSelect(oldSelect) && validSelect(newSelect)) {
+                if (validSelect(oldSelect) && newSelect && newSelect.value) {
+                    let exchangeRefund = 0;
+                    exchangeRefund -= (prices[oldSelect.value] || 100000) * Math.max(1, Number(oldPanel.querySelector('input').value || 1));
+                    exchangeRefund += (prices[newSelect.value] || 100000) * Math.max(1, Number(newPanel.querySelector('input[type="number"]').value || 1));
                     await window.kidCityApi.post('sales/exchanges.php', {
                         invoice_id: invoiceIdByCode(invoiceCode),
                         old_product_id: invoiceProductId(invoiceCode, oldSelect.value),
@@ -1927,11 +2520,14 @@ window.initSalePage = function initSalePage(container) {
                         exchange_date: date,
                         quantity: Math.max(1, Number(oldPanel.querySelector('input').value || 1)),
                         reason: reason + ' (Đổi)',
-                        type: 'Đổi hàng'
+                        type: 'Đổi hàng',
+                        exchange_refund: exchangeRefund
                     });
                 }
                 closeModal(modal);
                 await loadReturnTableFromApi();
+                if (typeof loadExchangeTableFromApi === 'function') await loadExchangeTableFromApi();
+                alert('Tạo phiếu thành công!');
                 return;
             } catch (error) {
                 alert(error.message || 'Không thể tạo phiếu đổi/trả hàng.');
@@ -1975,8 +2571,10 @@ window.initSalePage = function initSalePage(container) {
     const bindReturnPage = () => {
         showTableLoading('#return-table', 6);
         loadReturnTableFromApi();
+        loadInvoiceFormDataFromApi();
         const modal = root.querySelector('#return-create');
-        const invoiceSelect = enhanceInvoiceControl(modal, 'return-invoice-combo', '.swap-panel.return-only');
+        const invoiceSelect = enhanceInvoiceControl(modal, 'return-invoice-combo', '.swap-panel.return-only, .swap-panel.old');
+        setupProductCombobox(modal);
         
         invoiceSelect?.addEventListener('change', () => { 
             syncInvoiceProductPanel(modal, '.swap-panel.return-only');
@@ -1987,8 +2585,8 @@ window.initSalePage = function initSalePage(container) {
         modal.querySelector('.swap-panel.return-only input')?.addEventListener('input', updateReturnRefund);
         modal.querySelector('.swap-panel.old select')?.addEventListener('change', updateReturnRefund);
         modal.querySelector('.swap-panel.old input')?.addEventListener('input', updateReturnRefund);
-        modal.querySelector('.swap-panel.new select')?.addEventListener('change', updateReturnRefund);
-        modal.querySelector('.swap-panel.new input')?.addEventListener('input', updateReturnRefund);
+        modal.querySelector('.swap-panel.new [data-product-value]')?.addEventListener('change', updateReturnRefund);
+        modal.querySelector('.swap-panel.new input[type="number"]')?.addEventListener('input', updateReturnRefund);
         root.querySelector('#return-create .modal-actions .sales-btn.primary').addEventListener('click', createReturn);
         
         syncInvoiceProductPanel(modal, '.swap-panel.return-only');

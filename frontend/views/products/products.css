@@ -799,6 +799,18 @@
     display:none;
 }
 
+/* VIEW MODE STYLES */
+.modal.view-mode .product-modal input,
+.modal.view-mode .product-modal select,
+.modal.view-mode .product-modal textarea {
+    background-color: #f3f4f6 !important;
+    color: #111827 !important;
+    border-color: #e5e7eb !important;
+}
+.modal.view-mode .product-modal .product-image-actions {
+    display: none !important;
+}
+
 .product-image-file-btn{
     height:50px;
     border:0;

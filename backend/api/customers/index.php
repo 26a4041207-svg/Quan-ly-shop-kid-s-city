@@ -10,10 +10,34 @@ if ($method === 'GET') {
     $keyword = trim((string) ($_GET['q'] ?? ''));
     if ($keyword !== '') {
         $like = '%' . $keyword . '%';
-        $stmt = db()->prepare('SELECT * FROM customers WHERE code LIKE ? OR name LIKE ? OR phone LIKE ? ORDER BY id DESC');
-        $stmt->execute([$like, $like, $like]);
+        $stmt = db()->prepare('SELECT 
+            maKhachHang AS id,
+            CONCAT("KH", LPAD(maKhachHang, 3, "0")) AS code,
+            tenKhachHang AS name,
+            soDienThoai AS phone,
+            "" AS email,
+            "" AS address,
+            "" AS gender,
+            NULL AS birthday,
+            "" AS note,
+            ngayTao AS created_at,
+            ngayCapNhat AS updated_at
+        FROM KhachHang WHERE tenKhachHang LIKE ? OR soDienThoai LIKE ? ORDER BY maKhachHang DESC');
+        $stmt->execute([$like, $like]);
     } else {
-        $stmt = db()->query('SELECT * FROM customers ORDER BY id DESC');
+        $stmt = db()->query('SELECT 
+            maKhachHang AS id,
+            CONCAT("KH", LPAD(maKhachHang, 3, "0")) AS code,
+            tenKhachHang AS name,
+            soDienThoai AS phone,
+            "" AS email,
+            "" AS address,
+            "" AS gender,
+            NULL AS birthday,
+            "" AS note,
+            ngayTao AS created_at,
+            ngayCapNhat AS updated_at
+        FROM KhachHang ORDER BY maKhachHang DESC');
     }
     ok($stmt->fetchAll());
 }
@@ -25,18 +49,12 @@ if ($method === 'POST') {
 
     try {
         $stmt = db()->prepare(
-            'INSERT INTO customers (code, name, phone, email, address, gender, birthday, note)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+            'INSERT INTO KhachHang (tenKhachHang, soDienThoai)
+             VALUES (?, ?)'
         );
         $stmt->execute([
-            $data['code'] ?? null,
             $data['name'],
             $data['phone'],
-            $data['email'] ?? '',
-            $data['address'] ?? '',
-            $data['gender'] ?? '',
-            $data['birthday'] ?? null,
-            $data['note'] ?? '',
         ]);
 
         ok(['id' => (int) db()->lastInsertId()], 'Thêm khách hàng thành công');
@@ -56,18 +74,12 @@ if ($method === 'PUT') {
 
     try {
         $stmt = db()->prepare(
-            'UPDATE customers SET code = ?, name = ?, phone = ?, email = ?, address = ?, gender = ?, birthday = ?, note = ?, updated_at = NOW()
-             WHERE id = ?'
+            'UPDATE KhachHang SET tenKhachHang = ?, soDienThoai = ?, ngayCapNhat = NOW()
+             WHERE maKhachHang = ?'
         );
         $stmt->execute([
-            $data['code'] ?? null,
             $data['name'],
             $data['phone'],
-            $data['email'] ?? '',
-            $data['address'] ?? '',
-            $data['gender'] ?? '',
-            $data['birthday'] ?? null,
-            $data['note'] ?? '',
             $data['id'],
         ]);
 
@@ -85,7 +97,7 @@ if ($method === 'DELETE') {
     require_admin();
     $id = (int) ($_GET['id'] ?? 0);
     if ($id <= 0) fail('Thiếu mã khách hàng.', 422);
-    $stmt = db()->prepare('DELETE FROM customers WHERE id = ?');
+    $stmt = db()->prepare('DELETE FROM KhachHang WHERE maKhachHang = ?');
     $stmt->execute([$id]);
     ok(null, 'Xóa khách hàng thành công');
 }

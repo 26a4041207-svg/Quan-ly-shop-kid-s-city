@@ -13,10 +13,10 @@ $dataMap = [];
 
 // 1. Invoices
 $stmt = db()->prepare(
-    'SELECT invoice_date, COUNT(*) AS orders, SUM(total) AS invoice_total
-     FROM invoices
-     WHERE invoice_date BETWEEN ? AND ?
-     GROUP BY invoice_date'
+    'SELECT DATE(ngayTao) AS invoice_date, COUNT(*) AS orders, SUM(tongTien) AS invoice_total
+     FROM HoaDon
+     WHERE DATE(ngayTao) BETWEEN ? AND ?
+     GROUP BY DATE(ngayTao)'
 );
 $stmt->execute([$from, $to]);
 foreach ($stmt->fetchAll() as $row) {
@@ -33,10 +33,10 @@ foreach ($stmt->fetchAll() as $row) {
 
 // 2. Returns
 $stmt = db()->prepare(
-    'SELECT return_date, SUM(refund_amount) AS return_total
-     FROM returns
-     WHERE return_date BETWEEN ? AND ?
-     GROUP BY return_date'
+    'SELECT DATE(ngayTra) AS return_date, SUM(tongTienHoan) AS return_total
+     FROM TraHang
+     WHERE DATE(ngayTra) BETWEEN ? AND ?
+     GROUP BY DATE(ngayTra)'
 );
 $stmt->execute([$from, $to]);
 foreach ($stmt->fetchAll() as $row) {
@@ -56,12 +56,13 @@ foreach ($stmt->fetchAll() as $row) {
 
 // 3. Exchanges
 $stmt = db()->prepare(
-    'SELECT e.exchange_date, SUM((COALESCE(new_p.price, 0) - COALESCE(old_p.price, 0)) * e.quantity) AS exchange_total
-     FROM exchanges e
-     LEFT JOIN products old_p ON e.old_product_id = old_p.id
-     LEFT JOIN products new_p ON e.new_product_id = new_p.id
-     WHERE e.exchange_date BETWEEN ? AND ?
-     GROUP BY e.exchange_date'
+    'SELECT DATE(e.ngayDoi) AS exchange_date, SUM((COALESCE(new_p.giaBan, 0) - COALESCE(old_p.giaBan, 0)) * d.soLuongDoi) AS exchange_total
+     FROM DoiHang e
+     LEFT JOIN ChiTietDoiHang d ON d.maDoiHang = e.maDoiHang
+     LEFT JOIN SanPham old_p ON d.maSanPhamCu = old_p.maSanPham
+     LEFT JOIN SanPham new_p ON d.maSanPhamMoi = new_p.maSanPham
+     WHERE DATE(e.ngayDoi) BETWEEN ? AND ?
+     GROUP BY DATE(e.ngayDoi)'
 );
 $stmt->execute([$from, $to]);
 foreach ($stmt->fetchAll() as $row) {

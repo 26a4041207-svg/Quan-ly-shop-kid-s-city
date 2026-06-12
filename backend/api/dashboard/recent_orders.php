@@ -8,10 +8,10 @@ current_user();
 
 $limit = max(1, min(20, (int) ($_GET['limit'] ?? 10)));
 $stmt = db()->prepare(
-    'SELECT i.code, i.invoice_date, i.total, c.name AS customer_name
-     FROM invoices i
-     LEFT JOIN customers c ON c.id = i.customer_id
-     ORDER BY i.id DESC
+    'SELECT CONCAT("HD", LPAD(i.maHoaDon, 3, "0")) AS code, i.ngayTao AS invoice_date, i.tongTien AS total, c.tenKhachHang AS customer_name
+     FROM HoaDon i
+     LEFT JOIN KhachHang c ON c.maKhachHang = i.maKhachHang
+     ORDER BY i.maHoaDon DESC
      LIMIT ?'
 );
 $stmt->bindValue(1, $limit, PDO::PARAM_INT);

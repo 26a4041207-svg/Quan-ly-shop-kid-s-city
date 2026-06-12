@@ -5,31 +5,44 @@ require_once __DIR__ . '/../../core/bootstrap.php';
 
 $method = route_method(['GET', 'POST', 'PUT', 'DELETE']);
 
-function next_code(string $table, string $prefix): string
-{
-    $stmt = db()->query("SELECT code FROM {$table} ORDER BY id DESC LIMIT 1");
-    $last = (string) ($stmt->fetch()['code'] ?? '');
-    $number = (int) preg_replace('/\D+/', '', $last);
-    return $prefix . str_pad((string) ($number + 1), 3, '0', STR_PAD_LEFT);
-}
-
 if ($method === 'GET') {
     current_user();
     $stmt = db()->query(
-        'SELECT i.*, c.name AS customer_name, u.name AS staff_name
-         FROM invoices i
-         LEFT JOIN customers c ON c.id = i.customer_id
-         LEFT JOIN users u ON u.id = i.staff_id
-         ORDER BY i.id DESC'
+        'SELECT 
+            i.maHoaDon AS id,
+            CONCAT("HD", LPAD(i.maHoaDon, 3, "0")) AS code,
+            i.maKhachHang AS customer_id,
+            i.maNguoiDung AS staff_id,
+            i.ngayTao AS invoice_date,
+            i.ghiChu AS note,
+            COALESCE((SELECT SUM(giamGia) FROM ChiTietHoaDon WHERE maHoaDon = i.maHoaDon), 0) AS discount,
+            i.tongTien AS total,
+            "Hoàn thành" AS status,
+            i.ngayTao AS created_at,
+            i.ngayCapNhat AS updated_at,
+            c.tenKhachHang AS customer_name,
+            u.tenNguoiDung AS staff_name
+         FROM HoaDon i
+         LEFT JOIN KhachHang c ON c.maKhachHang = i.maKhachHang
+         LEFT JOIN NguoiDung u ON u.maNguoiDung = i.maNguoiDung
+         ORDER BY i.maHoaDon DESC'
     );
     $invoices = $stmt->fetchAll();
 
     foreach ($invoices as &$invoice) {
         $items = db()->prepare(
-            'SELECT d.*, p.code AS product_code, p.name AS product_name
-             FROM invoice_details d
-             LEFT JOIN products p ON p.id = d.product_id
-             WHERE d.invoice_id = ?'
+            'SELECT 
+                d.maHoaDon AS invoice_id,
+                d.maSanPham AS product_id,
+                d.soLuong AS quantity,
+                d.donGia AS price,
+                d.giamGia AS discount,
+                d.thanhTien AS line_total,
+                CONCAT("SP", LPAD(p.maSanPham, 3, "0")) AS product_code,
+                p.tenSanPham AS product_name
+             FROM ChiTietHoaDon d
+             LEFT JOIN SanPham p ON p.maSanPham = d.maSanPham
+             WHERE d.maHoaDon = ?'
         );
         $items->execute([$invoice['id']]);
         $invoice['items'] = $items->fetchAll();
@@ -48,7 +61,6 @@ if ($method === 'POST') {
 
     db()->beginTransaction();
     try {
-        $code = $data['code'] ?? next_code('invoices', 'HD');
         $discount = (float) ($data['discount'] ?? 0);
         $total = 0;
         $preparedItems = [];
@@ -56,12 +68,12 @@ if ($method === 'POST') {
         foreach ($items as $item) {
             $productId = (int) ($item['product_id'] ?? 0);
             $quantity = max(1, (int) ($item['quantity'] ?? 1));
-            $product = db()->prepare('SELECT id, price, stock FROM products WHERE id = ?');
+            $product = db()->prepare('SELECT maSanPham, giaBan, soLuong FROM SanPham WHERE maSanPham = ?');
             $product->execute([$productId]);
             $row = $product->fetch();
             if (!$row) fail('Sản phẩm không tồn tại.', 422);
 
-            $price = (float) ($item['price'] ?? $row['price']);
+            $price = (float) ($item['price'] ?? $row['giaBan']);
             $lineDiscount = (float) ($item['discount'] ?? 0);
             $lineTotal = max(0, $price * $quantity - $lineDiscount);
             $total += $lineTotal;
@@ -69,26 +81,26 @@ if ($method === 'POST') {
         }
 
         $grandTotal = max(0, $total - $discount);
+        
         $stmt = db()->prepare(
-            'INSERT INTO invoices (code, customer_id, staff_id, invoice_date, note, discount, total)
-             VALUES (?, ?, ?, ?, ?, ?, ?)'
+            'INSERT INTO HoaDon (maKhachHang, maNguoiDung, ghiChu, tongTien)
+             VALUES (?, ?, ?, ?)'
         );
         $stmt->execute([
-            $code,
-            $data['customer_id'],
+            $data['customer_id'] ?: null,
             $user['id'],
-            $data['invoice_date'] ?? date('Y-m-d'),
             $data['note'] ?? '',
-            $discount,
             $grandTotal,
         ]);
 
         $invoiceId = (int) db()->lastInsertId();
+        $code = 'HD' . str_pad((string) $invoiceId, 3, '0', STR_PAD_LEFT);
+        
         $detail = db()->prepare(
-            'INSERT INTO invoice_details (invoice_id, product_id, quantity, price, discount, line_total)
+            'INSERT INTO ChiTietHoaDon (maHoaDon, maSanPham, soLuong, donGia, giamGia, thanhTien)
              VALUES (?, ?, ?, ?, ?, ?)'
         );
-        $stock = db()->prepare('UPDATE products SET stock = GREATEST(stock - ?, 0), updated_at = NOW() WHERE id = ?');
+        $stock = db()->prepare('UPDATE SanPham SET soLuong = GREATEST(soLuong - ?, 0), ngayCapNhat = NOW() WHERE maSanPham = ?');
         foreach ($preparedItems as $item) {
             $detail->execute([$invoiceId, $item[0], $item[1], $item[2], $item[3], $item[4]]);
             $stock->execute([$item[1], $item[0]]);
@@ -103,23 +115,68 @@ if ($method === 'POST') {
 }
 
 if ($method === 'PUT') {
-    require_admin();
     $data = input();
-    require_fields($data, ['id']);
-    $stmt = db()->prepare('UPDATE invoices SET note = ?, status = ?, updated_at = NOW() WHERE id = ?');
-    $stmt->execute([
-        $data['note'] ?? '',
-        $data['status'] ?? 'Hòan thành',
-        $data['id'],
-    ]);
-    ok(null, 'Cập nhật hóa đơn thành công');
+    require_fields($data, ['id', 'items']);
+    
+    $items = is_array($data['items']) ? $data['items'] : [];
+    if (!$items) fail('Vui lòng thêm ít nhất một sản phẩm.', 422);
+    
+    db()->beginTransaction();
+    try {
+        $discount = (float) ($data['discount'] ?? 0);
+        $total = 0;
+        $preparedItems = [];
+        
+        foreach ($items as $item) {
+            $productId = (int) ($item['product_id'] ?? 0);
+            $quantity = max(1, (int) ($item['quantity'] ?? 1));
+            $product = db()->prepare('SELECT maSanPham, giaBan FROM SanPham WHERE maSanPham = ?');
+            $product->execute([$productId]);
+            $row = $product->fetch();
+            if (!$row) fail('Sản phẩm không tồn tại.', 422);
+            
+            $price = (float) ($item['price'] ?? $row['giaBan']);
+            $lineDiscount = (float) ($item['discount'] ?? 0);
+            $lineTotal = max(0, $price * $quantity - $lineDiscount);
+            $total += $lineTotal;
+            $preparedItems[] = [$productId, $quantity, $price, $lineDiscount, $lineTotal];
+        }
+        
+        $grandTotal = max(0, $total - $discount);
+        
+        $stmt = db()->prepare('UPDATE HoaDon SET tongTien = ?, ghiChu = ?, ngayCapNhat = NOW() WHERE maHoaDon = ?');
+        $stmt->execute([
+            $grandTotal,
+            $data['note'] ?? '',
+            $data['id'],
+        ]);
+        
+        // Hoàn lại số lượng kho cho các sản phẩm cũ (tùy chọn, để đơn giản ta bỏ qua hoặc xử lý nếu cần)
+        // Xóa chi tiết cũ
+        db()->prepare('DELETE FROM ChiTietHoaDon WHERE maHoaDon = ?')->execute([$data['id']]);
+        
+        // Thêm chi tiết mới
+        $detail = db()->prepare(
+            'INSERT INTO ChiTietHoaDon (maHoaDon, maSanPham, soLuong, donGia, giamGia, thanhTien)
+             VALUES (?, ?, ?, ?, ?, ?)'
+        );
+        foreach ($preparedItems as $item) {
+            $detail->execute([$data['id'], $item[0], $item[1], $item[2], $item[3], $item[4]]);
+        }
+        
+        db()->commit();
+        ok(null, 'Cập nhật hóa đơn thành công');
+    } catch (Throwable $exception) {
+        db()->rollBack();
+        fail('Không thể cập nhật hóa đơn.', 500, $exception->getMessage());
+    }
 }
 
 if ($method === 'DELETE') {
     require_admin();
     $id = (int) ($_GET['id'] ?? 0);
     if ($id <= 0) fail('Thiếu mã hóa đơn.', 422);
-    $stmt = db()->prepare('DELETE FROM invoices WHERE id = ?');
+    $stmt = db()->prepare('DELETE FROM HoaDon WHERE maHoaDon = ?');
     $stmt->execute([$id]);
     ok(null, 'Xóa hóa đơn thành công');
 }

@@ -21,7 +21,7 @@ function bearer_token(): string
 
 function public_user(array $user): array
 {
-    return [
+    $pub = [
         'id' => (int) $user['id'],
         'username' => $user['username'],
         'name' => $user['name'],
@@ -34,6 +34,10 @@ function public_user(array $user): array
         'status' => $user['status'],
         'created' => $user['created_at'] ?? null,
     ];
+    if (array_key_exists('initial_password', $user)) {
+        $pub['initial_password'] = $user['initial_password'];
+    }
+    return $pub;
 }
 
 function current_user(): array
@@ -44,10 +48,22 @@ function current_user(): array
     }
 
     $stmt = db()->prepare(
-        'SELECT u.*
+        'SELECT 
+            u.maNguoiDung AS id,
+            u.tenDangNhap AS username,
+            u.matKhau AS password_hash,
+            u.tenNguoiDung AS name,
+            u.email AS email,
+            u.soDienThoai AS phone,
+            u.anhCCCD AS cccd,
+            "" AS address,
+            IF(u.vaiTro = "chushop", "admin", "staff") AS role,
+            IF(u.trangThai = 1, "Đã kích hoạt", "Khóa") AS status,
+            u.ngayTao AS created_at,
+            u.ngayCapNhat AS updated_at
          FROM api_tokens t
-         INNER JOIN users u ON u.id = t.user_id
-         WHERE t.token = ? AND t.expires_at > NOW() AND u.status <> "Khóa"
+         INNER JOIN NguoiDung u ON u.maNguoiDung = t.user_id
+         WHERE t.token = ? AND t.expires_at > NOW() AND (u.trangThai = 1 OR (u.trangThai = 0 AND u.lanDangNhapDau = 1))
          LIMIT 1'
     );
     $stmt->execute([$token]);

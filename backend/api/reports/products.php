@@ -7,13 +7,17 @@ route_method(['GET']);
 current_user();
 
 $stmt = db()->query(
-    'SELECT p.code, p.name, c.name AS category_name, p.stock,
-            COALESCE(SUM(d.quantity), 0) AS sold_quantity,
-            COALESCE(SUM(d.line_total), 0) AS revenue
-     FROM products p
-     LEFT JOIN categories c ON c.id = p.category_id
-     LEFT JOIN invoice_details d ON d.product_id = p.id
-     GROUP BY p.id, p.code, p.name, c.name, p.stock
+    'SELECT 
+        CONCAT("SP", LPAD(p.maSanPham, 3, "0")) AS code, 
+        p.tenSanPham AS name, 
+        c.tenDanhMuc AS category_name, 
+        p.soLuong AS stock,
+        COALESCE(SUM(d.soLuong), 0) AS sold_quantity,
+        COALESCE(SUM(d.thanhTien), 0) AS revenue
+     FROM SanPham p
+     LEFT JOIN DanhMucSP c ON c.maDanhMuc = p.maDanhMuc
+     LEFT JOIN ChiTietHoaDon d ON d.maSanPham = p.maSanPham
+     GROUP BY p.maSanPham, p.tenSanPham, c.tenDanhMuc, p.soLuong
      ORDER BY sold_quantity DESC'
 );
 

@@ -35,7 +35,8 @@
             role,
             roleLabel: user.roleLabel || user.tenVaiTro || (role === 'staff' ? 'Nh?n vi?n' : 'Ch? shop'),
             name: user.fullname || user.fullName || user.name || username,
-            email: user.email || ''
+            email: user.email || '',
+            is_first_login: user.is_first_login || false
         };
     };
 
@@ -382,6 +383,29 @@
             redirectStaffAwayFromUsersPage({ ...account, role: 'staff' });
         } else {
             redirectStaffAwayFromUsersPage(account);
+        }
+        
+        if (account.is_first_login) {
+            const passwordModal = document.getElementById('modal-password');
+            if (passwordModal) {
+                passwordModal.classList.add('active');
+                passwordModal.style.pointerEvents = 'none';
+                
+                const modalContent = passwordModal.querySelector('.modal-content');
+                if (modalContent) {
+                    modalContent.style.pointerEvents = 'auto';
+                }
+                
+                const closeBtns = passwordModal.querySelectorAll('.close-modal');
+                closeBtns.forEach(btn => {
+                    btn.style.display = 'none';
+                });
+                
+                const headerText = passwordModal.querySelector('.modal-header h3');
+                if (headerText) {
+                    headerText.textContent = 'Đổi mật khẩu (Bắt buộc)';
+                }
+            }
         }
     };
 

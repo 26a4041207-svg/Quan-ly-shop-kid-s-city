@@ -254,6 +254,7 @@
                             <div class="detail-item"><span>Tên đăng nhập</span><strong id="detailUsername">0901234567</strong></div>
                             <div class="detail-item"><span>Email</span><strong id="detailUserEmail">admin@kidscity.vn</strong></div>
                             <div class="detail-item"><span>Điện thoại</span><strong id="detailPhone">0901234567</strong></div>
+                            <div class="detail-item" id="detailInitialPasswordContainer" style="display: none;"><span>Mật khẩu tự sinh</span><strong id="detailInitialPassword" style="color: #ea580c;">-</strong></div>
                             <div class="detail-item" style="grid-column: span 2;">
                                 <span>Ảnh CCCD</span>
                                 <div style="margin-top: 10px; max-width: 300px;">
@@ -323,7 +324,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="modal-actions" style="margin-top: 20px;"><span></span><div class="action-buttons"><button class="sales-btn light" onclick="closeModal('editUserModal')">Hủy</button><button class="sales-btn primary" onclick="closeModal('editUserModal'); showToast('Cập nhật thành công!')">Cập nhật</button></div></div>
+                        <div class="modal-actions" style="margin-top: 20px;"><span></span><div class="action-buttons"><button class="sales-btn light" onclick="closeModal('editUserModal')">Hủy</button><button class="sales-btn primary" onclick="editUserFromModal()">Cập nhật</button></div></div>
                     </div>
                 </div>
             </div>

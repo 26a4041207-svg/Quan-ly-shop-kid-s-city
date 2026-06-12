@@ -5,81 +5,60 @@ require_once __DIR__ . '/../../core/bootstrap.php';
 
 $method = route_method(['GET', 'POST', 'PUT', 'DELETE']);
 
-function next_import_code(): string
-{
-    $stmt = db()->query('SELECT code FROM import_receipts ORDER BY id DESC LIMIT 1');
-    $row = $stmt->fetch();
-    $last = $row ? (string) ($row['code'] ?? '') : '';
-    $number = (int) preg_replace('/\D+/', '', $last);
-    return 'NH' . str_pad((string) ($number + 1), 3, '0', STR_PAD_LEFT);
-}
-
-function next_product_code(): string
-{
-    $stmt = db()->query("SELECT code FROM products WHERE code LIKE 'SP%' ORDER BY id DESC LIMIT 1");
-    $row = $stmt->fetch();
-    $last = $row ? (string) ($row['code'] ?? '') : '';
-    $number = (int) preg_replace('/\D+/', '', $last);
-    if ($number === 0) {
-        $stmt2 = db()->query("SELECT COUNT(*) as cnt FROM products");
-        $row2 = $stmt2->fetch();
-        $number = $row2 ? (int) ($row2['cnt'] ?? 0) : 0;
-    }
-    return 'SP' . str_pad((string) ($number + 1), 3, '0', STR_PAD_LEFT);
-}
-
 function get_or_create_category(string $name): ?int
 {
     $name = trim($name);
     if ($name === '') return null;
     
-    $stmt = db()->prepare('SELECT id FROM categories WHERE name = ?');
+    $stmt = db()->prepare('SELECT maDanhMuc FROM DanhMucSP WHERE tenDanhMuc = ?');
     $stmt->execute([$name]);
     $cat = $stmt->fetch();
     if ($cat) {
-        return (int) $cat['id'];
+        return (int) $cat['maDanhMuc'];
     }
     
-    // Auto-generate DM code
-    $stmt = db()->query("SELECT code FROM categories WHERE code LIKE 'DM%' ORDER BY id DESC LIMIT 1");
-    $row = $stmt->fetch();
-    $last = $row ? (string) ($row['code'] ?? '') : '';
-    $number = (int) preg_replace('/\D+/', '', $last);
-    if ($number === 0) {
-        $stmt2 = db()->query("SELECT COUNT(*) as cnt FROM categories");
-        $row2 = $stmt2->fetch();
-        $number = $row2 ? (int) ($row2['cnt'] ?? 0) : 0;
-    }
-    $code = 'DM' . str_pad((string) ($number + 1), 3, '0', STR_PAD_LEFT);
-    
-    $stmt = db()->prepare('INSERT INTO categories (code, name, status) VALUES (?, ?, "Đang bán")');
-    $stmt->execute([$code, $name]);
+    $stmt = db()->prepare('INSERT INTO DanhMucSP (tenDanhMuc) VALUES (?)');
+    $stmt->execute([$name]);
     return (int) db()->lastInsertId();
 }
 
 if ($method === 'GET') {
     current_user();
     $stmt = db()->query(
-        'SELECT r.*, u.name AS staff_name
-         FROM import_receipts r
-         LEFT JOIN users u ON u.id = r.staff_id
-         ORDER BY r.id DESC'
+        'SELECT 
+            r.maHangNhap AS id,
+            CONCAT("NH", LPAD(r.maHangNhap, 3, "0")) AS code,
+            r.nhaCungCap AS supplier,
+            r.maNguoiDung AS staff_id,
+            r.ngayNhap AS created_at,
+            r.ghiChu AS note,
+            (SELECT SUM(d.soLuongNhap * p.giaBan) FROM ChiTietHangNhap d JOIN SanPham p ON p.maSanPham = d.maSanPham WHERE d.maHangNhap = r.maHangNhap) AS total,
+            r.ngayCapNhat AS updated_at,
+            u.tenNguoiDung AS staff_name
+         FROM HangNhap r
+         LEFT JOIN NguoiDung u ON u.maNguoiDung = r.maNguoiDung
+         ORDER BY r.maHangNhap DESC'
      );
     $receipts = $stmt->fetchAll();
 
     foreach ($receipts as &$receipt) {
         $items = db()->prepare(
-            'SELECT d.*,
-                    p.code AS product_code,
-                    p.name AS product_name,
-                    p.size,
-                    p.color,
-                    p.image AS product_image,
-                    c.name AS category_name
-             FROM import_details d
-             LEFT JOIN products p ON p.id = d.product_id
-             LEFT JOIN categories c ON c.id = p.category_id
-             WHERE d.import_id = ?'
+            'SELECT 
+                d.maHangNhap AS import_id,
+                d.maSanPham AS product_id,
+                d.soLuongNhap AS quantity,
+                p.giaBan AS price,
+                (d.soLuongNhap * p.giaBan) AS line_total,
+                CONCAT("SP", LPAD(p.maSanPham, 3, "0")) AS product_code,
+                p.tenSanPham AS product_name,
+                p.size,
+                p.mauSac AS color,
+                p.anh AS product_image,
+                c.tenDanhMuc AS category_name
+             FROM ChiTietHangNhap d
+             LEFT JOIN SanPham p ON p.maSanPham = d.maSanPham
+             LEFT JOIN DanhMucSP c ON c.maDanhMuc = p.maDanhMuc
+             WHERE d.maHangNhap = ?'
         );
         $items->execute([$receipt['id']]);
         $receipt['items'] = $items->fetchAll();
@@ -97,30 +76,21 @@ if ($method === 'POST') {
 
     db()->beginTransaction();
     try {
-        $total = 0;
-        foreach ($items as $item) {
-            $total += (float) ($item['price'] ?? 0) * max(1, (int) ($item['quantity'] ?? 1));
-        }
-
-        $importId = 0;
-        $importCode = next_import_code();
         $stmt = db()->prepare(
-            'INSERT INTO import_receipts (code, supplier, staff_id, import_date, note, total)
-             VALUES (?, ?, ?, ?, ?, ?)'
+            'INSERT INTO HangNhap (maNguoiDung, nhaCungCap, ngayNhap, ghiChu)
+             VALUES (?, ?, ?, ?)'
         );
         $stmt->execute([
-            $importCode,
-            $data['supplier'],
             $user['id'],
-            date('Y-m-d'),
+            $data['supplier'],
+            date('Y-m-d H:i:s'),
             $data['note'] ?? '',
-            $total,
         ]);
         $importId = (int) db()->lastInsertId();
 
         $detail = db()->prepare(
-            'INSERT INTO import_details (import_id, product_id, quantity, price, line_total)
-             VALUES (?, ?, ?, ?, ?)'
+            'INSERT INTO ChiTietHangNhap (maHangNhap, maSanPham, soLuongNhap)
+             VALUES (?, ?, ?)'
         );
 
         foreach ($items as $item) {
@@ -128,49 +98,42 @@ if ($method === 'POST') {
             $size = trim($item['size'] ?? '');
             $color = trim($item['color'] ?? '');
             $qty = max(1, (int) ($item['quantity'] ?? 1));
-            $price = (float) ($item['price'] ?? 0); // This is selling price, will be mapped to product price and import price
+            $price = (float) ($item['price'] ?? 0); 
             
-            // Check if product variation exists
-            $prodStmt = db()->prepare('SELECT id FROM products WHERE name = ? AND size = ? AND color = ?');
+            $prodStmt = db()->prepare('SELECT maSanPham FROM SanPham WHERE tenSanPham = ? AND size = ? AND mauSac = ?');
             $prodStmt->execute([$name, $size, $color]);
             $prod = $prodStmt->fetch();
             
             $productId = 0;
             if ($prod) {
-                $productId = (int) $prod['id'];
-                // Update existing product stock and price
+                $productId = (int) $prod['maSanPham'];
                 if (!empty($item['image'])) {
-                    $upStmt = db()->prepare('UPDATE products SET stock = stock + ?, price = ?, import_price = ?, image = ?, status = "Đang bán", updated_at = NOW() WHERE id = ?');
-                    $upStmt->execute([$qty, $price, $price, $item['image'], $productId]);
+                    $upStmt = db()->prepare('UPDATE SanPham SET soLuong = soLuong + ?, giaBan = ?, anh = ?, ngayCapNhat = NOW() WHERE maSanPham = ?');
+                    $upStmt->execute([$qty, $price, $item['image'], $productId]);
                 } else {
-                    $upStmt = db()->prepare('UPDATE products SET stock = stock + ?, price = ?, import_price = ?, status = "Đang bán", updated_at = NOW() WHERE id = ?');
-                    $upStmt->execute([$qty, $price, $price, $productId]);
+                    $upStmt = db()->prepare('UPDATE SanPham SET soLuong = soLuong + ?, giaBan = ?, ngayCapNhat = NOW() WHERE maSanPham = ?');
+                    $upStmt->execute([$qty, $price, $productId]);
                 }
             } else {
-                // Create new product variation
-                $code = next_product_code();
                 $categoryId = get_or_create_category($item['category_name'] ?? '');
                 
                 $insStmt = db()->prepare(
-                    'INSERT INTO products (code, category_id, name, size, color, price, import_price, stock, image, status)
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, "Đang bán")'
+                    'INSERT INTO SanPham (maDanhMuc, tenSanPham, size, mauSac, giaBan, soLuong, anh)
+                     VALUES (?, ?, ?, ?, ?, ?, ?)'
                 );
                 $insStmt->execute([
-                    $code,
                     $categoryId,
                     $name,
                     $size,
                     $color,
-                    $price, // price
-                    $price, // import_price
+                    $price, 
                     $qty,
                     $item['image'] ?? '',
                 ]);
                 $productId = (int) db()->lastInsertId();
             }
 
-            $lineTotal = $price * $qty;
-            $detail->execute([$importId, $productId, $qty, $price, $lineTotal]);
+            $detail->execute([$importId, $productId, $qty]);
         }
 
         db()->commit();
@@ -190,27 +153,23 @@ if ($method === 'PUT') {
 
     db()->beginTransaction();
     try {
-        // 1. Get old items and revert stock
-        $oldStmt = db()->prepare('SELECT product_id, quantity FROM import_details WHERE import_id = ?');
+        $oldStmt = db()->prepare('SELECT maSanPham, soLuongNhap FROM ChiTietHangNhap WHERE maHangNhap = ?');
         $oldStmt->execute([$importId]);
         $oldItems = $oldStmt->fetchAll();
 
-        $revertStmt = db()->prepare('UPDATE products SET stock = stock - ? WHERE id = ?');
+        $revertStmt = db()->prepare('UPDATE SanPham SET soLuong = soLuong - ? WHERE maSanPham = ?');
         foreach ($oldItems as $old) {
-            if ($old['product_id']) {
-                $revertStmt->execute([$old['quantity'], $old['product_id']]);
+            if ($old['maSanPham']) {
+                $revertStmt->execute([$old['soLuongNhap'], $old['maSanPham']]);
             }
         }
 
-        // 2. Delete old details
-        $deleteStmt = db()->prepare('DELETE FROM import_details WHERE import_id = ?');
+        $deleteStmt = db()->prepare('DELETE FROM ChiTietHangNhap WHERE maHangNhap = ?');
         $deleteStmt->execute([$importId]);
 
-        // 3. Process and insert new details
-        $total = 0;
         $detail = db()->prepare(
-            'INSERT INTO import_details (import_id, product_id, quantity, price, line_total)
-             VALUES (?, ?, ?, ?, ?)'
+            'INSERT INTO ChiTietHangNhap (maHangNhap, maSanPham, soLuongNhap)
+             VALUES (?, ?, ?)'
         );
 
         foreach ($items as $item) {
@@ -219,38 +178,32 @@ if ($method === 'PUT') {
             $color = trim($item['color'] ?? '');
             $qty = max(1, (int) ($item['quantity'] ?? 1));
             $price = (float) ($item['price'] ?? 0);
-            $total += $price * $qty;
 
-            // Check if product variation exists
-            $prodStmt = db()->prepare('SELECT id FROM products WHERE name = ? AND size = ? AND color = ?');
+            $prodStmt = db()->prepare('SELECT maSanPham FROM SanPham WHERE tenSanPham = ? AND size = ? AND mauSac = ?');
             $prodStmt->execute([$name, $size, $color]);
             $prod = $prodStmt->fetch();
 
             $productId = 0;
             if ($prod) {
-                $productId = (int) $prod['id'];
-                // Update stock and price
+                $productId = (int) $prod['maSanPham'];
                 if (!empty($item['image'])) {
-                    $upStmt = db()->prepare('UPDATE products SET stock = stock + ?, price = ?, import_price = ?, image = ?, status = "Đang bán", updated_at = NOW() WHERE id = ?');
-                    $upStmt->execute([$qty, $price, $price, $item['image'], $productId]);
+                    $upStmt = db()->prepare('UPDATE SanPham SET soLuong = soLuong + ?, giaBan = ?, anh = ?, ngayCapNhat = NOW() WHERE maSanPham = ?');
+                    $upStmt->execute([$qty, $price, $item['image'], $productId]);
                 } else {
-                    $upStmt = db()->prepare('UPDATE products SET stock = stock + ?, price = ?, import_price = ?, status = "Đang bán", updated_at = NOW() WHERE id = ?');
-                    $upStmt->execute([$qty, $price, $price, $productId]);
+                    $upStmt = db()->prepare('UPDATE SanPham SET soLuong = soLuong + ?, giaBan = ?, ngayCapNhat = NOW() WHERE maSanPham = ?');
+                    $upStmt->execute([$qty, $price, $productId]);
                 }
             } else {
-                $code = next_product_code();
                 $categoryId = get_or_create_category($item['category_name'] ?? '');
                 $insStmt = db()->prepare(
-                    'INSERT INTO products (code, category_id, name, size, color, price, import_price, stock, image, status)
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, "Đang bán")'
+                    'INSERT INTO SanPham (maDanhMuc, tenSanPham, size, mauSac, giaBan, soLuong, anh)
+                     VALUES (?, ?, ?, ?, ?, ?, ?)'
                 );
                 $insStmt->execute([
-                    $code,
                     $categoryId,
                     $name,
                     $size,
                     $color,
-                    $price,
                     $price,
                     $qty,
                     $item['image'] ?? '',
@@ -258,16 +211,13 @@ if ($method === 'PUT') {
                 $productId = (int) db()->lastInsertId();
             }
 
-            $lineTotal = $price * $qty;
-            $detail->execute([$importId, $productId, $qty, $price, $lineTotal]);
+            $detail->execute([$importId, $productId, $qty]);
         }
 
-        // 4. Update import receipt supplier, note, total
-        $stmt = db()->prepare('UPDATE import_receipts SET supplier = ?, note = ?, total = ?, updated_at = NOW() WHERE id = ?');
+        $stmt = db()->prepare('UPDATE HangNhap SET nhaCungCap = ?, ghiChu = ?, ngayCapNhat = NOW() WHERE maHangNhap = ?');
         $stmt->execute([
             $data['supplier'],
             $data['note'] ?? '',
-            $total,
             $importId,
         ]);
 
@@ -283,7 +233,7 @@ if ($method === 'DELETE') {
     require_admin();
     $id = (int) ($_GET['id'] ?? 0);
     if ($id <= 0) fail('Thiếu mã phiếu nhập hàng.', 422);
-    $stmt = db()->prepare('DELETE FROM import_receipts WHERE id = ?');
+    $stmt = db()->prepare('DELETE FROM HangNhap WHERE maHangNhap = ?');
     $stmt->execute([$id]);
     ok(null, 'Xóa phiếu nhập hàng thành công');
 }

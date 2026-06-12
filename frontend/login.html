@@ -175,7 +175,8 @@
                     email: account.email || "",
                     phone: account.phone || username,
                     role: account.role || "staff",
-                    roleLabel: account.roleLabel || (account.role === "admin" ? "Chủ shop" : "Nhân viên")
+                    roleLabel: account.roleLabel || (account.role === "admin" ? "Chủ shop" : "Nhân viên"),
+                    is_first_login: account.is_first_login
                 }));
                 localStorage.setItem("currentRole", account.role || "staff");
                 window.location.href = "index.html";

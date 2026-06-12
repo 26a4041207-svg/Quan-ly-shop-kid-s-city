@@ -444,6 +444,25 @@ window.initImportPage = function initImportPage(container) {
             return;
         }
 
+        const sizeInput = root.querySelector('[data-import-variant-size]');
+        const colorInput = root.querySelector('[data-import-variant-color]');
+        const qtyInput = root.querySelector('[data-import-variant-qty]');
+        
+        const currentSize = sizeInput?.value.trim() || '';
+        const currentColor = colorInput?.value.trim() || '';
+        const currentQty = qtyInput?.value ? Number(qtyInput.value) : 0;
+        
+        if (currentSize || currentColor || currentQty > 0) {
+            currentProductVariants.push({
+                size: currentSize,
+                color: currentColor,
+                qty: Math.max(1, currentQty)
+            });
+            if (sizeInput) sizeInput.value = '';
+            if (colorInput) colorInput.value = '';
+            if (qtyInput) qtyInput.value = '';
+        }
+
         if (!currentProductVariants.length) {
             alert('Vui lòng thêm ít nhất một chi tiết sản phẩm (size/màu/số lượng).');
             return;
@@ -555,11 +574,15 @@ window.initImportPage = function initImportPage(container) {
             currentProductInfo = { image: tr.dataset.image || '' };
             updateCreateImagePreview(tr.dataset.image || '');
             
-            currentProductVariants = [{
-                size: tr.dataset.size || '',
-                color: tr.dataset.color || '',
-                qty: Number(tr.dataset.quantity || 1)
-            }];
+            const sizeInput = root.querySelector('[data-import-variant-size]');
+            const colorInput = root.querySelector('[data-import-variant-color]');
+            const qtyInput = root.querySelector('[data-import-variant-qty]');
+            
+            if (sizeInput) sizeInput.value = tr.dataset.size || '';
+            if (colorInput) colorInput.value = tr.dataset.color || '';
+            if (qtyInput) qtyInput.value = Number(tr.dataset.quantity || 1);
+            
+            currentProductVariants = [];
             renderVariantsTable();
             tr.remove();
         }

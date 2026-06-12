@@ -17,6 +17,49 @@ window.closeModal = function(modalId) {
     }
 };
 
+window.showToast = function(message) {
+    let toast = document.getElementById('toast-notification');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'toast-notification';
+        toast.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 10000;
+            transition: opacity 0.3s, transform 0.3s;
+            transform: translateY(-20px);
+            opacity: 0;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        `;
+        document.body.appendChild(toast);
+    }
+    toast.innerHTML = `<i class='bx bx-check-circle' style='font-size: 1.2rem;'></i> ${escapeHtml(message)}`;
+    toast.style.display = 'flex';
+    
+    // Trigger reflow
+    void toast.offsetWidth;
+    
+    toast.style.opacity = '1';
+    toast.style.transform = 'translateY(0)';
+    
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(-20px)';
+        setTimeout(() => {
+            if (toast.style.opacity === '0') toast.style.display = 'none';
+        }, 300);
+    }, 3000);
+};
+
 const fileToBase64 = (file) => new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result);
@@ -56,20 +99,6 @@ document.addEventListener('click', function(event) {
     }
 });
 
-const USER_ACCOUNTS_KEY = 'kidCityAccounts';
-
-const getStoredUserAccounts = () => {
-    try {
-        return JSON.parse(localStorage.getItem(USER_ACCOUNTS_KEY) || '{}');
-    } catch {
-        return {};
-    }
-};
-
-const saveStoredUserAccounts = (accounts) => {
-    localStorage.setItem(USER_ACCOUNTS_KEY, JSON.stringify(accounts));
-};
-
 const roleCode = (role) => role === 'Chủ shop' ? 'admin' : 'staff';
 
 const roleClass = (role) => role === 'Chủ shop' ? 'shop-owner' : 'staff';
@@ -97,7 +126,7 @@ const userRowHtml = (account) => {
     const status = account.status || 'Chưa kích hoạt';
 
     return `
-        <tr class="${status === 'Khóa' ? 'locked-row' : ''}" data-id="${escapeHtml(account.id)}" data-name="${escapeHtml(account.name)}" data-username="${escapeHtml(account.username)}" data-email="${escapeHtml(account.email)}" data-phone="${escapeHtml(account.phone || account.username)}" data-cccd_image="${escapeHtml(account.cccd_image || '')}" data-role="${escapeHtml(role)}" data-status="${escapeHtml(status)}" data-created="${escapeHtml(account.created)}">
+        <tr class="${status === 'Khóa' ? 'locked-row' : ''}" data-id="${escapeHtml(account.id)}" data-name="${escapeHtml(account.name)}" data-username="${escapeHtml(account.username)}" data-email="${escapeHtml(account.email)}" data-phone="${escapeHtml(account.phone || account.username)}" data-cccd_image="${escapeHtml(account.cccd_image || '')}" data-role="${escapeHtml(role)}" data-status="${escapeHtml(status)}" data-created="${escapeHtml(account.created)}" data-initial_password="${escapeHtml(account.initial_password || '')}">
             <td>
                 <div class="user-info">
                     <div class="avatar bg-light">${escapeHtml(avatar)}</div>
@@ -122,55 +151,12 @@ const updateUserCount = () => {
     if (info) info.textContent = `Hiển thị ${total} / ${total} người dùng`;
 };
 
-const updateStoredAccountFromRow = (row) => {
-    if (!row?.dataset.username) return;
-    const accounts = getStoredUserAccounts();
-    const username = row.dataset.username;
-    accounts[username] = {
-        ...(accounts[username] || {}),
-        username,
-        name: row.dataset.name || username,
-        email: row.dataset.email || '',
-        phone: row.dataset.phone || username,
-        cccd_image: row.dataset.cccd_image || '',
-        role: roleCode(row.dataset.role),
-        roleLabel: row.dataset.role || 'Nhân viên',
-        status: row.dataset.status || 'Chưa kích hoạt',
-        created: row.dataset.created || formatToday()
-    };
-    saveStoredUserAccounts(accounts);
-};
-
 const roleWeight = (role) => (role === 'admin' || role === 'Chủ shop' ? 1 : 2);
 const statusWeight = (status) => {
     if (status === 'Đã kích hoạt') return 1;
     if (status === 'Chưa kích hoạt') return 2;
     if (status === 'Khóa') return 3;
     return 4;
-};
-
-const loadStoredUsersIntoTable = () => {
-    const tbody = document.querySelector('.users-table tbody');
-    if (!tbody) return;
-
-    const existingUsernames = new Set(Array.from(tbody.querySelectorAll('tr')).map((row) => row.dataset.username));
-    const accountsArray = Object.values(getStoredUserAccounts()).filter((account) => account?.username && !existingUsernames.has(account.username));
-    accountsArray.sort((a, b) => {
-        const rA = roleWeight(a.role || a.roleLabel);
-        const rB = roleWeight(b.role || b.roleLabel);
-        if (rA !== rB) return rA - rB;
-        const sA = statusWeight(a.status);
-        const sB = statusWeight(b.status);
-        if (sA !== sB) return sA - sB;
-        return 0;
-    });
-    const rows = accountsArray.map(userRowHtml).join('');
-
-    if (rows) {
-        tbody.insertAdjacentHTML('beforeend', rows);
-    }
-
-    updateUserCount();
 };
 
 const loadUsersFromApi = async () => {
@@ -262,6 +248,7 @@ window.createUserFromModal = async function createUserFromModal() {
         if (window.kidCityApi) {
             const created = await window.kidCityApi.post('users/index.php', account);
             account.id = created.id;
+            account.initial_password = account.password;
         } else {
             throw new Error('Không thể kết nối API người dùng.');
         }
@@ -301,11 +288,27 @@ window.openUserDetail = function(button) {
     setText('detailStatus', data.status);
     setText('detailCreated', data.created);
     
+    const initialPasswordContainer = document.getElementById('detailInitialPasswordContainer');
+    if (initialPasswordContainer) {
+        if (data.initial_password) {
+            setText('detailInitialPassword', data.initial_password);
+            initialPasswordContainer.style.display = 'block';
+        } else {
+            initialPasswordContainer.style.display = 'none';
+        }
+    }
+    
     const imgEl = document.getElementById('detailCccdImage');
     const txtEl = document.getElementById('detailCccdText');
     if (imgEl && txtEl) {
         if (data.cccd_image && data.cccd_image !== 'undefined') {
-            imgEl.src = window.kidCityApi ? `../../${data.cccd_image}` : data.cccd_image;
+            let imgSrc = data.cccd_image;
+            if (imgSrc.startsWith('backend/')) {
+                imgSrc = `../${imgSrc}`;
+            } else if (!imgSrc.startsWith('http') && !imgSrc.startsWith('data:')) {
+                imgSrc = `../backend/uploads/cccd/${imgSrc}`;
+            }
+            imgEl.src = imgSrc;
             imgEl.style.display = 'block';
             txtEl.style.display = 'none';
         } else {
@@ -350,13 +353,75 @@ window.openUserEdit = function(button) {
     if (preview) {
         if (data.cccd_image && data.cccd_image !== 'undefined') {
             preview.style.display = 'block';
-            preview.querySelector('img').src = window.kidCityApi ? `../../${data.cccd_image}` : data.cccd_image;
+            let imgSrc = data.cccd_image;
+            if (imgSrc.startsWith('backend/')) {
+                imgSrc = `../${imgSrc}`;
+            } else if (!imgSrc.startsWith('http') && !imgSrc.startsWith('data:')) {
+                imgSrc = `../backend/uploads/cccd/${imgSrc}`;
+            }
+            preview.querySelector('img').src = imgSrc;
         } else {
             preview.style.display = 'none';
         }
     }
 
     openModal('editUserModal');
+    document.getElementById('editUserModal').dataset.editId = data.id;
+    document.getElementById('editUserModal').dataset.editRowIndex = row.rowIndex;
+};
+
+window.editUserFromModal = async function() {
+    const modal = document.getElementById('editUserModal');
+    const id = modal.dataset.editId;
+    if (!id) return;
+
+    const account = {
+        id: id,
+        name: document.getElementById('editName')?.value.trim() || '',
+        roleLabel: document.getElementById('editRole')?.value || 'Nhân viên',
+        email: document.getElementById('editEmail')?.value.trim() || '',
+        phone: document.getElementById('editPhone')?.value.trim() || '',
+        cccd_image: document.getElementById('editCccdImage')?.dataset.base64 || ''
+    };
+    account.role = roleCode(account.roleLabel);
+
+    if (!account.name || !account.email || !account.phone) {
+        alert('Vui lòng nhập đầy đủ họ tên, email và số điện thoại.');
+        return;
+    }
+
+    if (account.phone.length !== 10) {
+        alert('Số điện thoại phải bao gồm đúng 10 chữ số.');
+        return;
+    }
+
+    try {
+        if (window.kidCityApi) {
+            const updated = await window.kidCityApi.put('users/index.php', account);
+            account.cccd_image = updated.cccd_image || updated.cccd || '';
+        } else {
+            throw new Error('Không thể kết nối API người dùng.');
+        }
+    } catch (error) {
+        alert(error.message || 'Không thể cập nhật người dùng.');
+        return;
+    }
+
+    const row = document.querySelector(`.users-table tbody tr[data-id="${id}"]`);
+    if (row) {
+        row.dataset.name = account.name;
+        row.dataset.email = account.email;
+        row.dataset.phone = account.phone;
+        row.dataset.role = account.roleLabel;
+        if (account.cccd_image) row.dataset.cccd_image = account.cccd_image;
+        
+        row.querySelector('.user-info span.fw-bold').textContent = account.name;
+        row.querySelector('.user-info .avatar').textContent = account.name.charAt(0).toUpperCase();
+        row.querySelector('td:nth-child(3)').innerHTML = `<span class="role-badge ${roleClass(account.roleLabel)}">${escapeHtml(account.roleLabel)}</span>`;
+    }
+
+    closeModal('editUserModal');
+    showToast('Cập nhật thành công!');
 };
 
 window.toggleUserLock = async function(button) {
@@ -404,16 +469,22 @@ window.toggleUserLock = async function(button) {
         }
 
         row.dataset.status = newStatus;
-        updateStoredAccountFromRow(row);
-        showToast(`${isLocked ? 'Mở khóa' : 'Khóa'} tài khoản thành công!`);
-
-        if (window.kidCityApi) {
-            loadUsersFromApi();
+        if (newStatus === 'Khóa') {
+            row.classList.add('locked-row');
         } else {
-            const tbody = document.querySelector('.users-table tbody');
-            if (tbody) tbody.innerHTML = '';
-            loadStoredUsersIntoTable();
+            row.classList.remove('locked-row');
         }
+        
+        row.querySelector('td:nth-child(4)').innerHTML = statusBadgeHtml(newStatus);
+        
+        const actionBtn = row.querySelector('.actions button.delete') || row.querySelector('.actions button.view:last-child');
+        if (actionBtn) {
+            actionBtn.className = `action-btn ${newStatus === 'Khóa' ? 'view' : 'delete'}`;
+            actionBtn.title = newStatus === 'Khóa' ? 'Mở khóa' : 'Khóa';
+            actionBtn.innerHTML = `<i class='bx ${newStatus === 'Khóa' ? 'bx-lock-open-alt' : 'bx-lock-alt'}'></i>`;
+        }
+
+        showToast(`${isLocked ? 'Mở khóa' : 'Khóa'} tài khoản thành công!`);
     };
 
     openModal('toggleLockUserModal');
@@ -601,7 +672,26 @@ document.addEventListener('DOMContentLoaded', function() {
                     confirmNewPassword
                 });
                 alert('Đổi mật khẩu thành công!');
-                if (passwordModal) passwordModal.classList.remove('active');
+                
+                // Unblock UI if it was first login
+                const currentUserStr = localStorage.getItem("currentUser");
+                if (currentUserStr) {
+                    try {
+                        const user = JSON.parse(currentUserStr);
+                        user.is_first_login = false;
+                        localStorage.setItem("currentUser", JSON.stringify(user));
+                    } catch(e) {}
+                }
+                
+                passwordModal.style.pointerEvents = '';
+                const modalContent = passwordModal.querySelector('.modal-content');
+                if (modalContent) modalContent.style.pointerEvents = '';
+                const closeBtns = passwordModal.querySelectorAll('.close-modal');
+                closeBtns.forEach(btn => btn.style.display = '');
+                const headerText = passwordModal.querySelector('.modal-header h3');
+                if (headerText) headerText.textContent = 'Đổi mật khẩu';
+
+                passwordModal.classList.remove('active');
                 clearPasswordForm();
             } catch (error) {
                 showPasswordError(error.message || 'Không thể đổi mật khẩu.');

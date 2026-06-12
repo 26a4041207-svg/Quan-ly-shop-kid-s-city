@@ -760,6 +760,8 @@ if (openModalBtn) {
 
         updateAddProductCategoryGate();
 
+        modal.classList.remove("view-mode");
+
         openModal();
     });
 }
@@ -958,6 +960,8 @@ function viewProduct(id) {
     document.getElementById("productCreatedAtGroup").style.display = "block";
     document.getElementById("productUpdatedAtGroup").style.display = "block";
 
+    modal.classList.add("view-mode");
+
     openModal();
 
 }
@@ -999,6 +1003,8 @@ function editProduct(id) {
     document.getElementById("productIdGroup").style.display = "block";
     document.getElementById("productCreatedAtGroup").style.display = "block";
     document.getElementById("productUpdatedAtGroup").style.display = "block";
+
+    modal.classList.remove("view-mode");
 
     openModal();
 

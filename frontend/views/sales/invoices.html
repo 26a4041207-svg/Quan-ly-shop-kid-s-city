@@ -25,7 +25,18 @@
             <div class="sales-modal-header"><h3>Tạo hóa đơn mới</h3><button class="modal-close" data-close>&times;</button></div>
             <div class="sales-modal-body">
                 <div class="form-grid">
-                    <div class="field invoice-customer-field"><label>Khách hàng <span class="required">*</span></label><div class="customer-select-row"><select><option value="">-- Chọn khách hàng --</option></select><a class="add-customer-link inline" href="#" data-add-invoice-customer title="Thêm khách hàng mới"><i class='bx bx-user-plus'></i></a></div></div>
+                    <div class="field invoice-customer-field"><label>Khách hàng <span class="required">*</span></label>
+                        <div class="customer-select-row" style="display:flex; align-items:center; gap: 10px;">
+                            <div class="product-combobox" data-customer-combobox style="flex:1;">
+                                <input type="text" data-customer-search placeholder="Nhập tên hoặc SĐT khách hàng..." autocomplete="off" style="width: 100%; border: 1px solid #dbe4f0; border-radius: 8px; padding: 8px 10px;">
+                                <input type="hidden" data-customer-value>
+                                <button type="button" class="combo-toggle" data-customer-toggle aria-label="Mở danh sách khách hàng"><i class='bx bx-chevron-down'></i></button>
+                                <div class="combo-options" data-customer-options></div>
+                            </div>
+                            <a class="add-customer-link inline" href="#" data-add-invoice-customer title="Thêm khách hàng mới"><i class='bx bx-user-plus'></i></a>
+                        </div>
+                        <span class="error-message" style="color: red; font-size: 12px; display: none; margin-top: 4px;">Vui lòng chọn khách hàng</span>
+                    </div>
                     <div class="field"><label>Ngày lập hóa đơn</label><input type="text" id="invoice-date-input" readonly></div>
                     <div class="field full"><label>Ghi chú</label><input type="text" placeholder="Ghi chú hóa đơn (tùy chọn)..."></div>
                 </div>
@@ -47,9 +58,10 @@
                 <div class="sales-card"><table class="sales-table"><thead><tr><th>STT</th><th>Mã SP</th><th>Sản phẩm</th><th>SL</th><th>Đơn giá</th><th>Thành tiền</th><th>Thao tác</th></tr></thead><tbody><tr><td colspan="7" class="empty-row">Chưa có sản phẩm. Thêm sản phẩm ở trên.</td></tr></tbody></table></div>
                 <div class="invoice-summary">
                     <div class="summary-row"><span>Tổng tiền</span><strong data-invoice-subtotal>0đ</strong></div>
-                    <div class="summary-row discount-row">
+                    <div class="summary-row discount-row" style="flex-wrap: wrap;">
                         <span>Ưu đãi</span>
                         <input type="text" data-invoice-discount value="0đ">
+                        <span class="discount-error" style="color: red; font-size: 12px; display: none; width: 100%; text-align: right; margin-top: 4px;">Ưu đãi vượt quá 15% (tối đa <span class="max-discount-val"></span>)</span>
                     </div>
                     <div class="summary-row total-row"><span>Thành tiền</span><strong data-invoice-total>0đ</strong></div>
                 </div>
