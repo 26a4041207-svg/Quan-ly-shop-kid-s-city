@@ -56,13 +56,10 @@ foreach ($stmt->fetchAll() as $row) {
 
 // 3. Exchanges
 $stmt = db()->prepare(
-    'SELECT DATE(e.ngayDoi) AS exchange_date, SUM((COALESCE(new_p.giaBan, 0) - COALESCE(old_p.giaBan, 0)) * d.soLuongDoi) AS exchange_total
-     FROM DoiHang e
-     LEFT JOIN ChiTietDoiHang d ON d.maDoiHang = e.maDoiHang
-     LEFT JOIN SanPham old_p ON d.maSanPhamCu = old_p.maSanPham
-     LEFT JOIN SanPham new_p ON d.maSanPhamMoi = new_p.maSanPham
-     WHERE DATE(e.ngayDoi) BETWEEN ? AND ?
-     GROUP BY DATE(e.ngayDoi)'
+    'SELECT DATE(ngayDoi) AS exchange_date, SUM(tienBu - tienHoan) AS exchange_total
+     FROM DoiHang
+     WHERE DATE(ngayDoi) BETWEEN ? AND ?
+     GROUP BY DATE(ngayDoi)'
 );
 $stmt->execute([$from, $to]);
 foreach ($stmt->fetchAll() as $row) {

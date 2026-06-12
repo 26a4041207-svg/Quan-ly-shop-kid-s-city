@@ -12,7 +12,8 @@ $stmt = db()->query(
         c.tenKhachHang AS name, 
         c.soDienThoai AS phone,
         COUNT(i.maHoaDon) AS order_count,
-        COALESCE(SUM(i.tongTien), 0) AS total_spent
+        COALESCE(SUM(i.tongTien), 0) AS total_spent,
+        MAX(i.ngayTao) AS last_purchase
      FROM KhachHang c
      LEFT JOIN HoaDon i ON i.maKhachHang = c.maKhachHang
      GROUP BY c.maKhachHang, c.tenKhachHang, c.soDienThoai

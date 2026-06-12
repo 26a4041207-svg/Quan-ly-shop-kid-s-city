@@ -7,6 +7,35 @@
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
     <link rel="stylesheet" href="../../assets/css/index.css">
     <link rel="stylesheet" href="../../assets/css/revenue.css?v=20260610-layout-fix">
+    <style>
+        #product-status-filter {
+            appearance: none;
+            background-color: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 8px 36px 8px 16px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #1e293b;
+            cursor: pointer;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            transition: all 0.2s ease-in-out;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            outline: none;
+            min-width: 180px;
+        }
+        #product-status-filter:hover {
+            border-color: #cbd5e1;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            transform: translateY(-1px);
+        }
+        #product-status-filter:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+    </style>
 </head>
 <body>
     <aside class="sidebar">
@@ -89,16 +118,16 @@
         </header>
         <main id="main-content" class="content-body reports-page" data-report-page="products">
             <div class="page-header"><h2>Báo cáo sản phẩm</h2><p>Phân tích tồn kho, doanh thu và sản phẩm bán chạy</p></div>
-            <div class="report-toolbar">
-                <select data-report-filter><option value="today">Hôm nay</option><option value="yesterday">Hôm qua</option><option value="last7">7 ngày qua</option><option value="this-month">Tháng này</option><option value="last-month">Tháng trước</option></select>
+            <section class="report-summary-cards"><div class="stat-card"><div class="stat-info"><p>Tổng sản phẩm</p><h3>0</h3><span>Đang quản lý</span></div><div class="stat-icon bg-blue-light"><i class="bx bx-package"></i></div></div><div class="stat-card"><div class="stat-info"><p>Đang bán</p><h3>0</h3><span>Còn hoạt động</span></div><div class="stat-icon bg-green-light"><i class="bx bx-check-circle"></i></div></div><div class="stat-card"><div class="stat-info"><p>Sắp hết hàng</p><h3>0</h3><span>Số lượng còn ít hơn 5, cần nhập thêm</span></div><div class="stat-icon bg-orange-light"><i class="bx bx-error"></i></div></div></section>
+            <div class="report-toolbar" style="display: flex; gap: 10px;">
+                <select id="product-report-filter" data-report-filter><option value="all">Tất cả</option><option value="today">Hôm nay</option><option value="yesterday">Hôm qua</option><option value="last7">7 ngày qua</option><option value="this-month">Tháng này</option><option value="last-month">Tháng trước</option></select>
             </div>
-            <section class="report-summary-cards"><div class="stat-card"><div class="stat-info"><p>Tổng sản phẩm</p><h3>0</h3><span>Đang quản lý</span></div><div class="stat-icon bg-blue-light"><i class="bx bx-package"></i></div></div><div class="stat-card"><div class="stat-info"><p>Đang bán</p><h3>0</h3><span>Còn hoạt động</span></div><div class="stat-icon bg-green-light"><i class="bx bx-check-circle"></i></div></div><div class="stat-card"><div class="stat-info"><p>Sắp hết hàng</p><h3>0</h3><span>Cần nhập thêm</span></div><div class="stat-icon bg-orange-light"><i class="bx bx-error"></i></div></div><div class="stat-card"><div class="stat-info"><p>Doanh thu SP</p><h3>0</h3><span>Top sản phẩm</span></div><div class="stat-icon bg-purple-light"><i class="bx bx-bar-chart"></i></div></div></section>
-            <section class="report-grid two-cols"><div class="dash-card report-panel"><div class="chart-header"><h3>Top sản phẩm bán chạy</h3><p>Theo số lượng bán</p></div><div class="rank-list"></div></div><div class="dash-card report-panel"><div class="chart-header"><h3>Tồn kho theo nhóm</h3><p>Các nhóm hàng chính</p></div><div class="bar-chart small"></div></div></section>
-            <section class="dash-card"><div class="dash-card-header"><div><h3>Báo cáo sản phẩm</h3><p>Tồn kho và hiệu quả bán hàng</p></div></div><div class="table-responsive"><table class="dash-table reports-table"><thead><tr><th>Mã SP</th><th>Tên sản phẩm</th><th>Danh mục</th><th>Đã bán</th><th>Tồn kho</th><th>Doanh thu</th><th>Trạng thái</th></tr></thead><tbody data-report-table></tbody></table></div></section>
+            <section class="report-grid two-cols"><div class="dash-card report-panel"><div class="chart-header"><h3>Top sản phẩm bán chạy</h3><p>Theo số lượng bán</p></div><div class="rank-list" id="product-rank-list"></div></div><div class="dash-card report-panel"><div class="chart-header"><h3>Số lượng theo nhóm</h3><p>Các nhóm hàng chính</p></div><div class="bar-chart small"></div></div></section>
+            <section class="dash-card"><div class="dash-card-header" style="display: flex; justify-content: space-between; align-items: center;"><div><h3>Báo cáo sản phẩm</h3><p>Số lượng và hiệu quả bán hàng</p></div><select id="product-status-filter" data-status-filter><option value="all">Tất cả trạng thái</option><option value="in-stock">Còn hàng</option><option value="low-stock">Sắp hết hàng</option><option value="out-of-stock">Hết hàng</option><option value="stopped">Ngừng bán</option></select></div><div class="table-responsive"><table class="dash-table reports-table"><thead><tr><th>Mã SP</th><th>Tên sản phẩm</th><th>Danh mục</th><th>Đã bán</th><th>Số lượng</th><th>Trạng thái</th></tr></thead><tbody data-report-table></tbody></table></div></section>
         </main>
     </div>
     <script src="../../js/api.js?v=20260612-no-toast"></script>
     <script src="../../js/auth.js?v=20260531-staff-role-normalize"></script>
-    <script src="../../js/revenue.js?v=20260601-password"></script>
+    <script src="../../js/revenue.js?v=20260612-api-products-status-move"></script>
 </body>
 </html>

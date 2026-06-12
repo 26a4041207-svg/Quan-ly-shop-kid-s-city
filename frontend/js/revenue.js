@@ -172,11 +172,13 @@
         if (!page) return;
         const search = page.querySelector('[data-report-search]');
         const filter = page.querySelector('[data-report-filter]');
-        const rows = Array.from(page.querySelectorAll('[data-report-table] tr'));
+        const statusFilter = page.querySelector('[data-status-filter]');
 
         const render = () => {
+            const rows = Array.from(page.querySelectorAll('[data-report-table] tr'));
             const keyword = (search?.value || '').trim().toLowerCase();
             const selected = filter?.value || 'all';
+            const selectedStatus = statusFilter?.value || 'all';
             let visible = 0;
             let sumInvoice = 0, sumReturn = 0, sumExchange = 0, sumRevenue = 0;
 
@@ -184,9 +186,11 @@
                 if (row.classList.contains('report-empty')) return;
                 const text = row.textContent.toLowerCase();
                 const period = row.dataset.period || '';
+                const rowStatus = row.dataset.status || 'in-stock';
                 const matchKeyword = !keyword || text.includes(keyword);
                 const matchFilter = selected === 'all' || !selected || period.split(/\s+/).includes(selected);
-                const show = matchKeyword && matchFilter;
+                const matchStatus = selectedStatus === 'all' || selectedStatus === rowStatus;
+                const show = matchKeyword && matchFilter && matchStatus;
                 row.style.display = show ? '' : 'none';
                 if (show) {
                     visible += 1;
@@ -199,18 +203,13 @@
                 }
             });
 
-            // Nếu là trang revenue, update cards và summary
+            // Nếu là trang revenue, update cards
             if (page.dataset.reportPage === 'revenue') {
                 const cards = page.querySelectorAll('.stat-card h3');
                 if (cards[0]) cards[0].textContent = formatMoney(sumInvoice);
                 if (cards[1]) cards[1].textContent = (sumExchange > 0 ? '+' : '') + formatMoney(sumExchange);
                 if (cards[2]) cards[2].textContent = '-' + formatMoney(sumReturn);
                 if (cards[3]) cards[3].textContent = formatMoney(sumRevenue);
-
-                const summary = page.querySelector('[data-revenue-summary]');
-                if (summary) {
-                    summary.innerHTML = `<div><strong>Tổng tiền hóa đơn</strong><span>${formatMoney(sumInvoice)}</span><i style="width:100%"></i></div><div><strong>Tổng tiền trả hàng</strong><span>-${formatMoney(sumReturn)}</span><i style="width:100%; background: #f97316;"></i></div><div><strong>Tổng doanh thu</strong><span>${formatMoney(sumRevenue)}</span><i style="width:100%; background: #22c55e;"></i></div>`;
-                }
             }
             
             if (page.dataset.reportPage === 'customers') {
@@ -248,6 +247,14 @@
 
         search?.addEventListener('input', render);
         filter?.addEventListener('change', render);
+        statusFilter?.addEventListener('change', render);
+        
+        const monthFilter = document.getElementById('revenue-chart-month');
+        if (monthFilter && !monthFilter.dataset.bound) {
+            monthFilter.dataset.bound = 'true';
+            monthFilter.addEventListener('change', renderRevenueMonthChart);
+        }
+        
         render();
     };
 
@@ -275,23 +282,95 @@
         return formatMoney(amount);
     };
 
-    const renderRevenuePanels = (page, rows, totalRevenue, totalOrders) => {
+    const renderRevenueMonthChart = () => {
+        const page = document.querySelector('.reports-page');
+        if (!page || page.dataset.reportPage !== 'revenue') return;
         const chart = page.querySelector('[data-revenue-chart]');
-        if (chart) {
-            const maxRevenue = Math.max(...rows.map((item) => Number(item.revenue || 0)), 1);
-            chart.innerHTML = rows.length ? rows.slice(-8).map((item) => {
-                const height = Math.max(12, Math.round(Number(item.revenue || 0) / maxRevenue * 100));
-                return `<div style="--h:${height}%"><span>${compactMoney(item.revenue)}</span><b>${formatReportDate(item.invoice_date).slice(0, 5)}</b></div>`;
-            }).join('') : '<p class="report-empty-inline">Ch\u01b0a c\u00f3 d\u1eef li\u1ec7u doanh thu.</p>';
+        if (!chart) return;
+        
+        const monthInput = document.getElementById('revenue-chart-month');
+        let selectedMonth = monthInput?.value;
+        if (!selectedMonth) {
+            const now = new Date();
+            selectedMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+            if (monthInput) monthInput.value = selectedMonth;
         }
-        const summary = page.querySelector('[data-revenue-summary]');
-        if (summary) {
-            const totalInvoice = rows.reduce((sum, item) => sum + Number(item.invoice_total || 0), 0);
-            const totalReturn = rows.reduce((sum, item) => sum + Number(item.return_total || 0), 0);
-            summary.innerHTML = `<div><strong>Tổng tiền hóa đơn</strong><span>${formatMoney(totalInvoice)}</span><i style="width:100%"></i></div><div><strong>Tổng tiền trả hàng</strong><span>${formatMoney(totalReturn)}</span><i style="width:100%; background: #f97316;"></i></div><div><strong>Tổng doanh thu</strong><span>${formatMoney(totalRevenue)}</span><i style="width:100%; background: #22c55e;"></i></div>`;
-        }
-    };
 
+        const [year, month] = selectedMonth.split('-').map(Number);
+        const daysInMonth = new Date(year, month, 0).getDate();
+        const rows = window.revenueDataRows || [];
+        
+        // Map data by day
+        const revenueByDay = {};
+        rows.forEach(row => {
+            if (row.invoice_date && row.invoice_date.startsWith(selectedMonth)) {
+                const day = parseInt(row.invoice_date.split('-')[2], 10);
+                revenueByDay[day] = Number(row.revenue || 0);
+            }
+        });
+
+        const chartData = [];
+        for (let i = 1; i <= daysInMonth; i++) {
+            chartData.push({
+                revenue: revenueByDay[i] || 0,
+                dateLabel: `${String(i).padStart(2, '0')}/${String(month).padStart(2, '0')}`
+            });
+        }
+
+        const maxRevenue = Math.max(...chartData.map(item => item.revenue), 1000);
+        
+        const width = 800;
+        const height = 300;
+        const paddingLeft = 50;
+        const paddingRight = 20;
+        const paddingTop = 20;
+        const paddingBottom = 40;
+        
+        const chartWidth = width - paddingLeft - paddingRight;
+        const chartHeight = height - paddingTop - paddingBottom;
+        
+        const stepX = chartData.length > 1 ? chartWidth / (chartData.length - 1) : chartWidth;
+        
+        const points = chartData.map((item, index) => {
+            const x = paddingLeft + index * stepX;
+            const normalizedY = (item.revenue / maxRevenue) * chartHeight;
+            const y = height - paddingBottom - normalizedY;
+            return { x, y, item };
+        });
+
+        const pathData = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+
+        const xAxisHtml = points.map((p) => {
+            return `<text x="${p.x}" y="${height - paddingBottom + 20}" font-size="10" text-anchor="middle" fill="#64748b">${p.item.dateLabel.split('/')[0]}</text>`;
+        }).join('');
+        
+        const pointsHtml = points.map((p) => {
+            return `
+                <circle cx="${p.x}" cy="${p.y}" r="4" fill="#fff" stroke="#3b82f6" stroke-width="2" style="cursor:pointer;">
+                    <title>${p.item.dateLabel}: ${formatMoney(p.item.revenue)}</title>
+                </circle>
+                <text x="${p.x}" y="${p.y - 10}" font-size="9" text-anchor="middle" fill="#334155">${p.item.revenue > 0 ? compactMoney(p.item.revenue) : ''}</text>
+            `;
+        }).join('');
+
+        const yAxisHtml = [0, 0.25, 0.5, 0.75, 1].map(ratio => {
+            const y = height - paddingBottom - (chartHeight * ratio);
+            const label = compactMoney(maxRevenue * ratio);
+            return `
+                <line x1="${paddingLeft}" y1="${y}" x2="${width - paddingRight}" y2="${y}" stroke="#e2e8f0" stroke-dasharray="4" />
+                <text x="${paddingLeft - 10}" y="${y + 4}" font-size="10" text-anchor="end" fill="#64748b">${label}</text>
+            `;
+        }).join('');
+
+        chart.innerHTML = `
+            <svg viewBox="0 0 ${width} ${height}" style="width: 100%; height: auto; display: block; overflow: visible;">
+                ${yAxisHtml}
+                <path d="${pathData}" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linejoin="round" />
+                ${xAxisHtml}
+                ${pointsHtml}
+            </svg>
+        `;
+    };
     const renderTopCustomers = (page, rows) => {
         const list = page.querySelector('[data-customer-rank]');
         if (!list) return;
@@ -321,8 +400,12 @@
             const isThisMonth = d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear();
             const lastMonth = new Date(today); lastMonth.setMonth(today.getMonth() - 1);
             const isLastMonth = d.getMonth() === lastMonth.getMonth() && d.getFullYear() === lastMonth.getFullYear();
+            const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
+            const isYesterday = d.toDateString() === yesterday.toDateString();
+            
             let periods = ['all'];
             if (isToday) periods.push('today');
+            if (isYesterday) periods.push('yesterday');
             if (isLast7) periods.push('last7');
             if (isThisMonth) periods.push('this-month');
             if (isLastMonth) periods.push('last-month');
@@ -333,6 +416,7 @@
             if (type === 'revenue') {
                 const rows = await window.kidCityApi.get('reports/revenue.php?from=1900-01-01&to=2999-12-31');
                 if (!Array.isArray(rows)) return;
+                window.revenueDataRows = rows;
                 const totalInvoice = rows.reduce((sum, item) => sum + Number(item.invoice_total || 0), 0);
                 const totalExchange = rows.reduce((sum, item) => sum + Number(item.exchange_total || 0), 0);
                 const totalReturn = rows.reduce((sum, item) => sum + Number(item.return_total || 0), 0);
@@ -343,7 +427,7 @@
                 if (cards[0]) cards[0].textContent = formatMoney(totalInvoice);
                 if (cards[1]) cards[1].textContent = formatMoney(totalExchange);
                 if (cards[2]) cards[2].textContent = formatMoney(totalReturn);
-                renderRevenuePanels(page, rows, totalRevenue, totalOrders);
+
                 table.innerHTML = rows.map((item) => {
                     const exchangeColor = Number(item.exchange_total || 0) >= 0 ? 'text-green' : 'text-red';
                     const exchangeSign = Number(item.exchange_total || 0) > 0 ? '+' : '';
@@ -358,55 +442,115 @@
                     </tr>
                 `}).join('');
                 bindReportFilters();
+                renderRevenueMonthChart();
             }
 
             if (type === 'products') {
-                const rows = await window.kidCityApi.get('reports/products.php');
-                if (!Array.isArray(rows)) return;
-                const cards = page.querySelectorAll('.stat-card h3');
-                if (cards[0]) cards[0].textContent = rows.length;
-                if (cards[1]) cards[1].textContent = rows.filter((item) => Number(item.stock || 0) > 0).length;
-                if (cards[2]) cards[2].textContent = rows.filter((item) => Number(item.stock || 0) <= 5).length;
-                if (cards[3]) cards[3].textContent = formatMoney(rows.reduce((sum, item) => sum + Number(item.revenue || 0), 0));
+                const productFilter = page.querySelector('#product-report-filter');
+                const loadFilteredProducts = async () => {
+                    const period = productFilter ? productFilter.value : 'all';
+                    let from = '1900-01-01';
+                    let to = '2999-12-31';
+                    
+                    const d = new Date();
+                    d.setHours(0, 0, 0, 0); // Normalize today
+                    const t = new Date(d);
+                    
+                    if (period === 'today') {
+                        from = to = t.toISOString().slice(0, 10);
+                    } else if (period === 'yesterday') {
+                        t.setDate(t.getDate() - 1);
+                        from = to = t.toISOString().slice(0, 10);
+                    } else if (period === 'last7') {
+                        to = t.toISOString().slice(0, 10);
+                        t.setDate(t.getDate() - 7);
+                        from = t.toISOString().slice(0, 10);
+                    } else if (period === 'this-month') {
+                        from = new Date(t.getFullYear(), t.getMonth(), 1).toISOString().slice(0, 10);
+                        to = new Date(t.getFullYear(), t.getMonth() + 1, 0).toISOString().slice(0, 10);
+                    } else if (period === 'last-month') {
+                        from = new Date(t.getFullYear(), t.getMonth() - 1, 1).toISOString().slice(0, 10);
+                        to = new Date(t.getFullYear(), t.getMonth(), 0).toISOString().slice(0, 10);
+                    }
+                    
+                    const rows = await window.kidCityApi.get(`reports/products.php?from=${from}&to=${to}`);
+                    if (!Array.isArray(rows)) return;
+                    
+                    const cards = page.querySelectorAll('.stat-card h3');
+                    if (cards[0]) cards[0].textContent = rows.length;
+                    if (cards[1]) cards[1].textContent = rows.filter((item) => Number(item.stock || 0) > 0).length;
+                    if (cards[2]) cards[2].textContent = rows.filter((item) => Number(item.stock || 0) <= 5).length;
+                    
+                    const rankList = page.querySelector('.rank-list');
+                    if (rankList) {
+                        const topProducts = [...rows].sort((a, b) => Number(b.sold_quantity) - Number(a.sold_quantity)).slice(0, 5);
+                        const maxSold = Math.max(...topProducts.map((item) => Number(item.sold_quantity || 0)), 1);
+                        rankList.innerHTML = topProducts.length && maxSold > 0 ? topProducts.map((item) => {
+                            const width = Math.max(8, Math.round(Number(item.sold_quantity || 0) / maxSold * 100));
+                            return `<div><strong>${item.name || '-'}</strong><span>${item.sold_quantity} đã bán</span><i style="width:${width}%"></i></div>`;
+                        }).join('') : '<p class="report-empty-inline">Chưa có dữ liệu bán hàng.</p>';
+                    }
+
+                    const barChart = page.querySelector('.bar-chart.small');
+                    if (barChart) {
+                        const stockByCategory = {};
+                        rows.forEach(item => {
+                            const cat = item.category_name || 'Khác';
+                            stockByCategory[cat] = (stockByCategory[cat] || 0) + Number(item.stock || 0);
+                        });
+                        const cats = Object.keys(stockByCategory);
+                        const maxStock = Math.max(...Object.values(stockByCategory), 1);
+                        barChart.innerHTML = cats.length ? cats.slice(0, 7).map(cat => {
+                            const stock = stockByCategory[cat];
+                            const height = Math.max(12, Math.round(stock / maxStock * 100));
+                            return `<div style="--h:${height}%" title="${cat}: ${stock}"><span>${stock}</span><b>${cat.substring(0, 8)}</b></div>`;
+                        }).join('') : '<p class="report-empty-inline">Chưa có dữ liệu tồn kho.</p>';
+                    }
+
+                    table.innerHTML = rows.map((item) => {
+                        let stock = Number(item.stock || 0);
+                        let statusText = 'Còn hàng';
+                        let badgeClass = 'good';
+                        let statusCode = 'in-stock';
+
+                        if (stock < 0) {
+                            statusText = 'Ngừng bán';
+                            badgeClass = 'secondary';
+                            statusCode = 'stopped';
+                        } else if (stock === 0) {
+                            statusText = 'Hết hàng';
+                            badgeClass = 'danger';
+                            statusCode = 'out-of-stock';
+                        } else if (stock <= 5) {
+                            statusText = 'Sắp hết hàng';
+                            badgeClass = 'warn';
+                            statusCode = 'low-stock';
+                        }
+
+                        return `
+                        <tr data-period="all today yesterday last7 this-month last-month" data-status="${statusCode}">
+                            <td class="fw-bold text-blue">${item.code || ''}</td>
+                            <td>${item.name || ''}</td>
+                            <td>${item.category_name || ''}</td>
+                            <td>${item.sold_quantity || 0}</td>
+                            <td>${item.stock || 0}</td>
+                            <td><span class="report-badge ${badgeClass}">${statusText}</span></td>
+                        </tr>
+                        `;
+                    }).join('');
+                    
+                    const statusFilter = page.querySelector('[data-status-filter]');
+                    if (statusFilter) {
+                        statusFilter.dispatchEvent(new Event('change'));
+                    }
+                };
                 
-                const rankList = page.querySelector('.rank-list');
-                if (rankList) {
-                    const topProducts = [...rows].sort((a, b) => Number(b.sold_quantity) - Number(a.sold_quantity)).slice(0, 5);
-                    const maxSold = Math.max(...topProducts.map((item) => Number(item.sold_quantity || 0)), 1);
-                    rankList.innerHTML = topProducts.length && maxSold > 0 ? topProducts.map((item) => {
-                        const width = Math.max(8, Math.round(Number(item.sold_quantity || 0) / maxSold * 100));
-                        return `<div><strong>${item.name || '-'}</strong><span>${item.sold_quantity} đã bán</span><i style="width:${width}%"></i></div>`;
-                    }).join('') : '<p class="report-empty-inline">Chưa có dữ liệu bán hàng.</p>';
+                if (productFilter) {
+                    productFilter.addEventListener('change', loadFilteredProducts);
                 }
-
-                const barChart = page.querySelector('.bar-chart.small');
-                if (barChart) {
-                    const stockByCategory = {};
-                    rows.forEach(item => {
-                        const cat = item.category_name || 'Khác';
-                        stockByCategory[cat] = (stockByCategory[cat] || 0) + Number(item.stock || 0);
-                    });
-                    const cats = Object.keys(stockByCategory);
-                    const maxStock = Math.max(...Object.values(stockByCategory), 1);
-                    barChart.innerHTML = cats.length ? cats.slice(0, 7).map(cat => {
-                        const stock = stockByCategory[cat];
-                        const height = Math.max(12, Math.round(stock / maxStock * 100));
-                        return `<div style="--h:${height}%" title="${cat}: ${stock}"><span>${stock}</span><b>${cat.substring(0, 8)}</b></div>`;
-                    }).join('') : '<p class="report-empty-inline">Chưa có dữ liệu tồn kho.</p>';
-                }
-
-                table.innerHTML = rows.map((item) => `
-                    <tr data-period="all today yesterday last7 this-month last-month">
-                        <td class="fw-bold text-blue">${item.code || ''}</td>
-                        <td>${item.name || ''}</td>
-                        <td>${item.category_name || ''}</td>
-                        <td>${item.sold_quantity || 0}</td>
-                        <td>${item.stock || 0}</td>
-                        <td class="fw-bold">${formatMoney(item.revenue)}</td>
-                        <td><span class="report-badge ${Number(item.stock || 0) <= 5 ? 'warn' : 'good'}">${Number(item.stock || 0) <= 5 ? 'Sắp hết' : 'Còn hàng'}</span></td>
-                    </tr>
-                `).join('');
+                await loadFilteredProducts();
                 bindReportFilters();
+                return;
             }
 
             if (type === 'customers') {
@@ -425,8 +569,6 @@
                         <td>${item.phone || ''}</td>
                         <td>${item.order_count || 0}</td>
                         <td class="fw-bold">${formatMoney(item.total_spent)}</td>
-                        <td>${formatReportDate(item.last_purchase)}</td>
-                        <td><span class="report-badge good">${getCustomerGroup(item)}</span></td>
                     </tr>
                 `).join('');
                 bindReportFilters();
@@ -465,8 +607,41 @@
     const getVisibleRevenueRows = (page) => Array.from(page.querySelectorAll('[data-report-table] tr'))
         .filter((row) => row.style.display !== 'none' && !row.classList.contains('report-empty'));
 
-    const buildRevenueExcelHtml = (page) => {
-        const title = page.querySelector('.page-header h2')?.textContent.trim() || 'Bao cao doanh thu';
+    const getChartBase64 = async (page) => {
+        return new Promise((resolve) => {
+            const svgElement = page.querySelector('[data-revenue-chart] svg');
+            if (!svgElement) return resolve('');
+            
+            const serializer = new XMLSerializer();
+            let svgString = serializer.serializeToString(svgElement);
+            if (!svgString.includes('xmlns=')) {
+                svgString = svgString.replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ');
+            }
+
+            const canvas = document.createElement('canvas');
+            const width = svgElement.viewBox.baseVal.width || 800;
+            const height = svgElement.viewBox.baseVal.height || 300;
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, width, height);
+
+            const img = new Image();
+            img.onload = () => {
+                ctx.drawImage(img, 0, 0);
+                resolve(canvas.toDataURL('image/png'));
+            };
+            img.onerror = () => resolve('');
+            
+            const encodedData = btoa(unescape(encodeURIComponent(svgString)));
+            img.src = `data:image/svg+xml;base64,${encodedData}`;
+        });
+    };
+
+    const buildExcelHtml = async (page) => {
+        const title = page.querySelector('.page-header h2')?.textContent.trim() || 'Bao cao';
         const generatedAt = new Date().toLocaleString('vi-VN');
         const cards = Array.from(page.querySelectorAll('.stat-card')).map((card) => ({
             label: card.querySelector('.stat-info p')?.textContent.trim() || '',
@@ -480,44 +655,97 @@
         const summaryRows = cards.map((item) => `
             <tr>
                 <td>${escapeExcelText(item.label)}</td>
-                <td>${escapeExcelText(item.value)}</td>
+                <td style="text-align:right;font-weight:bold;color:#1d4ed8;">${escapeExcelText(item.value)}</td>
                 <td>${escapeExcelText(item.note)}</td>
             </tr>
         `).join('');
         const headerHtml = headers.map((header) => `<th>${escapeExcelText(header)}</th>`).join('');
         const bodyHtml = rows.map((row) => `<tr>${row.map((cell) => `<td>${escapeExcelText(cell)}</td>`).join('')}</tr>`).join('');
 
-        return `<!DOCTYPE html>
+        const chartBase64 = await getChartBase64(page);
+        const chartHtml = chartBase64 ? `
+        <table>
+            <tr><th style="background:#0f172a;color:#fff;font-size:16px;text-align:center;padding:12px;" colspan="${headers.length || 6}">BIỂU ĐỒ DOANH THU THEO THÁNG</th></tr>
+            <tr><td colspan="${headers.length || 6}" style="text-align:center;padding:20px;border:1px solid #cbd5e1;"><img src="cid:chart_image" width="800" height="300" /></td></tr>
+        </table>
+        ` : '';
+
+        const htmlPart = `<!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
 <style>
-    body{font-family:Arial,sans-serif;color:#111827;}
-    h1{font-size:22px;margin:0 0 6px;}
-    p{margin:0 0 16px;color:#475569;}
-    table{border-collapse:collapse;width:100%;margin-bottom:20px;}
-    th{background:#2563eb;color:#fff;font-weight:700;}
-    th,td{border:1px solid #dbe3ef;padding:10px;text-align:left;}
-    .summary th{background:#0f172a;}
+    body{font-family:'Segoe UI', Arial, sans-serif;color:#1e293b; background-color: #f8fafc; padding: 20px;}
+    h1{font-size:26px;margin:0 0 10px; color: #0f172a; text-transform: uppercase; text-align: center;}
+    p.meta{margin:0 0 20px;color:#64748b; text-align: center; font-style: italic;}
+    .container { background: #fff; padding: 30px; border-radius: 8px; border: 1px solid #e2e8f0; }
+    table{border-collapse:collapse;width:100%;margin-bottom:30px;}
+    th{background:#2563eb;color:#ffffff;font-weight:600; padding:12px; font-size: 14px;}
+    td{border:1px solid #cbd5e1;padding:10px; font-size: 13px;}
+    .summary th{background:#334155;}
+    .text-center { text-align: center; }
 </style>
 </head>
 <body>
-    <h1>${escapeExcelText(title)}</h1>
-    <p>Th\u1eddi gian xu\u1ea5t: ${escapeExcelText(generatedAt)}</p>
-    <table class="summary">
-        <thead><tr><th>Ch\u1ec9 s\u1ed1</th><th>Gi\u00e1 tr\u1ecb</th><th>Ghi ch\u00fa</th></tr></thead>
-        <tbody>${summaryRows}</tbody>
-    </table>
-    <table>
-        <thead><tr>${headerHtml}</tr></thead>
-        <tbody>${bodyHtml || `<tr><td colspan="${headers.length || 1}">Kh\u00f4ng c\u00f3 d\u1eef li\u1ec7u \u0111\u1ec3 xu\u1ea5t</td></tr>`}</tbody>
-    </table>
+    <div class="container">
+        <h1>${escapeExcelText(title)}</h1>
+        <p class="meta">Thời gian xuất: ${escapeExcelText(generatedAt)}</p>
+        
+        <table class="summary">
+            <thead>
+                <tr><th colspan="3" style="font-size:16px;">TỔNG QUAN CHỈ SỐ</th></tr>
+                <tr><th>Chỉ số</th><th>Giá trị</th><th>Ghi chú</th></tr>
+            </thead>
+            <tbody>${summaryRows}</tbody>
+        </table>
+
+        ${chartHtml}
+        
+        <table>
+            <thead>
+                <tr><th colspan="${headers.length || 1}" style="background:#0f172a; font-size:16px;">CHI TIẾT DOANH THU</th></tr>
+                <tr>${headerHtml}</tr>
+            </thead>
+            <tbody>${bodyHtml || `<tr><td colspan="${headers.length || 1}" class="text-center">Không có dữ liệu để xuất</td></tr>`}</tbody>
+        </table>
+    </div>
 </body>
 </html>`;
+
+        const boundary = "----=_NextPart_KidCity_Report_Boundary";
+        
+        let mhtml = `MIME-Version: 1.0
+X-Document-Type: Workbook
+Content-Type: multipart/related; boundary="${boundary}"
+
+--${boundary}
+Content-Type: text/html; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+
+${htmlPart}
+`;
+
+        if (chartBase64) {
+            const b64Data = chartBase64.split(',')[1];
+            mhtml += `
+--${boundary}
+Content-Type: image/png
+Content-Transfer-Encoding: base64
+Content-ID: <chart_image>
+
+${b64Data}
+`;
+        }
+
+        mhtml += `\n--${boundary}--\n`;
+        return mhtml;
     };
 
-    const downloadExcelFile = (html, filename) => {
-        const blob = new Blob(['\ufeff', html], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+    const downloadExcelFile = (content, filename) => {
+        const hasMime = content.startsWith('MIME-Version');
+        const blobParts = hasMime ? [content] : ['\ufeff', content];
+        const type = hasMime ? 'message/rfc822' : 'application/vnd.ms-excel;charset=utf-8;';
+        const blob = new Blob(blobParts, { type });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
@@ -532,12 +760,18 @@
         document.querySelectorAll('[data-export-report]').forEach((btn) => {
             if (btn.dataset.reportExportBound === 'true') return;
             btn.dataset.reportExportBound = 'true';
-            btn.addEventListener('click', () => {
-                const page = document.querySelector('.reports-page[data-report-page="revenue"]');
+            btn.addEventListener('click', async () => {
+                const page = document.querySelector('.reports-page');
                 if (!page) return;
+                
+                showReportToast('Đang tạo báo cáo Excel, vui lòng đợi...');
+                
+                const type = page.dataset.reportPage || 'chung';
                 const today = new Date().toISOString().slice(0, 10);
-                downloadExcelFile(buildRevenueExcelHtml(page), `bao-cao-doanh-thu-${today}.xls`);
-                showReportToast('\u0110\u00e3 xu\u1ea5t b\u00e1o c\u00e1o doanh thu th\u00e0nh c\u00f4ng!');
+                const html = await buildExcelHtml(page);
+                
+                downloadExcelFile(html, `bao-cao-${type}-${today}.xls`);
+                showReportToast('\u0110\u00e3 xu\u1ea5t b\u00e1o c\u00e1o th\u00e0nh c\u00f4ng!');
             });
         });
     };

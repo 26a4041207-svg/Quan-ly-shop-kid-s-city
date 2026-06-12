@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,26 +9,33 @@
     <link rel="stylesheet" href="../../assets/css/index.css">
     <link rel="stylesheet" href="../../assets/css/revenue.css?v=20260610-layout-fix">
 </head>
+
 <body>
     <aside class="sidebar">
         <div class="sidebar-header">
             <div class="logo">
                 <i class="bx bxs-face"></i>
-                <div><h2>Kid's City</h2><p>Quản lý bán hàng</p></div>
+                <div>
+                    <h2>Kid's City</h2>
+                    <p>Quản lý bán hàng</p>
+                </div>
             </div>
         </div>
         <ul class="menu">
             <li class="menu-item"><a href="../../index.html"><i class="bx bx-grid-alt"></i> Tổng quan</a></li>
-            <li class="menu-item"><a href="../../index.html#imports"><i class="bx bx-box"></i> Quản lý hàng nhập</a></li>
+            <li class="menu-item"><a href="../../index.html#imports"><i class="bx bx-box"></i> Quản lý hàng nhập</a>
+            </li>
             <li class="menu-item has-submenu">
-                <a href="#" class="menu-toggle"><i class="bx bx-cube"></i> <span>Quản lý sản phẩm</span><i class="bx bx-chevron-down arrow"></i></a>
+                <a href="#" class="menu-toggle"><i class="bx bx-cube"></i> <span>Quản lý sản phẩm</span><i
+                        class="bx bx-chevron-down arrow"></i></a>
                 <ul class="submenu">
                     <li><a href="../products/categories.html"><i class="bx bx-purchase-tag-alt"></i> Danh mục</a></li>
                     <li><a href="../products/list.html"><i class="bx bx-package"></i> Sản phẩm</a></li>
                 </ul>
             </li>
             <li class="menu-item has-submenu">
-                <a href="#" class="menu-toggle"><i class="bx bx-cart"></i> <span>Quản lý bán hàng</span><i class="bx bx-chevron-down arrow"></i></a>
+                <a href="#" class="menu-toggle"><i class="bx bx-cart"></i> <span>Quản lý bán hàng</span><i
+                        class="bx bx-chevron-down arrow"></i></a>
                 <ul class="submenu">
                     <li><a href="../../index.html#sales/invoices"><i class="bx bx-receipt"></i> Hóa đơn</a></li>
                     <li><a href="../../index.html#sales/exchanges"><i class="bx bx-transfer"></i> Đổi hàng</a></li>
@@ -36,7 +44,8 @@
             </li>
             <li class="menu-item"><a href="../customers.html"><i class="bx bx-user-pin"></i> Quản lý khách hàng</a></li>
             <li class="menu-item has-submenu active open">
-                <a href="#" class="menu-toggle"><i class="bx bx-bar-chart-alt-2"></i> <span>Quản lý báo cáo</span><i class="bx bx-chevron-down arrow"></i></a>
+                <a href="#" class="menu-toggle"><i class="bx bx-bar-chart-alt-2"></i> <span>Quản lý báo cáo</span><i
+                        class="bx bx-chevron-down arrow"></i></a>
                 <ul class="submenu">
                     <li><a href="revenue.html" class="active"><i class="bx bx-line-chart"></i> Doanh thu</a></li>
                     <li><a href="products.html"><i class="bx bx-box"></i> Sản phẩm</a></li>
@@ -50,16 +59,26 @@
         <header class="top-header">
             <div style="display:flex;align-items:center;">
                 <i class="bx bx-menu" id="mobile-menu-btn"></i>
-                <div class="search-bar"><i class="bx bx-search"></i><input type="text" placeholder="Tìm kiếm tại đây..."></div>
+                <div class="search-bar"><i class="bx bx-search"></i><input type="text"
+                        placeholder="Tìm kiếm tại đây..."></div>
             </div>
             <div class="header-actions">
                 <div class="dropdown" id="notification-dropdown">
-                    <div class="icon-wrapper"><i class="bx bx-bell notification-icon"></i><span class="badge-dot"></span></div>
+                    <div class="icon-wrapper"><i class="bx bx-bell notification-icon"></i><span
+                            class="badge-dot"></span></div>
                     <div class="dropdown-menu">
                         <div class="dropdown-header">Thông báo mới</div>
                         <ul class="dropdown-list">
-                            <li><i class="bx bx-cart-alt"></i><div><p>Có đơn hàng mới <strong>#ORD011</strong></p><span>2 phút trước</span></div></li>
-                            <li><i class="bx bx-error-circle"></i><div><p>Sản phẩm <strong>Áo thun</strong> sắp hết hàng</p><span>1 giờ trước</span></div></li>
+                            <li><i class="bx bx-cart-alt"></i>
+                                <div>
+                                    <p>Có đơn hàng mới <strong>#ORD011</strong></p><span>2 phút trước</span>
+                                </div>
+                            </li>
+                            <li><i class="bx bx-error-circle"></i>
+                                <div>
+                                    <p>Sản phẩm <strong>Áo thun</strong> sắp hết hàng</p><span>1 giờ trước</span>
+                                </div>
+                            </li>
                         </ul>
                         <a href="#" class="dropdown-footer">Xem tất cả thông báo</a>
                     </div>
@@ -67,7 +86,10 @@
                 <div class="dropdown" id="user-dropdown">
                     <div class="header-user">
                         <div class="avatar blue-bg">N</div>
-                        <div class="user-info mobile-hidden"><h4>Nguyễn Văn An</h4><p>Chủ shop</p></div>
+                        <div class="user-info mobile-hidden">
+                            <h4>Nguyễn Văn An</h4>
+                            <p>Chủ shop</p>
+                        </div>
                         <i class="bx bx-chevron-down"></i>
                     </div>
                     <div class="dropdown-menu account-menu">
@@ -81,33 +103,135 @@
                 </div>
             </div>
             <div class="modal-overlay" id="modal-profile">
-                <div class="modal-content profile-modal"><div class="modal-header"><h3>Thông tin cá nhân</h3></div><div class="modal-body"><div class="profile-main"><div class="avatar-large blue-bg">N</div><div class="profile-info-header"><h4>Nguyễn Văn An</h4><p>admin@kidscity.vn</p><span class="badge-role">Chủ shop</span></div></div><div class="profile-details"><div class="detail-row"><span class="label">Tên đăng nhập</span><span class="value">admin</span></div><div class="detail-row"><span class="label">Điện thoại</span><span class="value">0901234567</span></div><div class="detail-row"><span class="label">Ngày tạo</span><span class="value">2024-01-01</span></div></div><button class="btn-primary-block close-modal">Đóng</button></div></div>
+                <div class="modal-content profile-modal">
+                    <div class="modal-header">
+                        <h3>Thông tin cá nhân</h3>
+                    </div>
+                    <div class="modal-body">
+                        <div class="profile-main">
+                            <div class="avatar-large blue-bg">N</div>
+                            <div class="profile-info-header">
+                                <h4>Nguyễn Văn An</h4>
+                                <p>admin@kidscity.vn</p><span class="badge-role">Chủ shop</span>
+                            </div>
+                        </div>
+                        <div class="profile-details">
+                            <div class="detail-row"><span class="label">Tên đăng nhập</span><span
+                                    class="value">admin</span></div>
+                            <div class="detail-row"><span class="label">Điện thoại</span><span
+                                    class="value">0901234567</span></div>
+                            <div class="detail-row"><span class="label">Ngày tạo</span><span
+                                    class="value">2024-01-01</span></div>
+                        </div><button class="btn-primary-block close-modal">Đóng</button>
+                    </div>
+                </div>
             </div>
             <div class="modal-overlay" id="modal-password">
-                <div class="modal-content password-modal"><div class="modal-header"><h3>Đổi mật khẩu</h3></div><div class="modal-body"><div class="form-group"><label>Mật khẩu mới</label><input type="password" class="form-control" id="new-password" autocomplete="new-password" value=""></div><div class="form-group"><label>Xác nhận lại mật khẩu mới</label><input type="password" class="form-control" id="confirm-new-password" autocomplete="new-password" value=""><p class="password-error" id="password-match-error"></p></div><div class="modal-footer-btns"><button class="btn-outline close-modal">Hủy</button><button class="btn-primary" id="save-password-change">Lưu thay đổi</button></div></div></div>
+                <div class="modal-content password-modal">
+                    <div class="modal-header">
+                        <h3>Đổi mật khẩu</h3>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group"><label>Mật khẩu mới</label><input type="password" class="form-control"
+                                id="new-password" autocomplete="new-password" value=""></div>
+                        <div class="form-group"><label>Xác nhận lại mật khẩu mới</label><input type="password"
+                                class="form-control" id="confirm-new-password" autocomplete="new-password" value="">
+                            <p class="password-error" id="password-match-error"></p>
+                        </div>
+                        <div class="modal-footer-btns"><button class="btn-outline close-modal">Hủy</button><button
+                                class="btn-primary" id="save-password-change">Lưu thay đổi</button></div>
+                    </div>
+                </div>
             </div>
         </header>
         <main id="main-content" class="content-body reports-page" data-report-page="revenue">
-            <div class="page-header"><h2>Báo cáo doanh thu</h2><p>Theo dõi doanh thu, lợi nhuận và phương thức thanh toán</p></div>
+            <div class="page-header">
+                <h2>Báo cáo doanh thu</h2>
+                <p>Theo dõi doanh thu, lợi nhuận và phương thức thanh toán</p>
+            </div>
             <div class="report-toolbar">
-                <select data-report-filter><option value="all">T&#7845;t c&#7843;</option><option value="today">H&#244;m nay</option><option value="last7">7 ng&#224;y qua</option><option value="this-month">Th&#225;ng n&#224;y</option><option value="last-month">Th&#225;ng tr&#432;&#7899;c</option></select>
+                <select data-report-filter>
+                    <option value="all">Tất cả</option>
+                    <option value="today">Hôm nay</option>
+                    <option value="yesterday">Hôm qua</option>
+                    <option value="last7">7 ngày qua</option>
+                    <option value="this-month">Tháng này</option>
+                    <option value="last-month">Tháng trước</option>
+                </select>
                 <button class="report-btn" data-export-report><i class="bx bx-export"></i> Xuất báo cáo</button>
             </div>
             <section class="report-summary-cards">
-                <div class="stat-card"><div class="stat-info"><p>Tổng tiền hóa đơn</p><h3>0đ</h3><span>Giao dịch bán</span></div><div class="stat-icon bg-blue-light"><i class="bx bx-receipt"></i></div></div>
-                <div class="stat-card"><div class="stat-info"><p>Tổng tiền đổi hàng</p><h3>0đ</h3><span>Chênh lệch đổi</span></div><div class="stat-icon bg-purple-light"><i class="bx bx-transfer"></i></div></div>
-                <div class="stat-card"><div class="stat-info"><p>Tổng tiền trả hàng</p><h3>0đ</h3><span>Đã hoàn lại</span></div><div class="stat-icon bg-orange-light"><i class="bx bx-revision"></i></div></div>
-                <div class="stat-card"><div class="stat-info"><p>Tổng tiền doanh thu</p><h3>0đ</h3><span>Thực tế thu về</span></div><div class="stat-icon bg-green-light"><i class="bx bx-dollar"></i></div></div>
+                <div class="stat-card">
+                    <div class="stat-info">
+                        <p>Tổng tiền hóa đơn</p>
+                        <h3>0đ</h3><span>Giao dịch bán</span>
+                    </div>
+                    <div class="stat-icon bg-blue-light"><i class="bx bx-receipt"></i></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-info">
+                        <p>Tổng tiền đổi hàng</p>
+                        <h3>0đ</h3><span>Chênh lệch đổi</span>
+                    </div>
+                    <div class="stat-icon bg-purple-light"><i class="bx bx-transfer"></i></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-info">
+                        <p>Tổng tiền trả hàng</p>
+                        <h3>0đ</h3><span>Đã hoàn lại</span>
+                    </div>
+                    <div class="stat-icon bg-orange-light"><i class="bx bx-revision"></i></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-info">
+                        <p>Tổng tiền doanh thu</p>
+                        <h3>0đ</h3><span>Thực tế thu về</span>
+                    </div>
+                    <div class="stat-icon bg-green-light"><i class="bx bx-dollar"></i></div>
+                </div>
             </section>
-            <section class="report-grid two-cols">
-                <div class="dash-card report-panel"><div class="chart-header"><h3>Doanh thu theo ng&#224;y</h3><p>D&#7919; li&#7879;u l&#7845;y tr&#7921;c ti&#7871;p t&#7915; h&#243;a &#273;&#417;n</p></div><div class="bar-chart" data-revenue-chart></div></div>
-                <div class="dash-card report-panel"><div class="chart-header"><h3>T&#7893;ng quan giao d&#7883;ch</h3><p>T&#7893;ng h&#7907;p t&#7915; database</p></div><div class="rank-list" data-revenue-summary></div></div>
+
+            <section class="dash-card">
+                <div class="dash-card-header">
+                    <div>
+                        <h3>Chi tiết doanh thu</h3>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="dash-table reports-table">
+                        <thead>
+                            <tr>
+                                <th>Thời gian</th>
+                                <th>Tiền hóa đơn</th>
+                                <th>Tiền trả hàng</th>
+                                <th>Tiền đổi hàng</th>
+                                <th>Tổng doanh thu</th>
+                                <th>Ghi chú</th>
+                            </tr>
+                        </thead>
+                        <tbody data-report-table></tbody>
+                    </table>
+                </div>
             </section>
-            <section class="dash-card"><div class="dash-card-header"><div><h3>Chi tiết doanh thu</h3><p>Doanh thu theo kỳ gần nhất</p></div></div><div class="table-responsive"><table class="dash-table reports-table"><thead><tr><th>Kỳ</th><th>Tiền hóa đơn</th><th>Tiền trả hàng</th><th>Tiền đổi hàng</th><th>Tổng doanh thu</th><th>Ghi chú</th></tr></thead><tbody data-report-table></tbody></table></div></section>
+            <section class="report-grid" style="margin-top: 24px;">
+                <div class="dash-card report-panel">
+                    <div class="chart-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <div>
+                            <h3>Biểu đồ doanh thu theo tháng</h3>
+                            <p>Chọn tháng để xem doanh thu theo từng ngày</p>
+                        </div>
+                        <div>
+                            <input type="month" id="revenue-chart-month" class="form-control" style="width: auto;">
+                        </div>
+                    </div>
+                    <div class="line-chart" data-revenue-chart style="width: 100%; min-height: 300px; padding-top: 20px;"></div>
+                </div>
+            </section>
         </main>
     </div>
     <script src="../../js/api.js?v=20260612-no-toast"></script>
     <script src="../../js/auth.js?v=20260531-staff-role-normalize"></script>
-    <script src="../../js/revenue.js?v=20260610-layout-fix"></script>
+    <script src="../../js/revenue.js?v=20260612-api-yesterday"></script>
 </body>
+
 </html>

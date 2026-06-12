@@ -89,14 +89,16 @@
         </header>
         <main id="main-content" class="content-body reports-page" data-report-page="customers">
             <div class="page-header"><h2>Báo cáo khách hàng</h2><p>Phân tích nhóm khách hàng, tần suất mua và giá trị chi tiêu</p></div>
-            <div class="report-toolbar"><select data-report-filter><option value="all">T&#7845;t c&#7843;</option><option value="today">H&#244;m nay</option><option value="last7">7 ng&#224;y qua</option><option value="this-month">Th&#225;ng n&#224;y</option><option value="last-month">Th&#225;ng tr&#432;&#7899;c</option></select></div>
+            <div class="report-toolbar">
+                <select data-report-filter><option value="all">Tất cả</option><option value="today">Hôm nay</option><option value="yesterday">Hôm qua</option><option value="last7">7 ngày qua</option><option value="this-month">Tháng này</option><option value="last-month">Tháng trước</option></select>
+            </div>
             <section class="report-summary-cards"><div class="stat-card"><div class="stat-info"><p>Tổng khách hàng</p><h3>0</h3><span></span></div><div class="stat-icon bg-blue-light"><i class="bx bx-group"></i></div></div><div class="stat-card"><div class="stat-info"><p>Giá trị TB</p><h3>0đ</h3><span>Mỗi hóa đơn</span></div><div class="stat-icon bg-orange-light"><i class="bx bx-receipt"></i></div></div></section>
             <section class="report-grid two-cols"><div class="dash-card report-panel"><div class="chart-header"><h3>Kết quả thống kê</h3><p>Dữ liệu sau khi áp dụng bộ lọc thời gian</p></div><div class="rank-list" data-customer-summary></div></div><div class="dash-card report-panel"><div class="chart-header"><h3>Top khách hàng</h3><p>Theo tổng chi tiêu</p></div><div class="rank-list" data-customer-rank></div></div></section>
-            <section class="dash-card"><div class="dash-card-header"><div><h3>Báo cáo khách hàng</h3><p>Giá trị mua hàng và tần suất quay lại</p></div></div><div class="table-responsive"><table class="dash-table reports-table"><thead><tr><th>Mã KH</th><th>Khách hàng</th><th>Điện thoại</th><th>Số hóa đơn</th><th>Tổng chi tiêu</th><th>Lần mua cuối</th><th>Nhóm</th></tr></thead><tbody data-report-table></tbody></table></div></section>
+            <section class="dash-card"><div class="dash-card-header"><div><h3>Báo cáo khách hàng</h3><p>Giá trị mua hàng và tần suất quay lại</p></div></div><div class="table-responsive"><table class="dash-table reports-table"><thead><tr><th>Mã KH</th><th>Khách hàng</th><th>Điện thoại</th><th>Số hóa đơn</th><th>Tổng chi tiêu</th></tr></thead><tbody data-report-table></tbody></table></div></section>
         </main>
     </div>
     <script src="../../js/api.js?v=20260612-no-toast"></script>
     <script src="../../js/auth.js?v=20260531-staff-role-normalize"></script>
-    <script src="../../js/revenue.js?v=20260610-layout-fix"></script>
+    <script src="../../js/revenue.js?v=20260612-api-yesterday"></script>
 </body>
 </html>
