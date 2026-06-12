@@ -1119,11 +1119,6 @@ async function restoreProduct(id) {
             product.status = "selling";
             setupPriceRange();
             filterProducts();
-            if (window.showToast) {
-                window.showToast("Khôi phục sản phẩm thành công!");
-            } else {
-                alert("Khôi phục sản phẩm thành công!");
-            }
         } catch (error) {
             alert(error.message || "Không thể khôi phục sản phẩm.");
         }

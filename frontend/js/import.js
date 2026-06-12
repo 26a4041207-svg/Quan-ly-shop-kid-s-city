@@ -656,7 +656,6 @@ window.initImportPage = function initImportPage(container) {
                 });
                 closeModal(root.querySelector('#import-create'));
                 await loadImportsFromApi();
-                window.showToast?.('Tạo phiếu nhập hàng thành công!');
                 return;
             } catch (error) {
     console.error('CREATE IMPORT ERROR:', error);
@@ -846,7 +845,6 @@ window.initImportPage = function initImportPage(container) {
                     });
                     closeModal(modal);
                     await loadImportsFromApi();
-                    window.showToast?.('Cập nhật phiếu nhập hàng thành công!');
                 } catch (error) {
                     alert(error.message || 'Không thể cập nhật phiếu nhập hàng.');
                 }

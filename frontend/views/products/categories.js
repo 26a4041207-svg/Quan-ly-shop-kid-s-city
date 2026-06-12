@@ -239,9 +239,6 @@ saveCategoryBtn?.addEventListener("click", async () => {
             }
             await loadCategoriesFromApi();
             closeModal();
-            if (window.showToast) {
-                window.showToast(currentEditId === null ? "Thêm danh mục thành công!" : "Cập nhật danh mục thành công!");
-            }
         } catch (error) {
             alert(error.message || "Không thể lưu danh mục vào database.");
         }
@@ -290,9 +287,6 @@ window.deleteCategory = async function(id) {
         try {
             await window.kidCityApi.delete(`products/categories.php?id=${id}`);
             await loadCategoriesFromApi();
-            if (window.showToast) {
-                window.showToast("Xóa danh mục thành công!");
-            }
         } catch (error) {
             alert(error.message || "Không thể xóa danh mục.");
         }
