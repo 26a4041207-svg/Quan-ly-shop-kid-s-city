@@ -328,6 +328,26 @@ table td { padding: 15px 10px; font-size: 14px; border-bottom: 1px solid #f3f4f6
     font-weight: 600;
 }
 
+#global-toast {
+    position: fixed !important;
+    top: 20px !important;
+    right: -300px !important;
+    background: #dcfce7 !important;
+    color: #166534 !important;
+    padding: 12px 20px !important;
+    border-radius: 8px !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
+    z-index: 9999 !important;
+    transition: right 0.4s ease-in-out !important;
+}
+#global-toast.show { right: 20px !important; }
+#global-toast i { font-size: 20px !important; color: #16a34a !important; }
+
 .profile-details { margin-bottom: 30px; }
 .detail-row {
     display: flex;
