@@ -72,6 +72,9 @@ if ($method === 'POST') {
             $product->execute([$productId]);
             $row = $product->fetch();
             if (!$row) fail('Sản phẩm không tồn tại.', 422);
+            if ($row['soLuong'] < $quantity) {
+                fail("Sản phẩm không đủ số lượng trong kho. Chỉ còn {$row['soLuong']} sản phẩm.", 422);
+            }
 
             $price = (float) ($item['price'] ?? $row['giaBan']);
             $lineDiscount = (float) ($item['discount'] ?? 0);

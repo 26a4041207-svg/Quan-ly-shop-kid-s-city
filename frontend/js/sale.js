@@ -37,6 +37,53 @@ window.initSalePage = function initSalePage(container) {
         return `${date}/${month}/${year} ${hours}:${minutes}:${seconds}`;
     };
 
+    const showSaleToast = (message, type = 'success') => {
+        let toast = document.getElementById('sale-toast');
+        const color = type === 'error' ? '#ef4444' : '#10b981';
+        const icon = type === 'error' ? 'bx-error-circle' : 'bx-check-circle';
+        
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.id = 'sale-toast';
+            Object.assign(toast.style, {
+                position: 'fixed',
+                top: '20px',
+                right: '20px',
+                background: '#fff',
+                color: '#333',
+                padding: '16px 24px',
+                borderRadius: '8px',
+                boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+                display: 'none',
+                alignItems: 'center',
+                gap: '12px',
+                zIndex: '9999',
+                fontFamily: '"Inter", sans-serif',
+                fontWeight: '500',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                opacity: '0',
+                transform: 'translateY(-20px)',
+                borderLeft: `4px solid ${color}`
+            });
+            document.body.appendChild(toast);
+        }
+        toast.style.borderLeftColor = color;
+        toast.innerHTML = `<i class='bx ${icon}' style='font-size: 1.5rem; color: ${color};'></i> <span>${message}</span>`;
+        toast.style.display = 'flex';
+        void toast.offsetWidth;
+        toast.style.opacity = '1';
+        toast.style.transform = 'translateY(0)';
+        
+        window.clearTimeout(toast._hideTimer);
+        toast._hideTimer = window.setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateY(-20px)';
+            window.setTimeout(() => {
+                if (toast.style.opacity === '0') toast.style.display = 'none';
+            }, 300);
+        }, 3000);
+    };
+
     const showSelectedProductInfo = (modal, productName) => {
         const infoCard = modal.querySelector('.selected-product-info');
         if (!infoCard) return;
@@ -1880,6 +1927,8 @@ const openReturnEditModal = (row) => {
         const detail = productDetails[product] || {};
         const quantity = Number(row.dataset.quantity || 1);
         const price = Number(row.dataset.price || 0);
+        const stock = detail.stock !== undefined ? Number(detail.stock) : 0;
+        
         row.innerHTML = `
             <td>${index}</td>
             <td><a class="product-code-link" href="#">${code}</a></td>
@@ -1889,7 +1938,7 @@ const openReturnEditModal = (row) => {
                     Size: ${detail.size || '-'} · Màu: ${detail.color || '-'} · Tồn: ${detail.stock ?? '-'}
                 </div>
             </td>
-            <td><input type="number" class="draft-qty-input" min="1" value="${quantity}" style="width: 60px; text-align: center; border: 1px solid #dbe4f0; border-radius: 4px; padding: 4px;"></td>
+            <td><input type="number" class="draft-qty-input" min="1" max="${stock}" value="${quantity}" style="width: 60px; text-align: center; border: 1px solid #dbe4f0; border-radius: 4px; padding: 4px;"></td>
             <td>${formatMoney(price)}</td>
             <td class="draft-item-total"><strong>${formatMoney(price * quantity)}</strong></td>
             <td>
@@ -1901,7 +1950,12 @@ const openReturnEditModal = (row) => {
 
         const qtyInput = row.querySelector('.draft-qty-input');
         qtyInput.addEventListener('input', (e) => {
-            const newQty = Math.max(1, Number(e.target.value) || 1);
+            let newQty = Math.max(1, Number(e.target.value) || 1);
+            if (newQty > stock) {
+                showSaleToast(`Sản phẩm '${product}' chỉ còn ${stock} trong kho. Không đủ số lượng.`, 'error');
+                newQty = stock;
+                e.target.value = newQty;
+            }
             row.dataset.quantity = String(newQty);
             row.querySelector('.draft-item-total strong').textContent = formatMoney(price * newQty);
             updateInvoiceSummary(row.closest('#invoice-create'));
@@ -1971,8 +2025,18 @@ const openReturnEditModal = (row) => {
 
         const quantity = Math.max(1, Number(qtyInput.value || 1));
         const price = prices[product] || 100000;
-        const row = document.createElement('tr');
         const productInfo = invoiceProductOptions.find((item) => item.name === product) || {};
+        const stock = productInfo.stock !== undefined ? Number(productInfo.stock) : (productDetails[product]?.stock ?? 0);
+        
+        const existingRows = Array.from(body.querySelectorAll('tr')).filter(r => r.dataset.product === product);
+        const existingQty = existingRows.reduce((sum, r) => sum + Number(r.dataset.quantity || 0), 0);
+        
+        if (quantity + existingQty > stock) {
+            showSaleToast(`Sản phẩm '${product}' chỉ còn ${stock} trong kho. Không đủ số lượng.`, 'error');
+            return;
+        }
+
+        const row = document.createElement('tr');
         row.dataset.product = product;
         row.dataset.productId = productInfo.id || productDetails[product]?.productId || '';
         row.dataset.productCode = productCodes[product] || 'SP000';
@@ -2358,7 +2422,7 @@ const openReturnEditModal = (row) => {
                 closeModal(modal);
                 await loadExchangeTableFromApi();
                 if (typeof loadReturnTableFromApi === 'function') await loadReturnTableFromApi();
-                alert('Tạo phiếu thành công!');
+                showSaleToast('Tạo phiếu thành công!');
                 return;
             } catch (error) {
                 alert(error.message || 'Không thể tạo phiếu đổi/trả hàng.');
@@ -2540,7 +2604,7 @@ const openReturnEditModal = (row) => {
                 closeModal(modal);
                 await loadReturnTableFromApi();
                 if (typeof loadExchangeTableFromApi === 'function') await loadExchangeTableFromApi();
-                alert('Tạo phiếu thành công!');
+                showSaleToast('Tạo phiếu thành công!');
                 return;
             } catch (error) {
                 alert(error.message || 'Không thể tạo phiếu đổi/trả hàng.');
